@@ -123,3 +123,13 @@ Si se modifica el `Dockerfile.dev`:
 ```bash
 docker compose -f docker-compose.dev.yml up --build
 ```
+
+## 10.Comando para recuperar desde config/schema.sql.
+```bash
+Get-Content config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U postgres -d techhub
+```
+Comando para verificar las tablas:
+
+```bash
+docker compose -f docker-compose.dev.yml exec postgres psql -U postgres -d techhub -c "\dt"
+```
