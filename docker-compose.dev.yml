@@ -10,6 +10,12 @@ services:
       - .:/var/www/html
     env_file:
       - .env
+    environment:
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_DATABASE: "${POSTGRES_DB}"
+      PG_USER: "${POSTGRES_USER}"
+      PG_PASSWORD: "${POSTGRES_PASSWORD}"
     depends_on:
       postgres:
         condition: service_healthy
