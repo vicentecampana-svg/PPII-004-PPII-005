@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Repositories\ProyectoRepository;
+use App\Repositories\SiteRepository;
 use App\Services\Database;
 use PDOException;
 
@@ -16,7 +18,7 @@ use PDOException;
  * no está disponible, se usa contenido de respaldo para que la página
  * nunca se vea vacía o rota.
  */
-final class HomeController
+final class HomeController extends Controller
 {
     public function index(): void
     {
@@ -25,19 +27,9 @@ final class HomeController
             'proyectos' => $this->fetchProyectos(),
             'staff' => $this->fetchStaff(),
             'noticias' => $this->fetchNoticias(),
-            'enlacesFooter' => $this->fetchEnlacesFooter(),
-            'contacto' => $this->fetchContactoInfo(),
+            'enlacesFooter' => (new SiteRepository())->enlacesFooter(),
+            'contacto' => (new SiteRepository())->contactoInfo(),
         ]);
-    }
-
-    private function render(string $view, array $data = []): void
-    {
-        extract($data, EXTR_SKIP);
-        $viewsPath = dirname(__DIR__) . '/Views/';
-
-        require $viewsPath . 'layout/header.php';
-        require $viewsPath . $view . '.php';
-        require $viewsPath . 'layout/footer.php';
     }
 
     private function fetchContenido(): array
@@ -76,49 +68,7 @@ final class HomeController
 
     private function fetchProyectos(): array
     {
-        $pdo = Database::connect();
-
-        if ($pdo !== null) {
-            try {
-                $stmt = $pdo->query(
-                    'SELECT id, titulo, descripcion, imagen_url FROM proyectos
-                     ORDER BY orden ASC, created_at ASC LIMIT 4'
-                );
-                $rows = $stmt->fetchAll();
-                if ($rows !== false && count($rows) > 0) {
-                    return $rows;
-                }
-            } catch (PDOException) {
-                // Tabla aún no existe o falló la consulta: usar respaldo.
-            }
-        }
-
-        return [
-            [
-                'id' => 'plataforma-academica',
-                'titulo' => 'Plataforma Académica',
-                'descripcion' => 'Sistema web para la gestión de asignaturas, matrículas y seguimiento académico de estudiantes.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'gestion-laboratorios',
-                'titulo' => 'Gestión de Laboratorios',
-                'descripcion' => 'Reserva y control de uso de laboratorios, con reportes de disponibilidad en tiempo real.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'portal-vinculacion',
-                'titulo' => 'Portal de Vinculación',
-                'descripcion' => 'Espacio digital para conectar proyectos de la universidad con empresas y organizaciones de la región.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'app-terreno',
-                'titulo' => 'Aplicación de Terreno',
-                'descripcion' => 'Aplicación móvil para levantamiento de datos en terreno con sincronización sin conexión.',
-                'imagen_url' => null,
-            ],
-        ];
+        return (new ProyectoRepository())->findFeatured(4);
     }
 
     private function fetchStaff(): array
@@ -216,53 +166,4 @@ final class HomeController
         ];
     }
 
-    private function fetchEnlacesFooter(): array
-    {
-        $pdo = Database::connect();
-
-        if ($pdo !== null) {
-            try {
-                $stmt = $pdo->query(
-                    'SELECT id, grupo, etiqueta, url FROM enlaces_footer ORDER BY grupo ASC, orden ASC'
-                );
-                $rows = $stmt->fetchAll();
-                if ($rows !== false && count($rows) > 0) {
-                    return $rows;
-                }
-            } catch (PDOException) {
-                // Tabla aún no existe o falló la consulta: usar respaldo.
-            }
-        }
-
-        return [
-            ['id' => '4', 'grupo' => 'Contenido', 'etiqueta' => 'Noticias', 'url' => '/#noticias'],
-            ['id' => '5', 'grupo' => 'Contenido', 'etiqueta' => 'Contacto', 'url' => '/#contacto'],
-            ['id' => '6', 'grupo' => 'Contenido', 'etiqueta' => 'Iniciar sesión', 'url' => '#'],
-            ['id' => '1', 'grupo' => 'Sitio', 'etiqueta' => 'Inicio', 'url' => '/'],
-            ['id' => '2', 'grupo' => 'Sitio', 'etiqueta' => 'Proyectos', 'url' => '/#proyectos'],
-            ['id' => '3', 'grupo' => 'Sitio', 'etiqueta' => 'Staff', 'url' => '/#staff'],
-        ];
-    }
-
-    private function fetchContactoInfo(): array
-    {
-        $pdo = Database::connect();
-
-        if ($pdo !== null) {
-            try {
-                $stmt = $pdo->query('SELECT address, email FROM footer_info LIMIT 1');
-                $row = $stmt->fetch();
-                if ($row !== false) {
-                    return $row;
-                }
-            } catch (PDOException) {
-                // Tabla aún no existe o falló la consulta: usar respaldo.
-            }
-        }
-
-        return [
-            'address' => 'La Serena, Chile',
-            'email' => 'contacto@sfl.uls.cl',
-        ];
-    }
 }

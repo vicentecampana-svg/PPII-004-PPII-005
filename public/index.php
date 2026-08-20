@@ -22,6 +22,7 @@ if (is_file($autoload)) {
 }
 
 use App\Controllers\HomeController;
+use App\Controllers\ProyectosController;
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 
@@ -29,6 +30,10 @@ switch ($uri) {
     case '/':
     case '/index.php':
         (new HomeController())->index();
+        break;
+
+    case '/proyectos':
+        (new ProyectosController())->index();
         break;
 
     default:
