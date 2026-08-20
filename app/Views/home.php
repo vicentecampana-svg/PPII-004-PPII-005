@@ -37,13 +37,13 @@ use App\Services\Media;
           <div class="card-body">
             <h3><?= htmlspecialchars($p['titulo'], ENT_QUOTES, 'UTF-8') ?></h3>
             <p><?= htmlspecialchars($p['descripcion'], ENT_QUOTES, 'UTF-8') ?></p>
-            <a href="#proyectos" class="btn btn-destructive btn-sm">Ver más</a>
+            <a href="/proyectos" class="btn btn-destructive btn-sm">Ver más</a>
           </div>
         </article>
       <?php endforeach; ?>
     </div>
     <div class="section-cta">
-      <a href="#proyectos" class="btn btn-destructive">Ver todos los proyectos</a>
+      <a href="/proyectos" class="btn btn-destructive">Ver todos los proyectos</a>
     </div>
   </div>
 </section>

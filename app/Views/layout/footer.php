@@ -5,6 +5,7 @@
  */
 $enlacesFooter ??= [];
 $contacto ??= [];
+$currentPath ??= parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $grupos = [];
 foreach ($enlacesFooter as $enlace) {
     $grupos[$enlace['grupo']][] = $enlace;
@@ -33,7 +34,7 @@ foreach ($enlacesFooter as $enlace) {
             <p class="footer-group-title"><?= htmlspecialchars($grupo, ENT_QUOTES, 'UTF-8') ?></p>
             <ul>
               <?php foreach ($enlaces as $enlace): ?>
-                <li><a href="<?= htmlspecialchars($enlace['url'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($enlace['etiqueta'], ENT_QUOTES, 'UTF-8') ?></a></li>
+                <li><a href="<?= htmlspecialchars($enlace['url'], ENT_QUOTES, 'UTF-8') ?>"<?= $enlace['url'] === $currentPath ? ' class="active"' : '' ?>><?= htmlspecialchars($enlace['etiqueta'], ENT_QUOTES, 'UTF-8') ?></a></li>
               <?php endforeach; ?>
             </ul>
           </div>

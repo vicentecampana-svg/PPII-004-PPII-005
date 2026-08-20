@@ -459,6 +459,56 @@ a {
   color: var(--muted-foreground);
 }
 
+/* Página de Proyectos */
+.proyectos-page {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.proyectos-page h1 {
+  text-align: center;
+  font-size: 1.875rem;
+  font-weight: 800;
+}
+
+.proyectos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-top: 40px;
+}
+
+@media (min-width: 640px) {
+  .proyectos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .proyectos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.proyecto-tile h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.proyecto-tile-img {
+  margin-top: 8px;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.proyecto-tile p {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
 /* Contact CTA */
 .contact-cta {
   max-width: 600px;
