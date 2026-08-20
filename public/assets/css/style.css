@@ -66,7 +66,7 @@ a {
 .container {
   max-width: 1152px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
 .site {
@@ -93,7 +93,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 20px;
+  padding: 12px 16px;
 }
 
 .brand {
@@ -228,7 +228,7 @@ a {
 }
 
 .hero-inner {
-  max-width: 720px;
+  max-width: 768px;
   padding: 56px 20px;
   text-align: center;
 }
@@ -240,8 +240,8 @@ a {
 }
 
 .hero h1 {
-  margin-top: 28px;
-  font-size: 2rem;
+  margin-top: 32px;
+  font-size: 1.875rem;
   font-weight: 800;
 }
 
@@ -253,25 +253,48 @@ a {
 
 .hero p {
   margin-top: 16px;
-  font-size: 0.95rem;
-  line-height: 1.7;
+  font-size: 0.875rem;
+  line-height: 1.625;
   color: var(--muted-foreground);
   white-space: pre-line;
 }
 
+.hero .btn {
+  margin-top: 32px;
+}
+
+@media (min-width: 640px) {
+  .hero h1 {
+    font-size: 2.25rem;
+  }
+
+  .hero h2 {
+    font-size: 1.875rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+}
+
 /* Buttons */
 .btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
   border-radius: var(--radius);
-  padding: 10px 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: background-color 0.15s ease;
 }
 
 .btn-sm {
-  padding: 6px 14px;
-  font-size: 0.8rem;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.75rem;
 }
 
 .btn-destructive {
@@ -323,7 +346,7 @@ a {
 }
 
 .grid-proyectos {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
 }
 
 .grid-staff {
@@ -335,12 +358,16 @@ a {
 }
 
 @media (min-width: 640px) {
+  .grid-proyectos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .grid-noticias {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1024px) {
   .grid-proyectos {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -391,7 +418,7 @@ a {
 
 .card-body p {
   margin-top: 8px;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--muted-foreground);
 }
 
@@ -399,29 +426,36 @@ a {
   margin-top: 16px;
 }
 
+#noticias .card-body h3 {
+  font-size: 0.875rem;
+}
+
+#noticias .card-body p {
+  font-size: 0.75rem;
+}
+
 .read-more {
   display: inline-block;
   margin-top: 12px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--brand);
   text-decoration: underline;
 }
 
 .staff-card h3 {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
 .staff-cargo {
   margin-top: 8px;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
 .staff-desc {
-  margin-top: 4px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--muted-foreground);
 }
 
