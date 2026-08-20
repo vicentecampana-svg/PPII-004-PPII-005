@@ -36,17 +36,19 @@ $navLinks = [
         <img src="/assets/images/logo-sfl-color.png" alt="SFL ULS Lab" width="120" height="40" class="brand-logo">
       </a>
 
-      <nav class="main-nav" aria-label="Navegación principal">
-        <ul>
-          <?php foreach ($navLinks as $link): ?>
-            <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $link['href'] === $currentPath ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
-          <?php endforeach; ?>
-        </ul>
-      </nav>
+      <div class="nav-actions">
+        <nav class="main-nav" aria-label="Navegación principal">
+          <ul>
+            <?php foreach ($navLinks as $link): ?>
+              <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $link['href'] === $currentPath ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
+            <?php endforeach; ?>
+          </ul>
+        </nav>
 
-      <div class="header-actions">
-        <span class="lang-badge">ES</span>
-        <a href="#" class="login-link">Iniciar sesión</a>
+        <div class="header-actions">
+          <span class="lang-badge">ES</span>
+          <a href="#" class="login-link">Iniciar sesión</a>
+        </div>
       </div>
 
       <button type="button" class="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav" onclick="document.getElementById('mobile-nav').classList.toggle('open'); this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');">

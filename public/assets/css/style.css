@@ -136,6 +136,13 @@ a {
   font-weight: 600;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
