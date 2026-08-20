@@ -1,27 +1,38 @@
 <?php
-#prueba para ver si funciona todo bien
+
 declare(strict_types=1);
 
-$host = getenv('PG_HOST');
-$port = getenv('PG_PORT');
-$database = getenv('PG_DATABASE');
-$user = getenv('PG_USER');
-$password = getenv('PG_PASSWORD');
+$autoload = dirname(__DIR__) . '/vendor/autoload.php';
 
-try {
-    $pdo = new PDO(
-        "pgsql:host={$host};port={$port};dbname={$database}",
-        $user,
-        $password,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-        ]
-    );
+if (is_file($autoload)) {
+    require $autoload;
+} else {
+    // Sin `composer install` disponible: autoloader PSR-4 mínimo para App\.
+    spl_autoload_register(static function (string $class): void {
+        $prefix = 'App\\';
+        if (!str_starts_with($class, $prefix)) {
+            return;
+        }
+        $relative = substr($class, strlen($prefix));
+        $path = dirname(__DIR__) . '/app/' . str_replace('\\', '/', $relative) . '.php';
+        if (is_file($path)) {
+            require $path;
+        }
+    });
+}
 
-    echo '<h1>Proyecto Tech Hub ULS</h1>';
-    echo '<p>PHP funciona correctamente.</p>';
-    echo '<p>Conexión con PostgreSQL exitosa.</p>';
-} catch (PDOException $exception) {
-    echo '<h1>Error de conexión</h1>';
-    echo '<p>' . htmlspecialchars($exception->getMessage()) . '</p>';
+use App\Controllers\HomeController;
+
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+
+switch ($uri) {
+    case '/':
+    case '/index.php':
+        (new HomeController())->index();
+        break;
+
+    default:
+        http_response_code(404);
+        echo '404 - Página no encontrada';
+        break;
 }
