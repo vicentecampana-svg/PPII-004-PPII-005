@@ -1,6 +1,10 @@
 <?php
-/** @var array $enlacesFooter */
+/**
+ * @var array $enlacesFooter
+ * @var array $contacto
+ */
 $enlacesFooter ??= [];
+$contacto ??= [];
 $grupos = [];
 foreach ($enlacesFooter as $enlace) {
     $grupos[$enlace['grupo']][] = $enlace;
@@ -16,6 +20,14 @@ foreach ($enlacesFooter as $enlace) {
       </div>
 
       <div class="footer-links">
+        <div class="footer-group">
+          <p class="footer-group-title">Contacto</p>
+          <ul>
+            <li><?= htmlspecialchars($contacto['address'], ENT_QUOTES, 'UTF-8') ?></li>
+            <li><a href="mailto:<?= htmlspecialchars($contacto['email'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($contacto['email'], ENT_QUOTES, 'UTF-8') ?></a></li>
+          </ul>
+        </div>
+
         <?php foreach ($grupos as $grupo => $enlaces): ?>
           <div class="footer-group">
             <p class="footer-group-title"><?= htmlspecialchars($grupo, ENT_QUOTES, 'UTF-8') ?></p>
@@ -31,11 +43,31 @@ foreach ($enlacesFooter as $enlace) {
       <div class="footer-social">
         <p>Síguenos en:</p>
         <ul>
-          <li>Facebook</li>
-          <li>LinkedIn</li>
-          <li>Twitter</li>
-          <li>Instagram</li>
-          <li>YouTube</li>
+          <li>
+            <a href="#" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+          </li>
+          <li>
+            <a href="#" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+            </a>
+          </li>
+          <li>
+            <a href="#" aria-label="Twitter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+            </a>
+          </li>
+          <li>
+            <a href="#" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            </a>
+          </li>
+          <li>
+            <a href="#" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+            </a>
+          </li>
         </ul>
       </div>
 

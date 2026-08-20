@@ -468,7 +468,7 @@ a {
 
 .footer-links {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 24px;
   margin-top: 32px;
   font-size: 0.9rem;
@@ -519,8 +519,28 @@ a {
   gap: 16px;
   margin: 12px 0 0;
   padding: 0;
-  font-size: 0.8rem;
+}
+
+.footer-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ffffff;
+  border-radius: 999px;
+  color: #ffffff;
   opacity: 0.9;
+  transition: opacity 0.15s ease;
+}
+
+.footer-social a:hover {
+  opacity: 1;
+}
+
+.footer-social svg {
+  width: 18px;
+  height: 18px;
 }
 
 .footer-copy {

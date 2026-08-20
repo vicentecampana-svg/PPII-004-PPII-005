@@ -26,6 +26,7 @@ final class HomeController
             'staff' => $this->fetchStaff(),
             'noticias' => $this->fetchNoticias(),
             'enlacesFooter' => $this->fetchEnlacesFooter(),
+            'contacto' => $this->fetchContactoInfo(),
         ]);
     }
 
@@ -234,12 +235,34 @@ final class HomeController
         }
 
         return [
+            ['id' => '4', 'grupo' => 'Contenido', 'etiqueta' => 'Noticias', 'url' => '/#noticias'],
+            ['id' => '5', 'grupo' => 'Contenido', 'etiqueta' => 'Contacto', 'url' => '/#contacto'],
+            ['id' => '6', 'grupo' => 'Contenido', 'etiqueta' => 'Iniciar sesión', 'url' => '#'],
             ['id' => '1', 'grupo' => 'Sitio', 'etiqueta' => 'Inicio', 'url' => '/'],
             ['id' => '2', 'grupo' => 'Sitio', 'etiqueta' => 'Proyectos', 'url' => '/#proyectos'],
             ['id' => '3', 'grupo' => 'Sitio', 'etiqueta' => 'Staff', 'url' => '/#staff'],
-            ['id' => '4', 'grupo' => 'Contenido', 'etiqueta' => 'Noticias', 'url' => '/#noticias'],
-            ['id' => '5', 'grupo' => 'Contenido', 'etiqueta' => 'Contacto', 'url' => '#'],
-            ['id' => '6', 'grupo' => 'Contenido', 'etiqueta' => 'Iniciar sesión', 'url' => '#'],
+        ];
+    }
+
+    private function fetchContactoInfo(): array
+    {
+        $pdo = Database::connect();
+
+        if ($pdo !== null) {
+            try {
+                $stmt = $pdo->query('SELECT address, email FROM footer_info LIMIT 1');
+                $row = $stmt->fetch();
+                if ($row !== false) {
+                    return $row;
+                }
+            } catch (PDOException) {
+                // Tabla aún no existe o falló la consulta: usar respaldo.
+            }
+        }
+
+        return [
+            'address' => 'La Serena, Chile',
+            'email' => 'contacto@sfl.uls.cl',
         ];
     }
 }
