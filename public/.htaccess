@@ -1,0 +1,6 @@
+RewriteEngine On
+
+# Redirigir todo a public/index.php (front controller)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

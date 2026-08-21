@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'app_name' => 'TECH HUB ULS',
+    'app_env'  => getenv('APP_ENV') ?: 'development',
+
+    'db' => [
+        'host'     => getenv('PG_HOST') ?: 'localhost',
+        'port'     => getenv('PG_PORT') ?: '5432',
+        'database' => getenv('PG_DATABASE') ?: 'techhub',
+        'username' => getenv('PG_USER') ?: 'postgres',
+        'password' => getenv('PG_PASSWORD') ?: '',
+    ],
+
+    'storage_path' => dirname(__DIR__) . '/storage/uploads',
+
+    'base_url' => '/',
+];
