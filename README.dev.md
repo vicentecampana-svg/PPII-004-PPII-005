@@ -44,6 +44,8 @@ POSTGRES_PORT=5433
 
 ## 3. Levantar el entorno
 
+Tienes que tener abierto docker en tu pc.
+
 ```bash
 docker compose -f docker-compose.dev.yml up --build -d
 ```
@@ -57,44 +59,7 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ```
 
 ---
-
-## 5. Abrir el proyecto
-
-```
-http://localhost:8080
-```
-
-(o el puerto que hayas puesto en `APP_PORT`).
-
----
-
-## 6. Verificar contenedores
-
-```bash
-docker compose -f docker-compose.dev.yml ps
-```
-
-Debe salir `web → Up` y `postgres → Up (healthy)`.
-
----
-
-## 7. Detener el entorno
-
-```bash
-docker compose -f docker-compose.dev.yml down
-```
-
----
-
-## 8. Reconstruir (si cambias el Dockerfile.dev)
-
-```bash
-docker compose -f docker-compose.dev.yml up --build
-```
-
----
-
-## 9. Cargar el schema en la base de datos
+## 5. Cargar el schema en la base de datos
 
 ```powershell
 Get-Content .env | ForEach-Object {
@@ -115,3 +80,40 @@ Para verificar las tablas:
 ```bash
 docker compose -f docker-compose.dev.yml exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "\dt"
 ```
+## 6. Abrir el proyecto
+
+```
+http://localhost:8080
+```
+
+(o el puerto que hayas puesto en `APP_PORT`).
+
+---
+
+## 7. Verificar contenedores
+
+```bash
+docker compose -f docker-compose.dev.yml ps
+```
+
+Debe salir `web → Up` y `postgres → Up (healthy)`.
+
+---
+
+## 8. Detener el entorno
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+---
+
+## 9. Reconstruir (volver a iniciarlo cuando lo cierres)
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+---
+
+

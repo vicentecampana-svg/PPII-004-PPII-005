@@ -1,7 +1,6 @@
 RewriteEngine On
 
-# Si la ruta pedida no corresponde a un archivo o directorio real
-# (assets, imágenes, etc.), se enruta a index.php como front controller.
+# Redirigir todo a public/index.php (front controller)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [L]
+RewriteRule ^ index.php [QSA,L]
