@@ -20,6 +20,10 @@ RUN sed -ri \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
 
+# Permite que public/.htaccess reescriba las rutas limpias (/proyectos, etc.)
+# hacia index.php; por defecto Apache trae AllowOverride None.
+RUN sed -ri 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+
 WORKDIR /var/www/html
 
 EXPOSE 80
