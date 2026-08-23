@@ -127,6 +127,19 @@ function authMustChangePassword(): bool
     return !empty($_SESSION['must_change_password']);
 }
 
+/**
+ * Token CSRF para formularios HTML (no-API). Se genera una vez por sesión
+ * y mwCsrf() lo valida contra $_POST['csrf_token'] en cada POST.
+ */
+function csrfToken(): string
+{
+    sessionStart();
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
 // ══════════════════════════════════════════════
 //  MIDDLEWARE
 // ══════════════════════════════════════════════
