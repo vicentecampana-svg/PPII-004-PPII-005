@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Services\Media;
-
 /**
  * @var array $contenido
  * @var array $proyectos
@@ -31,7 +29,7 @@ use App\Services\Media;
     <div class="grid grid-proyectos">
       <?php foreach ($proyectos as $p): ?>
         <article class="card">
-          <img src="<?= htmlspecialchars(Media::url($p['imagen_url'], 'proyecto'), ENT_QUOTES, 'UTF-8') ?>"
+          <img src="<?= htmlspecialchars(mediaUrl($p['imagen_url'], 'proyecto'), ENT_QUOTES, 'UTF-8') ?>"
                alt="<?= htmlspecialchars($p['titulo'], ENT_QUOTES, 'UTF-8') ?>"
                loading="lazy" class="card-img card-img-4-3">
           <div class="card-body">
@@ -57,7 +55,7 @@ use App\Services\Media;
       <?php foreach ($staff as $m): ?>
         <article class="staff-card">
           <h3><?= htmlspecialchars($m['nombre'], ENT_QUOTES, 'UTF-8') ?></h3>
-          <img src="<?= htmlspecialchars(Media::url($m['imagen_url'], 'staff'), ENT_QUOTES, 'UTF-8') ?>"
+          <img src="<?= htmlspecialchars(mediaUrl($m['imagen_url'], 'staff'), ENT_QUOTES, 'UTF-8') ?>"
                alt="<?= htmlspecialchars($m['nombre'], ENT_QUOTES, 'UTF-8') ?>"
                loading="lazy" class="card-img card-img-square">
           <p class="staff-cargo"><?= htmlspecialchars($m['cargo'], ENT_QUOTES, 'UTF-8') ?></p>
@@ -80,7 +78,7 @@ use App\Services\Media;
     <div class="grid grid-noticias">
       <?php foreach ($noticias as $n): ?>
         <article class="card">
-          <img src="<?= htmlspecialchars(Media::url($n['imagen_url'], 'noticia'), ENT_QUOTES, 'UTF-8') ?>"
+          <img src="<?= htmlspecialchars(mediaUrl($n['imagen_url'], 'noticia'), ENT_QUOTES, 'UTF-8') ?>"
                alt="<?= htmlspecialchars($n['titulo'], ENT_QUOTES, 'UTF-8') ?>"
                loading="lazy" class="card-img card-img-16-9">
           <div class="card-body">

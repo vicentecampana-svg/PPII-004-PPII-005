@@ -74,6 +74,8 @@ if ($method === 'OPTIONS') {
 // Definición de rutas API
 $routes = [
     'GET' => [
+        '/'                        => [['App\Controllers\HomeController', 'index'],          []],
+        '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
         '/login'                   => [['App\Controllers\LoginController', 'show'],          ['guest']],
         '/api/auth/me'             => [['App\Controllers\AuthController', 'me'],             ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'index'],           []],

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Services\Media;
-
 /**
  * @var array $proyectos
  */
@@ -14,7 +12,7 @@ use App\Services\Media;
     <?php foreach ($proyectos as $p): ?>
       <article class="proyecto-tile">
         <h2><?= htmlspecialchars($p['titulo'], ENT_QUOTES, 'UTF-8') ?></h2>
-        <img src="<?= htmlspecialchars(Media::url($p['imagen_url'], 'proyecto'), ENT_QUOTES, 'UTF-8') ?>"
+        <img src="<?= htmlspecialchars(mediaUrl($p['imagen_url'], 'proyecto'), ENT_QUOTES, 'UTF-8') ?>"
              alt="<?= htmlspecialchars($p['titulo'], ENT_QUOTES, 'UTF-8') ?>"
              loading="lazy" class="proyecto-tile-img">
         <p><?= htmlspecialchars($p['descripcion'], ENT_QUOTES, 'UTF-8') ?></p>
