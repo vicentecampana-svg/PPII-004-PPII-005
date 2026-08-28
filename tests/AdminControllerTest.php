@@ -76,7 +76,6 @@ final class AdminControllerTest extends TestCase
         $this->assertStringContainsString('Sobre nosotros', $output);
         $this->assertStringContainsString('Footer', $output);
         $this->assertStringContainsString('Usuarios y roles', $output);
-        $this->assertStringContainsString('/logout', $output);
     }
 
     public function testRedactorRoleDoesNotSeeRestrictedTabs(): void

@@ -53,12 +53,6 @@ $roleClass = match ($roleNormalized) {
           <span class="admin-role-badge <?= $roleClass ?>"><?= e($roleName) ?></span>
         </div>
       </div>
-
-      <div class="admin-header-actions">
-        <a href="/logout" class="admin-btn-logout" aria-label="Cerrar sesión del panel">
-          Cerrar sesión
-        </a>
-      </div>
     </div>
 
     <!-- Barra de Pestañas (Tabs según Mockup) -->
