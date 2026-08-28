@@ -74,6 +74,9 @@ if ($method === 'OPTIONS') {
 // Definición de rutas API
 $routes = [
     'GET' => [
+        '/'                        => [['App\Controllers\HomeController', 'index'],          []],
+        '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
+        '/login'                   => [['App\Controllers\LoginController', 'show'],          ['guest']],
         '/api/auth/me'             => [['App\Controllers\AuthController', 'me'],             ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'index'],           []],
         '/api/news/{id}'           => [['App\Controllers\NewsController', 'show'],            []],
@@ -93,6 +96,7 @@ $routes = [
         '/api/footer'              => [['App\Controllers\FooterApiController', 'show'],       []],
     ],
     'POST' => [
+        '/login'                   => [['App\Controllers\LoginController', 'submit'],        ['guest', 'csrf']],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
         '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth']],
