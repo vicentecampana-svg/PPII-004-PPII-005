@@ -61,15 +61,7 @@ final class AdminControllerTest extends TestCase
         $this->assertSame('admin_tester', $user['username']);
         $this->assertSame('SuperAdmin', $user['role_name']);
 
-        $stats = [
-            'proyectos' => 5,
-            'servicios' => 3,
-            'staff'     => 8,
-            'noticias'  => 12,
-            'consultas' => 4,
-            'usuarios'  => 2,
-        ];
-        $activeTab = 'inicio';
+        $activeTab = 'proyectos';
 
         ob_start();
         require dirname(__DIR__) . '/app/Views/admin.php';
@@ -95,8 +87,7 @@ final class AdminControllerTest extends TestCase
         $_SESSION['role_name'] = 'Redactor';
 
         $user = authUser();
-        $stats = ['noticias' => 4];
-        $activeTab = 'inicio';
+        $activeTab = 'noticias';
 
         ob_start();
         require dirname(__DIR__) . '/app/Views/admin.php';

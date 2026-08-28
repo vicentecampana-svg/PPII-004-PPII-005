@@ -46,27 +46,9 @@ final class AdminController extends Controller
     public function index(): void
     {
         $user = authUser();
-        $tab = (string) ($_GET['tab'] ?? 'inicio');
-
-        $stats = [
-            'proyectos' => 0,
-            'servicios' => 0,
-            'staff'     => 0,
-            'noticias'  => 0,
-            'consultas' => 0,
-            'usuarios'  => 0,
-        ];
-
-        try {
-            $stats['proyectos'] = (int) (($this->projectService->getAll(1, 1, true))['total'] ?? 0);
-            $stats['servicios'] = (int) (($this->serviceService->getAll(1, 1, true))['total'] ?? 0);
-            $stats['staff']     = (int) (($this->staffService->getAll(1, 1))['total'] ?? 0);
-            $stats['noticias']  = (int) (($this->newsService->getAll(1, 1))['total'] ?? 0);
-            $stats['consultas'] = (int) (($this->queryService->getAll(1, 1))['total'] ?? 0);
-            $stats['usuarios']  = (int) (($this->userService->getAll(1, 1))['total'] ?? 0);
-        } catch (\Throwable) {
-            // Degradar graciosamente si la base de datos o conexión no está disponible
-        }
+        $roleName = (string) ($user['role_name'] ?? 'Usuario');
+        $defaultTab = strtolower($roleName) === 'redactor' ? 'noticias' : 'proyectos';
+        $tab = (string) ($_GET['tab'] ?? $defaultTab);
 
         $footer = ['links' => [], 'info' => ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl']];
         try {
@@ -80,7 +62,6 @@ final class AdminController extends Controller
             'metaDescription' => 'Panel de administración y gestión de contenidos del Software Factory Lab.',
             'extraCss'        => ['/assets/css/admin.css'],
             'user'            => $user,
-            'stats'           => $stats,
             'activeTab'       => $tab,
             'enlacesFooter'   => $footer['links'] ?? [],
             'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
