@@ -135,8 +135,8 @@
 }
 
 .admin-tab.active {
-  background-color: #a5251f; /* Tono de acento exacto de la maqueta */
-  border-color: #a5251f;
+  background-color: var(--destructive, #9e2320); /* Rojo #9e2320 */
+  border-color: var(--destructive, #9e2320);
   color: #ffffff;
   font-weight: 600;
 }
@@ -329,13 +329,13 @@
 }
 
 .admin-btn-icon.delete {
-  background-color: #a5251f;
-  border-color: #a5251f;
+  background-color: var(--destructive, #9e2320);
+  border-color: var(--destructive, #9e2320);
   color: #ffffff;
 }
 
 .admin-btn-icon.delete:hover {
-  background-color: #841e19;
+  background-color: var(--destructive-dark, #7d1c1a);
 }
 
 /* Formulario lateral (Mockup derecho) */
@@ -402,7 +402,7 @@
 }
 
 .admin-btn-submit:hover {
-  background-color: #a5251f;
+  background-color: var(--destructive, #9e2320);
 }
 
 /* ══════════════════════════════════════════════
