@@ -47,7 +47,12 @@ $navLinks = [
 
         <div class="header-actions">
           <span class="lang-badge">ES</span>
-          <a href="/login" class="login-link">Iniciar sesión</a>
+          <?php if (authCheck()): ?>
+            <a href="/admin" class="login-link">Admin</a>
+            <a href="/logout" class="login-link" style="margin-left: 8px;">Salir</a>
+          <?php else: ?>
+            <a href="/login" class="login-link">Iniciar sesión</a>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -61,7 +66,12 @@ $navLinks = [
         <?php foreach ($navLinks as $link): ?>
           <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
-        <li><a href="/login">Iniciar sesión</a></li>
+        <?php if (authCheck()): ?>
+          <li><a href="/admin">Admin</a></li>
+          <li><a href="/logout">Cerrar sesión</a></li>
+        <?php else: ?>
+          <li><a href="/login">Iniciar sesión</a></li>
+        <?php endif; ?>
       </ul>
     </nav>
   </header>
