@@ -39,7 +39,7 @@ $navLinks = [
       <div class="nav-actions">
         <nav class="main-nav" aria-label="Navegación principal">
           <ul>
-            <?php foreach ($navLinks as $link): ?>
+            <?php foreach ($navLinks as $link) : ?>
               <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $link['href'] === $currentPath ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
             <?php endforeach; ?>
           </ul>
@@ -58,7 +58,7 @@ $navLinks = [
 
     <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación móvil">
       <ul>
-        <?php foreach ($navLinks as $link): ?>
+        <?php foreach ($navLinks as $link) : ?>
           <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
         <li><a href="/login">Iniciar sesión</a></li>

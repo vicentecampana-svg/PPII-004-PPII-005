@@ -10,9 +10,9 @@ class NewsService
 {
     private NewsRepository $repo;
 
-    public function __construct()
+    public function __construct(?NewsRepository $repo = null)
     {
-        $this->repo = new NewsRepository();
+        $this->repo = $repo ?? new NewsRepository();
     }
 
     public function getAll(int $page, int $perPage): array
@@ -96,11 +96,21 @@ class NewsService
         }
 
         $fields = ['updated_at' => date('Y-m-d H:i:s')];
-        if (array_key_exists('title', $data))       $fields['title'] = $data['title'];
-        if (array_key_exists('subtitle', $data))    $fields['subtitle'] = $data['subtitle'] ?? null;
-        if (array_key_exists('content', $data))     $fields['content'] = $data['content'];
-        if (array_key_exists('image', $data))       $fields['image'] = $data['image'] ?? null;
-        if (array_key_exists('tag_id', $data))      $fields['tag_id'] = $data['tag_id'] ?? null;
+        if (array_key_exists('title', $data)) {
+            $fields['title'] = $data['title'];
+        }
+        if (array_key_exists('subtitle', $data)) {
+            $fields['subtitle'] = $data['subtitle'] ?? null;
+        }
+        if (array_key_exists('content', $data)) {
+            $fields['content'] = $data['content'];
+        }
+        if (array_key_exists('image', $data)) {
+            $fields['image'] = $data['image'] ?? null;
+        }
+        if (array_key_exists('tag_id', $data)) {
+            $fields['tag_id'] = $data['tag_id'] ?? null;
+        }
 
         $this->repo->update($id, $fields);
 
