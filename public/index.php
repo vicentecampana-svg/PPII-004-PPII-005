@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/vendor/autoload.php';
-
-sessionStart();
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // ══════════════════════════════════════════════
 //  HANDLER — ejecuta controller + middleware
@@ -13,6 +11,12 @@ sessionStart();
 function handle(array $route): void
 {
     foreach ($route['middleware'] as $mw) {
+        if (str_starts_with($mw, 'role:')) {
+            $roles = explode(',', substr($mw, 5));
+            mwRole(...$roles);
+            continue;
+        }
+
         match ($mw) {
             'csrf'  => mwCsrf(),
             'auth'  => mwAuth(),
@@ -26,7 +30,8 @@ function handle(array $route): void
     $controller = new $class();
 
     if (isset($route['params'])) {
-        $controller->$action(...$route['params']);
+        $params = array_map(fn($v) => is_numeric($v) ? (int) $v : $v, $route['params']);
+        $controller->$action(...$params);
     } else {
         $controller->$action();
     }
@@ -54,22 +59,15 @@ function matchRoute(string $routePath, string $uri): ?array
 }
 
 // ══════════════════════════════════════════════
-//  ROUTING
+//  ROUTING & SECURITY
 // ══════════════════════════════════════════════
 
-$method = $_SERVER['REQUEST_METHOD'];
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = rtrim($uri, '/') ?: '/';
+sendSecurityHeaders();
+handleCors();
 
-// CORS preflight
-if ($method === 'OPTIONS') {
-    http_response_code(204);
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token');
-    header('Access-Control-Max-Age: 86400');
-    exit;
-}
+$method = $_SERVER['REQUEST_METHOD'];
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+$uri = rtrim($uri, '/') ?: '/';
 
 // Definición de rutas API
 $routes = [
@@ -99,35 +97,35 @@ $routes = [
         '/login'                   => [['App\Controllers\LoginController', 'submit'],        ['guest', 'csrf']],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
         '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
-        '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth']],
-        '/api/projects'            => [['App\Controllers\ProjectController', 'store'],        ['auth']],
-        '/api/services'            => [['App\Controllers\ServiceController', 'store'],        ['auth']],
-        '/api/staff'               => [['App\Controllers\StaffController', 'store'],          ['auth']],
+        '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth', 'csrf']],
+        '/api/projects'            => [['App\Controllers\ProjectController', 'store'],        ['auth', 'csrf']],
+        '/api/services'            => [['App\Controllers\ServiceController', 'store'],        ['auth', 'csrf']],
+        '/api/staff'               => [['App\Controllers\StaffController', 'store'],          ['auth', 'csrf']],
         '/api/queries'             => [['App\Controllers\QueryController', 'store'],          []],
-        '/api/users'               => [['App\Controllers\UserController', 'store'],           ['auth']],
-        '/api/tags'                => [['App\Controllers\TagController', 'store'],            ['auth']],
+        '/api/users'               => [['App\Controllers\UserController', 'store'],           ['auth', 'csrf']],
+        '/api/tags'                => [['App\Controllers\TagController', 'store'],            ['auth', 'csrf']],
     ],
     'PUT' => [
-        '/api/news/{id}'           => [['App\Controllers\NewsController', 'update'],         ['auth']],
-        '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'update'],      ['auth']],
-        '/api/services/{id}'       => [['App\Controllers\ServiceController', 'update'],      ['auth']],
-        '/api/staff/{id}'          => [['App\Controllers\StaffController', 'update'],        ['auth']],
-        '/api/users/{id}'          => [['App\Controllers\UserController', 'update'],         ['auth']],
-        '/api/footer'              => [['App\Controllers\FooterApiController', 'update'],    ['auth']],
+        '/api/news/{id}'           => [['App\Controllers\NewsController', 'update'],         ['auth', 'csrf']],
+        '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'update'],      ['auth', 'csrf']],
+        '/api/services/{id}'       => [['App\Controllers\ServiceController', 'update'],      ['auth', 'csrf']],
+        '/api/staff/{id}'          => [['App\Controllers\StaffController', 'update'],        ['auth', 'csrf']],
+        '/api/users/{id}'          => [['App\Controllers\UserController', 'update'],         ['auth', 'csrf']],
+        '/api/footer'              => [['App\Controllers\FooterApiController', 'update'],    ['auth', 'csrf']],
     ],
     'PATCH' => [
-        '/api/news/{id}/status'       => [['App\Controllers\NewsController', 'updateStatus'],      ['auth']],
-        '/api/projects/{id}/status'   => [['App\Controllers\ProjectController', 'updateStatus'],   ['auth']],
-        '/api/services/{id}/status'   => [['App\Controllers\ServiceController', 'updateStatus'],   ['auth']],
-        '/api/queries/{id}/status'    => [['App\Controllers\QueryController', 'updateStatus'],     ['auth']],
+        '/api/news/{id}/status'       => [['App\Controllers\NewsController', 'updateStatus'],      ['auth', 'csrf']],
+        '/api/projects/{id}/status'   => [['App\Controllers\ProjectController', 'updateStatus'],   ['auth', 'csrf']],
+        '/api/services/{id}/status'   => [['App\Controllers\ServiceController', 'updateStatus'],   ['auth', 'csrf']],
+        '/api/queries/{id}/status'    => [['App\Controllers\QueryController', 'updateStatus'],     ['auth', 'csrf']],
     ],
     'DELETE' => [
-        '/api/news/{id}'           => [['App\Controllers\NewsController', 'destroy'],         ['auth']],
-        '/api/staff/{id}'          => [['App\Controllers\StaffController', 'destroy'],        ['auth']],
-        '/api/users/{id}'          => [['App\Controllers\UserController', 'destroy'],         ['auth']],
-        '/api/tags/{id}'           => [['App\Controllers\TagController', 'destroy'],          ['auth']],
-        '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'destroy'],      ['auth']],
-        '/api/services/{id}'       => [['App\Controllers\ServiceController', 'destroy'],      ['auth']],
+        '/api/news/{id}'           => [['App\Controllers\NewsController', 'destroy'],         ['auth', 'csrf']],
+        '/api/staff/{id}'          => [['App\Controllers\StaffController', 'destroy'],        ['auth', 'csrf']],
+        '/api/users/{id}'          => [['App\Controllers\UserController', 'destroy'],         ['auth', 'csrf']],
+        '/api/tags/{id}'           => [['App\Controllers\TagController', 'destroy'],          ['auth', 'csrf']],
+        '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'destroy'],      ['auth', 'csrf']],
+        '/api/services/{id}'       => [['App\Controllers\ServiceController', 'destroy'],      ['auth', 'csrf']],
     ],
 ];
 
@@ -138,9 +136,13 @@ if (isset($routes[$method][$uri])) {
     exit;
 }
 
-// Buscar ruta con parámetros
+// Buscar ruta dinámica
 if (isset($routes[$method])) {
     foreach ($routes[$method] as $routePath => [$handler, $middleware]) {
+        if (!str_contains($routePath, '{')) {
+            continue;
+        }
+
         $params = matchRoute($routePath, $uri);
         if ($params !== null) {
             handle(['handler' => $handler, 'middleware' => $middleware, 'params' => $params]);
@@ -150,9 +152,9 @@ if (isset($routes[$method])) {
 }
 
 // 404
-if (str_starts_with($uri, '/api/')) {
-    respNotFound('Endpoint no encontrado');
+if (isApiRequest()) {
+    respNotFound();
+} else {
+    http_response_code(404);
+    echo '<h1>404 - No encontrado</h1>';
 }
-
-http_response_code(404);
-echo '<h1>404 - No encontrado</h1>';

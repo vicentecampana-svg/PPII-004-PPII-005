@@ -52,6 +52,7 @@ class AuthController
                 'must_change_password' => (bool) $user['must_change_password'],
                 'role'                 => ['id' => $user['role_id'], 'name' => $user['role_name']],
             ],
+            'csrf_token' => csrfToken(),
         ]);
     }
 
@@ -77,6 +78,9 @@ class AuthController
             return;
         }
 
-        respSuccess(['user' => $full]);
+        respSuccess([
+            'user'       => $full,
+            'csrf_token' => csrfToken(),
+        ]);
     }
 }
