@@ -188,6 +188,22 @@ function mwGuest(): void
     }
 }
 
+function mwRole(string ...$roles): void
+{
+    mwAuth();
+    $user = authUser();
+    $userRole = $user['role_name'] ?? '';
+
+    if (!in_array($userRole, $roles, true)) {
+        if (isApiRequest()) {
+            respForbidden('Acceso denegado para el rol ' . ($userRole ?: 'desconocido'));
+        }
+        http_response_code(403);
+        echo '<h1>403 - Acceso denegado</h1>';
+        exit;
+    }
+}
+
 function mwForcePasswordChange(): void
 {
     if (authCheck() && authMustChangePassword()) {
