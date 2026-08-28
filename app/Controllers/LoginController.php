@@ -4,34 +4,33 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Repositories\SiteRepository;
+use App\Services\CaptchaService;
+use App\Services\FooterService;
+use App\Services\RateLimiterService;
 use App\Services\UserService;
 
-/**
- * Página pública de login (formulario HTML, sesión PHP).
- *
- * Es la contraparte "no-SPA" de AuthController::login(): el mockup en
- * TypeScript (lovable-project/src/routes/login.tsx) resuelve el login
- * contra Supabase Auth desde el cliente; aquí se resuelve en el servidor
- * con el mismo UserService que usa /api/auth/login, reutilizando la
- * sesión PHP y el CSRF ya definidos en helpers.php.
- *
- * El toggle "Crear cuenta" del mockup no tiene equivalente: el backend
- * no expone un registro público (POST /api/users requiere sesión de
- * admin), así que esta página solo cubre el login.
- */
 final class LoginController extends Controller
 {
     private UserService $userService;
+    private CaptchaService $captchaService;
+    private RateLimiterService $rateLimiter;
+    private FooterService $footerService;
 
-    public function __construct()
-    {
-        $this->userService = new UserService();
+    public function __construct(
+        ?UserService $userService = null,
+        ?CaptchaService $captchaService = null,
+        ?RateLimiterService $rateLimiter = null,
+        ?FooterService $footerService = null
+    ) {
+        $this->userService = $userService ?? new UserService();
+        $this->captchaService = $captchaService ?? new CaptchaService();
+        $this->rateLimiter = $rateLimiter ?? new RateLimiterService();
+        $this->footerService = $footerService ?? new FooterService();
     }
 
     public function show(): void
     {
-        $site = new SiteRepository();
+        $footer = $this->footerService->getAll();
 
         $this->render('login', [
             'pageTitle'       => 'Iniciar sesión — SFL ULS Lab',
@@ -39,8 +38,8 @@ final class LoginController extends Controller
             'csrfToken'       => csrfToken(),
             'errors'          => $_SESSION['_login_errors'] ?? [],
             'email'           => $_SESSION['_login_email'] ?? '',
-            'enlacesFooter'   => $site->enlacesFooter(),
-            'contacto'        => $site->contactoInfo(),
+            'enlacesFooter'   => $footer['links'],
+            'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
 
         unset($_SESSION['_login_errors'], $_SESSION['_login_email']);
@@ -50,14 +49,29 @@ final class LoginController extends Controller
     {
         $email = trim((string) ($_POST['email'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
+        $captcha = (string) ($_POST['captcha'] ?? '');
+        $ip = $this->rateLimiter->getClientIp();
 
-        $errors = $this->validate($email, $password);
+        $errors = $this->validateInput($email, $password, $captcha);
+
+        // 1. Validar CAPTCHA antes de cualquier consulta a base de datos o contraseña
+        if (!$errors && !$this->captchaService->validate($captcha)) {
+            $errors['captcha'] = 'El código de seguridad (CAPTCHA) es incorrecto o ha expirado.';
+        }
+
+        // 2. Verificar bloqueo por límite de intentos
+        if (!$errors && $this->rateLimiter->isBlocked($ip, $email)) {
+            $errors['general'] = 'Demasiados intentos fallidos. Su cuenta o dirección IP ha sido bloqueada temporalmente por 15 minutos.';
+        }
+
         $user = null;
 
+        // 3. Comprobar credenciales solo si pasó CAPTCHA y no está bloqueado
         if (!$errors) {
             $user = $this->userService->getByEmail($email);
 
-            if (!$user || !password_verify($password, $user['password'])) {
+            if (!$user || !password_verify($password, (string) ($user['password'] ?? ''))) {
+                $this->rateLimiter->recordFailedAttempt($ip, $email);
                 $errors['general'] = 'Correo o contraseña incorrectos.';
             } elseif (!$user['active']) {
                 $errors['general'] = 'La cuenta está desactivada.';
@@ -71,6 +85,9 @@ final class LoginController extends Controller
             exit;
         }
 
+        // Login exitoso: limpiar intentos fallidos y crear sesión
+        $this->rateLimiter->recordSuccess($ip, $email);
+
         authLogin(
             (int) $user['id'],
             $user['username'],
@@ -83,14 +100,17 @@ final class LoginController extends Controller
         exit;
     }
 
-    private function validate(string $email, string $password): array
+    private function validateInput(string $email, string $password, string $captcha): array
     {
         $errors = [];
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Ingresa un correo válido.';
         }
-        if (strlen($password) < 6) {
-            $errors['password'] = 'La contraseña debe tener al menos 6 caracteres.';
+        if ($password === '') {
+            $errors['password'] = 'La contraseña es obligatoria.';
+        }
+        if ($captcha === '') {
+            $errors['captcha'] = 'Ingresa el código de seguridad.';
         }
         return $errors;
     }
