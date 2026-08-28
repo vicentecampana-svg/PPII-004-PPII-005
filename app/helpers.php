@@ -55,9 +55,16 @@ function dbInsert(string $table, array $data): int
 
 function dbUpdate(string $table, array $data, string $where, array $whereParams = []): int
 {
-    $set = implode(', ', array_map(fn($col) => "{$col} = ?", array_keys($data)));
+    $params = [];
+    $setParts = [];
+    foreach ($data as $col => $val) {
+        $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
+        $setParts[] = "{$col} = :{$placeholder}";
+        $params[$placeholder] = $val;
+    }
+    $set = implode(', ', $setParts);
     $sql = "UPDATE {$table} SET {$set} WHERE {$where}";
-    return dbQuery($sql, array_merge(array_values($data), $whereParams))->rowCount();
+    return dbQuery($sql, array_merge($params, $whereParams))->rowCount();
 }
 
 function dbDelete(string $table, string $where, array $params = []): int
