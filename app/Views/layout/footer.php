@@ -29,11 +29,11 @@ foreach ($enlacesFooter as $enlace) {
           </ul>
         </div>
 
-        <?php foreach ($grupos as $grupo => $enlaces): ?>
+        <?php foreach ($grupos as $grupo => $enlaces) : ?>
           <div class="footer-group">
             <p class="footer-group-title"><?= htmlspecialchars($grupo, ENT_QUOTES, 'UTF-8') ?></p>
             <ul>
-              <?php foreach ($enlaces as $enlace): ?>
+              <?php foreach ($enlaces as $enlace) : ?>
                 <li><a href="<?= htmlspecialchars($enlace['url'], ENT_QUOTES, 'UTF-8') ?>"<?= $enlace['url'] === $currentPath ? ' class="active"' : '' ?>><?= htmlspecialchars($enlace['etiqueta'], ENT_QUOTES, 'UTF-8') ?></a></li>
               <?php endforeach; ?>
             </ul>

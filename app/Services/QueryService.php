@@ -10,9 +10,9 @@ class QueryService
 {
     private QueryRepository $repo;
 
-    public function __construct()
+    public function __construct(?QueryRepository $repo = null)
     {
-        $this->repo = new QueryRepository();
+        $this->repo = $repo ?? new QueryRepository();
     }
 
     public function getAll(int $page, int $perPage): array

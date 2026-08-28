@@ -29,7 +29,7 @@ use App\Services\Media;
   <div class="container">
     <h2 class="section-title">Proyectos de SFL</h2>
     <div class="grid grid-proyectos">
-      <?php foreach ($proyectos as $p): ?>
+      <?php foreach ($proyectos as $p) : ?>
         <article class="card">
           <img src="<?= htmlspecialchars(Media::url($p['imagen_url'], 'proyecto'), ENT_QUOTES, 'UTF-8') ?>"
                alt="<?= htmlspecialchars($p['titulo'], ENT_QUOTES, 'UTF-8') ?>"
@@ -54,7 +54,7 @@ use App\Services\Media;
       <h2 class="section-title">Conoce al Staff</h2>
     </div>
     <div class="grid grid-staff">
-      <?php foreach ($staff as $m): ?>
+      <?php foreach ($staff as $m) : ?>
         <article class="staff-card">
           <h3><?= htmlspecialchars($m['nombre'], ENT_QUOTES, 'UTF-8') ?></h3>
           <img src="<?= htmlspecialchars(Media::url($m['imagen_url'], 'staff'), ENT_QUOTES, 'UTF-8') ?>"
@@ -78,7 +78,7 @@ use App\Services\Media;
       <a href="#noticias" class="btn btn-destructive btn-sm">Ver más</a>
     </div>
     <div class="grid grid-noticias">
-      <?php foreach ($noticias as $n): ?>
+      <?php foreach ($noticias as $n) : ?>
         <article class="card">
           <img src="<?= htmlspecialchars(Media::url($n['imagen_url'], 'noticia'), ENT_QUOTES, 'UTF-8') ?>"
                alt="<?= htmlspecialchars($n['titulo'], ENT_QUOTES, 'UTF-8') ?>"
