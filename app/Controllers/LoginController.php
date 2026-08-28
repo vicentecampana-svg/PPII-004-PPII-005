@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Repositories\SiteRepository;
+use App\Services\FooterService;
 use App\Services\UserService;
 
 /**
@@ -23,15 +23,19 @@ use App\Services\UserService;
 final class LoginController extends Controller
 {
     private UserService $userService;
+    private FooterService $footerService;
 
-    public function __construct()
-    {
-        $this->userService = new UserService();
+    public function __construct(
+        ?UserService $userService = null,
+        ?FooterService $footerService = null
+    ) {
+        $this->userService = $userService ?? new UserService();
+        $this->footerService = $footerService ?? new FooterService();
     }
 
     public function show(): void
     {
-        $site = new SiteRepository();
+        $footer = $this->footerService->getAll();
 
         $this->render('login', [
             'pageTitle'       => 'Iniciar sesión — SFL ULS Lab',
@@ -39,8 +43,8 @@ final class LoginController extends Controller
             'csrfToken'       => csrfToken(),
             'errors'          => $_SESSION['_login_errors'] ?? [],
             'email'           => $_SESSION['_login_email'] ?? '',
-            'enlacesFooter'   => $site->enlacesFooter(),
-            'contacto'        => $site->contactoInfo(),
+            'enlacesFooter'   => $footer['links'] ?? [],
+            'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
 
         unset($_SESSION['_login_errors'], $_SESSION['_login_email']);
