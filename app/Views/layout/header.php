@@ -47,7 +47,7 @@ $navLinks = [
 
         <div class="header-actions">
           <span class="lang-badge">ES</span>
-          <a href="#" class="login-link">Iniciar sesión</a>
+          <a href="/login" class="login-link">Iniciar sesión</a>
         </div>
       </div>
 
@@ -61,7 +61,7 @@ $navLinks = [
         <?php foreach ($navLinks as $link) : ?>
           <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
-        <li><a href="#">Iniciar sesión</a></li>
+        <li><a href="/login">Iniciar sesión</a></li>
       </ul>
     </nav>
   </header>

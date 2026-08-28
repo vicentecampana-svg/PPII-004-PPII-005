@@ -4,52 +4,42 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Repositories\ProyectoRepository;
-use App\Repositories\SiteRepository;
-use App\Services\Database;
-use PDOException;
+use App\Services\FooterService;
+use App\Services\NewsService;
+use App\Services\ProjectService;
+use App\Services\StaffService;
 
 /**
  * Página de inicio: presentación del laboratorio, proyectos destacados,
  * staff y noticias recientes.
  *
- * Todas las secciones intentan leer desde PostgreSQL primero; si las
- * tablas todavía no existen (base de datos recién creada) o la conexión
- * no está disponible, se usa contenido de respaldo para que la página
- * nunca se vea vacía o rota.
+ * Los datos vienen de los mismos Services que usa la API (Backend): las
+ * páginas públicas se comportan como un visitante anónimo del API
+ * (sin sesión ⇒ solo se listan proyectos/noticias activos y publicados).
+ * Solo la sección "Sobre nosotros" tiene contenido de respaldo hardcodeado
+ * (si `contenido_sitio` aún no tiene una fila 'home'); las demás secciones
+ * simplemente no muestran tarjetas si la tabla está vacía.
  */
 final class HomeController extends Controller
 {
     public function index(): void
     {
+        $footer = (new FooterService())->getAll();
+
         $this->render('home', [
-            'contenido' => $this->fetchContenido(),
-            'proyectos' => $this->fetchProyectos(),
-            'staff' => $this->fetchStaff(),
-            'noticias' => $this->fetchNoticias(),
-            'enlacesFooter' => (new SiteRepository())->enlacesFooter(),
-            'contacto' => (new SiteRepository())->contactoInfo(),
+            'contenido' => $this->contenido($footer['contenido']),
+            'proyectos' => $this->proyectos(),
+            'staff' => $this->staff(),
+            'noticias' => $this->noticias(),
+            'enlacesFooter' => $footer['links'],
+            'contacto' => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
     }
 
-    private function fetchContenido(): array
+    private function contenido(?array $row): array
     {
-        $pdo = Database::connect();
-
-        if ($pdo !== null) {
-            try {
-                $stmt = $pdo->prepare(
-                    'SELECT sobre_titulo, sobre_texto, mision_titulo, mision_texto
-                     FROM contenido_sitio WHERE clave = :clave LIMIT 1'
-                );
-                $stmt->execute(['clave' => 'home']);
-                $row = $stmt->fetch();
-                if ($row !== false) {
-                    return $row;
-                }
-            } catch (PDOException) {
-                // Tabla aún no existe o falló la consulta: usar respaldo.
-            }
+        if ($row !== null) {
+            return $row;
         }
 
         return [
@@ -66,103 +56,45 @@ final class HomeController extends Controller
         ];
     }
 
-    private function fetchProyectos(): array
+    /** Los primeros 4 proyectos activos, para el homepage. */
+    private function proyectos(): array
     {
-        return (new ProyectoRepository())->findFeatured(4);
-    }
-
-    private function fetchStaff(): array
-    {
-        $pdo = Database::connect();
-
-        if ($pdo !== null) {
-            try {
-                $stmt = $pdo->query(
-                    'SELECT id, nombre, cargo, descripcion, imagen_url FROM staff
-                     ORDER BY orden ASC, created_at ASC LIMIT 4'
-                );
-                $rows = $stmt->fetchAll();
-                if ($rows !== false && count($rows) > 0) {
-                    return $rows;
-                }
-            } catch (PDOException) {
-                // Tabla aún no existe o falló la consulta: usar respaldo.
-            }
+        $items = (new ProjectService())->getAll(1, 4, false)['items'];
+        if ($items === []) {
+            return [];
         }
 
-        return [
-            [
-                'id' => 'fernando-flores',
-                'nombre' => 'Fernando Flores Cortijo',
-                'cargo' => 'Project Manager Officer',
-                'descripcion' => 'Coordina la planificación de los proyectos del laboratorio y el vínculo con las contrapartes.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'luis-hernandez',
-                'nombre' => 'Luis Hernández Comunez',
-                'cargo' => 'Analista de Riesgos',
-                'descripcion' => 'Responsable del análisis de riesgos, calidad y aseguramiento de los entregables de cada proyecto.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'bernardo-llanos',
-                'nombre' => 'Bernardo Llanos',
-                'cargo' => 'Arquitecto de Software',
-                'descripcion' => 'Define la arquitectura técnica de las soluciones y acompaña al equipo de desarrollo.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'camila-rojas',
-                'nombre' => 'Camila Rojas',
-                'cargo' => 'Diseñadora UX/UI',
-                'descripcion' => 'Diseña la experiencia de uso y los sistemas visuales de los productos digitales.',
-                'imagen_url' => null,
-            ],
-        ];
+        return array_map(static fn(array $p): array => [
+            'titulo' => $p['name'],
+            'descripcion' => $p['description'] ?? '',
+            'imagen_url' => $p['image'] ?? null,
+        ], $items);
     }
 
-    private function fetchNoticias(): array
+    /** Los primeros 4 miembros del staff. */
+    private function staff(): array
     {
-        $pdo = Database::connect();
+        $items = (new StaffService())->getAll(1, 4)['items'];
 
-        if ($pdo !== null) {
-            try {
-                $stmt = $pdo->query(
-                    'SELECT id, slug, titulo, resumen, imagen_url FROM noticias
-                     WHERE publicada = true ORDER BY created_at DESC LIMIT 3'
-                );
-                $rows = $stmt->fetchAll();
-                if ($rows !== false && count($rows) > 0) {
-                    return $rows;
-                }
-            } catch (PDOException) {
-                // Tabla aún no existe o falló la consulta: usar respaldo.
-            }
-        }
+        return array_map(static fn(array $m): array => [
+            'nombre' => $m['name'],
+            'cargo' => $m['position'] ?? '',
+            'descripcion' => $m['description'] ?? '',
+            'imagen_url' => $m['photo'] ?? null,
+        ], $items);
+    }
 
-        return [
-            [
-                'id' => 'nueva-ia-escaneo',
-                'slug' => 'nueva-ia-escaneo',
-                'titulo' => 'Estudiantes crean nueva IA de escaneo de animales',
-                'resumen' => 'Un equipo del laboratorio presentó un modelo de visión computacional para el reconocimiento de fauna local.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'convenio-regional',
-                'slug' => 'convenio-regional',
-                'titulo' => 'Nuevo convenio de vinculación regional',
-                'resumen' => 'La universidad firmó un acuerdo para desarrollar plataformas digitales junto a municipios de la región.',
-                'imagen_url' => null,
-            ],
-            [
-                'id' => 'practicas-profesionales',
-                'slug' => 'practicas-profesionales',
-                'titulo' => 'Se abren postulaciones a prácticas profesionales',
-                'resumen' => 'El laboratorio ofrece cupos de práctica en desarrollo de software, datos y diseño de experiencia.',
-                'imagen_url' => null,
-            ],
-        ];
+    /** Las últimas 3 noticias publicadas. */
+    private function noticias(): array
+    {
+        $items = (new NewsService())->getPublished(1, 3)['items'];
+
+        return array_map(static fn(array $n): array => [
+            'titulo' => $n['title'],
+            // La tabla `news` no tiene un campo de resumen dedicado: se usa
+            // el subtítulo, y si no hay, se recorta el contenido.
+            'resumen' => $n['subtitle'] ?: mb_strimwidth(strip_tags($n['content'] ?? ''), 0, 160, '…'),
+            'imagen_url' => $n['image'] ?? null,
+        ], $items);
     }
 }
