@@ -77,6 +77,8 @@ $routes = [
         '/'                        => [['App\Controllers\HomeController', 'index'],          []],
         '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
         '/login'                   => [['App\Controllers\LoginController', 'show'],          ['guest']],
+        '/logout'                  => [['App\Controllers\LogoutController', 'logout'],        []],
+        '/admin'                   => [['App\Controllers\AdminController', 'index'],          ['auth', 'force_password_change']],
         '/api/auth/me'             => [['App\Controllers\AuthController', 'me'],             ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'index'],           []],
         '/api/news/{id}'           => [['App\Controllers\NewsController', 'show'],            []],
@@ -97,6 +99,7 @@ $routes = [
     ],
     'POST' => [
         '/login'                   => [['App\Controllers\LoginController', 'submit'],        ['guest', 'csrf']],
+        '/logout'                  => [['App\Controllers\LogoutController', 'logout'],        []],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
         '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth']],
