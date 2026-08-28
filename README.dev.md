@@ -24,6 +24,12 @@ cd Proyecto_Tech_Hub_ULS
 Copy-Item .env.example .env
 ```
 
+O en Linux y macOS:
+
+```bash
+cp .env.example .env
+```
+
 Edítalo con los valores que quieras (usuario, password, puertos, etc). El
 `docker-compose.dev.yml` se encarga de pasarle esos mismos valores a PHP, así
 que no hay que tocar nada más.
@@ -61,6 +67,8 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ---
 ## 5. Cargar el schema en la base de datos
 
+### En Windows (PowerShell)
+
 ```powershell
 Get-Content .env | ForEach-Object {
     if ($_ -match '^\s*([^#=][^=]*)=(.*)$') {
@@ -70,6 +78,13 @@ Get-Content .env | ForEach-Object {
 
 Get-Content config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres `
   psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB
+```
+
+### En Linux y macOS (Bash/Zsh)
+
+```bash
+export $(grep -v '^#' .env | xargs)
+cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 
 Esto lee tu `.env` y usa esos valores, no importa qué usuario/base hayas
