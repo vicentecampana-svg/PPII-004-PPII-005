@@ -70,10 +70,18 @@ class StaffService
         }
 
         $fields = [];
-        if (array_key_exists('name', $data))        $fields['name'] = $data['name'];
-        if (array_key_exists('position', $data))     $fields['position'] = $data['position'] ?? null;
-        if (array_key_exists('photo', $data))        $fields['photo'] = $data['photo'] ?? null;
-        if (array_key_exists('description', $data))  $fields['description'] = $data['description'] ?? null;
+        if (array_key_exists('name', $data)) {
+            $fields['name'] = $data['name'];
+        }
+        if (array_key_exists('position', $data)) {
+            $fields['position'] = $data['position'] ?? null;
+        }
+        if (array_key_exists('photo', $data)) {
+            $fields['photo'] = $data['photo'] ?? null;
+        }
+        if (array_key_exists('description', $data)) {
+            $fields['description'] = $data['description'] ?? null;
+        }
 
         if ($fields) {
             $this->repo->update($id, $fields);

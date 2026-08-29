@@ -75,11 +75,21 @@ class ProjectService
         }
 
         $fields = [];
-        if (array_key_exists('name', $data))        $fields['name'] = $data['name'];
-        if (array_key_exists('description', $data))  $fields['description'] = $data['description'] ?? null;
-        if (array_key_exists('image', $data))        $fields['image'] = $data['image'] ?? null;
-        if (array_key_exists('link', $data))         $fields['link'] = $data['link'] ?? null;
-        if (array_key_exists('active', $data))       $fields['active'] = (bool) $data['active'];
+        if (array_key_exists('name', $data)) {
+            $fields['name'] = $data['name'];
+        }
+        if (array_key_exists('description', $data)) {
+            $fields['description'] = $data['description'] ?? null;
+        }
+        if (array_key_exists('image', $data)) {
+            $fields['image'] = $data['image'] ?? null;
+        }
+        if (array_key_exists('link', $data)) {
+            $fields['link'] = $data['link'] ?? null;
+        }
+        if (array_key_exists('active', $data)) {
+            $fields['active'] = (bool) $data['active'];
+        }
 
         if ($fields) {
             $this->repo->update($id, $fields);

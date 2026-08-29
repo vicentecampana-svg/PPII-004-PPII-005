@@ -3,6 +3,25 @@
 declare(strict_types=1);
 
 // ══════════════════════════════════════════════
+//  CONFIGURATION
+// ══════════════════════════════════════════════
+
+function config(?string $key = null, mixed $default = null): mixed
+{
+    static $config = null;
+
+    if ($config === null) {
+        $config = require dirname(__DIR__) . '/config/app.php';
+    }
+
+    if ($key === null) {
+        return $config;
+    }
+
+    return $config[$key] ?? $default;
+}
+
+// ══════════════════════════════════════════════
 //  DATABASE — Conexión PDO singleton a PostgreSQL
 // ══════════════════════════════════════════════
 
@@ -11,15 +30,15 @@ function db(): PDO
     static $pdo = null;
 
     if ($pdo === null) {
-        $config = require dirname(__DIR__) . '/config/app.php';
-        $db = $config['db'];
+        $db = config('db');
 
-        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s', $db['host'], $db['port'], $db['database']);
+        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s;connect_timeout=2', $db['host'], $db['port'], $db['database']);
 
         $pdo = new PDO($dsn, $db['username'], $db['password'], [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_TIMEOUT            => 2,
         ]);
     }
 
@@ -73,12 +92,72 @@ function dbDelete(string $table, string $where, array $params = []): int
 }
 
 // ══════════════════════════════════════════════
+//  SECURITY & HTTPS
+// ══════════════════════════════════════════════
+
+function isHttps(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+}
+
+function sendSecurityHeaders(): void
+{
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+
+    if (isHttps()) {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
+}
+
+function handleCors(): void
+{
+    $corsConfig = config('cors', []);
+    $allowedOrigins = $corsConfig['allowed_origins'] ?? [];
+    $allowCredentials = $corsConfig['allow_credentials'] ?? true;
+
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+    if ($origin !== '' && in_array($origin, $allowedOrigins, true)) {
+        header("Access-Control-Allow-Origin: {$origin}");
+        if ($allowCredentials) {
+            header('Access-Control-Allow-Credentials: true');
+        }
+        header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token, X-Requested-With');
+        header('Access-Control-Max-Age: 86400');
+        header('Vary: Origin');
+    }
+
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+        http_response_code(204);
+        exit;
+    }
+}
+
+// ══════════════════════════════════════════════
 //  SESSION / AUTH
 // ══════════════════════════════════════════════
 
 function sessionStart(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
+        $secure = isHttps();
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path'     => '/',
+            'domain'   => '',
+            'secure'   => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
         session_start();
     }
 }
@@ -107,6 +186,7 @@ function authUser(): ?array
 function authLogin(int $userId, string $username, int $roleId, string $roleName, bool $mustChangePassword = false): void
 {
     sessionStart();
+    session_regenerate_id(true);
     $_SESSION['user_id'] = $userId;
     $_SESSION['username'] = $username;
     $_SESSION['role_id'] = $roleId;
@@ -117,6 +197,19 @@ function authLogin(int $userId, string $username, int $roleId, string $roleName,
 function authLogout(): void
 {
     sessionStart();
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params['path'],
+            $params['domain'],
+            $params['secure'],
+            $params['httponly']
+        );
+    }
     session_destroy();
     session_start();
     session_regenerate_id(true);
@@ -153,7 +246,7 @@ function csrfToken(): string
 
 function isApiRequest(): bool
 {
-    $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
     return str_starts_with($uri, '/api/');
 }
 
@@ -163,9 +256,9 @@ function mwCsrf(): void
     if (isApiRequest()) {
         return;
     }
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-        if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        if (!hash_equals($_SESSION['csrf_token'] ?? '', (string) $token)) {
             http_response_code(403);
             echo 'Token CSRF inválido.';
             exit;
@@ -195,10 +288,26 @@ function mwGuest(): void
     }
 }
 
+function mwRole(string ...$roles): void
+{
+    mwAuth();
+    $user = authUser();
+    $userRole = $user['role_name'] ?? '';
+
+    if (!in_array($userRole, $roles, true)) {
+        if (isApiRequest()) {
+            respForbidden('Acceso denegado para el rol ' . ($userRole ?: 'desconocido'));
+        }
+        http_response_code(403);
+        echo '<h1>403 - Acceso denegado</h1>';
+        exit;
+    }
+}
+
 function mwForcePasswordChange(): void
 {
     if (authCheck() && authMustChangePassword()) {
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
         $uri = rtrim($uri, '/') ?: '/';
         if ($uri !== '/cambiar-password' && $uri !== '/logout') {
             if (isApiRequest()) {
@@ -218,9 +327,6 @@ function respJson(mixed $data, int $statusCode = 200): never
 {
     http_response_code($statusCode);
     header('Content-Type: application/json; charset=utf-8');
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token');
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
@@ -238,9 +344,6 @@ function respCreated(mixed $data = null): never
 function respNoContent(): never
 {
     http_response_code(204);
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token');
     exit;
 }
 

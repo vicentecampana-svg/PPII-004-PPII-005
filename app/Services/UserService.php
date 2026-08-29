@@ -82,11 +82,21 @@ class UserService
         }
 
         $fields = [];
-        if (array_key_exists('username', $data))             $fields['username'] = $data['username'];
-        if (array_key_exists('email', $data))                $fields['email'] = $data['email'];
-        if (array_key_exists('role_id', $data))              $fields['role_id'] = (int) $data['role_id'];
-        if (array_key_exists('active', $data))               $fields['active'] = (bool) $data['active'];
-        if (array_key_exists('must_change_password', $data)) $fields['must_change_password'] = (bool) $data['must_change_password'];
+        if (array_key_exists('username', $data)) {
+            $fields['username'] = $data['username'];
+        }
+        if (array_key_exists('email', $data)) {
+            $fields['email'] = $data['email'];
+        }
+        if (array_key_exists('role_id', $data)) {
+            $fields['role_id'] = (int) $data['role_id'];
+        }
+        if (array_key_exists('active', $data)) {
+            $fields['active'] = (bool) $data['active'];
+        }
+        if (array_key_exists('must_change_password', $data)) {
+            $fields['must_change_password'] = (bool) $data['must_change_password'];
+        }
 
         if (isset($data['password']) && $data['password'] !== '') {
             $fields['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
