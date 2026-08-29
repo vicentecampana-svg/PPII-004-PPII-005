@@ -14,12 +14,13 @@ function db(): PDO
         $config = require dirname(__DIR__) . '/config/app.php';
         $db = $config['db'];
 
-        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s', $db['host'], $db['port'], $db['database']);
+        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s;connect_timeout=2', $db['host'], $db['port'], $db['database']);
 
         $pdo = new PDO($dsn, $db['username'], $db['password'], [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_TIMEOUT            => 2,
         ]);
     }
 
