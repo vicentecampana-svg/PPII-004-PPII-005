@@ -74,12 +74,12 @@ function dbInsert(string $table, array $data): int
 
 function dbUpdate(string $table, array $data, string $where, array $whereParams = []): int
 {
-    $setParts = [];
     $params = [];
+    $setParts = [];
     foreach ($data as $col => $val) {
-        $paramKey = 'set_' . $col;
-        $setParts[] = "{$col} = :{$paramKey}";
-        $params[$paramKey] = $val;
+        $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
+        $setParts[] = "{$col} = :{$placeholder}";
+        $params[$placeholder] = $val;
     }
     $set = implode(', ', $setParts);
     $sql = "UPDATE {$table} SET {$set} WHERE {$where}";

@@ -9,10 +9,12 @@ use App\Repositories\UserRepository;
 class UserService
 {
     private UserRepository $repo;
+    private AuditService $audit;
 
-    public function __construct(?UserRepository $repo = null)
+    public function __construct(?UserRepository $repo = null, ?AuditService $audit = null)
     {
         $this->repo = $repo ?? new UserRepository();
+        $this->audit = $audit ?? new AuditService();
     }
 
     public function getAll(int $page, int $perPage): array
@@ -62,6 +64,8 @@ class UserService
             'must_change_password' => $data['must_change_password'] ?? false,
         ]);
 
+        $this->audit->log(null, 'crear', 'user', $id, 'Usuario creado: ' . $data['username']);
+
         return $this->repo->findById($id);
     }
 
@@ -102,6 +106,8 @@ class UserService
             $this->repo->update($id, $fields);
         }
 
+        $this->audit->log(null, 'actualizar', 'user', $id, 'Usuario actualizado: ' . ($data['username'] ?? $existing['username']));
+
         return $this->repo->findById($id);
     }
 
@@ -113,6 +119,8 @@ class UserService
         }
 
         $this->repo->delete($id);
+
+        $this->audit->log(null, 'eliminar', 'user', $id, 'Usuario eliminado: ' . ($existing['username'] ?? ''));
     }
 
     public function getRoles(): array

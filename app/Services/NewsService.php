@@ -9,10 +9,12 @@ use App\Repositories\NewsRepository;
 class NewsService
 {
     private NewsRepository $repo;
+    private AuditService $audit;
 
-    public function __construct(?NewsRepository $repo = null)
+    public function __construct(?NewsRepository $repo = null, ?AuditService $audit = null)
     {
         $this->repo = $repo ?? new NewsRepository();
+        $this->audit = $audit ?? new AuditService();
     }
 
     public function getAll(int $page, int $perPage): array
@@ -80,6 +82,8 @@ class NewsService
             'tag_id'     => $data['tag_id'] ?? null,
         ]);
 
+        $this->audit->log($authorId, 'crear', 'news', $id, 'Noticia creada: ' . $data['title']);
+
         return $this->repo->findById($id);
     }
 
@@ -114,6 +118,8 @@ class NewsService
 
         $this->repo->update($id, $fields);
 
+        $this->audit->log(null, 'actualizar', 'news', $id, 'Noticia actualizada: ' . ($data['title'] ?? $existing['title']));
+
         return $this->repo->findById($id);
     }
 
@@ -143,6 +149,9 @@ class NewsService
 
         $this->repo->update($id, $fields);
 
+        $action = $status === 'publicada' ? 'aprobar' : ($status === 'archivada' ? 'archivar' : 'cambiar_estado');
+        $this->audit->log(null, $action, 'news', $id, "Estado cambiado a {$status}");
+
         return $this->repo->findById($id);
     }
 
@@ -154,6 +163,8 @@ class NewsService
         }
 
         $this->repo->delete($id);
+
+        $this->audit->log(null, 'eliminar', 'news', $id, 'Noticia eliminada: ' . ($existing['title'] ?? ''));
     }
 
     private function validateCreate(array $data): array
