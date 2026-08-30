@@ -160,6 +160,10 @@ function sessionStart(): void
         ini_set('session.use_only_cookies', '1');
         session_start();
     }
+
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
 }
 
 function authCheck(): bool
@@ -228,8 +232,8 @@ function authMustChangePassword(): bool
 }
 
 /**
- * Token CSRF para formularios HTML (no-API). Se genera una vez por sesión
- * y mwCsrf() lo valida contra $_POST['csrf_token'] en cada POST.
+ * Token CSRF para formularios HTML y API. Se genera por sesión
+ * y mwCsrf() lo valida en cada petición mutante (POST, PUT, PATCH, DELETE).
  */
 function csrfToken(): string
 {
@@ -253,16 +257,30 @@ function isApiRequest(): bool
 function mwCsrf(): void
 {
     sessionStart();
-    if (isApiRequest()) {
+
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $mutatingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+    if (!in_array($method, $mutatingMethods, true)) {
         return;
     }
-    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-        if (!hash_equals($_SESSION['csrf_token'] ?? '', (string) $token)) {
-            http_response_code(403);
-            echo 'Token CSRF inválido.';
-            exit;
+
+    // Leer token de cabecera HTTP (X-CSRF-Token), $_POST o JSON input
+    $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? '';
+    if ($token === '' && isApiRequest()) {
+        $jsonInput = getJsonInput();
+        $token = $jsonInput['csrf_token'] ?? '';
+    }
+
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+
+    if ($sessionToken === '' || !hash_equals($sessionToken, (string) $token)) {
+        if (isApiRequest()) {
+            respForbidden('Token CSRF inválido o ausente.');
         }
+        http_response_code(403);
+        echo 'Token CSRF inválido o ausente.';
+        exit;
     }
 }
 
