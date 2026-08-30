@@ -113,8 +113,15 @@ final class AdminController extends Controller
         }
 
         $footer = ['links' => [], 'info' => ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl']];
+        $editingFooterLink = null;
         try {
             $footer = $this->footerService->getAll();
+            if ($tab === 'footer' && $roleNormalized === 'superadmin') {
+                $editId = (int) ($_GET['edit_id'] ?? 0);
+                if ($editId > 0) {
+                    $editingFooterLink = $this->footerService->getLinkById($editId);
+                }
+            }
         } catch (\Throwable) {
             // Degradar graciosamente
         }
@@ -124,22 +131,25 @@ final class AdminController extends Controller
         unset($_SESSION['_flash_success'], $_SESSION['_flash_error']);
 
         $this->render('admin', [
-            'pageTitle'       => 'Panel de Administración — SFL ULS Lab',
-            'metaDescription' => 'Panel de administración y gestión de contenidos del Software Factory Lab.',
-            'extraCss'        => ['/assets/css/admin.css'],
-            'user'            => $user,
-            'activeTab'       => $tab,
-            'projects'        => $projects,
-            'editingProject'  => $editingProject,
-            'staffList'       => $staffList,
-            'editingStaff'    => $editingStaff,
-            'newsList'        => $newsList,
-            'editingNews'     => $editingNews,
-            'siteContent'     => $footer['contenido'] ?? null,
-            'flashSuccess'    => $flashSuccess,
-            'flashError'      => $flashError,
-            'enlacesFooter'   => $footer['links'] ?? [],
-            'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
+            'pageTitle'          => 'Panel de Administración — SFL ULS Lab',
+            'metaDescription'    => 'Panel de administración y gestión de contenidos del Software Factory Lab.',
+            'extraCss'           => ['/assets/css/admin.css'],
+            'user'               => $user,
+            'activeTab'          => $tab,
+            'projects'           => $projects,
+            'editingProject'     => $editingProject,
+            'staffList'          => $staffList,
+            'editingStaff'       => $editingStaff,
+            'newsList'           => $newsList,
+            'editingNews'        => $editingNews,
+            'siteContent'        => $footer['contenido'] ?? null,
+            'footerLinks'        => $footer['links'] ?? [],
+            'editingFooterLink'  => $editingFooterLink,
+            'footerInfo'         => $footer['info'] ?? null,
+            'flashSuccess'       => $flashSuccess,
+            'flashError'         => $flashError,
+            'enlacesFooter'      => $footer['links'] ?? [],
+            'contacto'           => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
     }
 
@@ -456,6 +466,108 @@ final class AdminController extends Controller
 
         header('Location: /admin?tab=sobre-nosotros');
         exit;
+    }
+
+    /**
+     * Crear o actualizar un enlace del footer.
+     */
+    public function saveFooterLink(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $grupo = trim((string) ($_POST['grupo'] ?? 'Sitio'));
+        $etiqueta = trim((string) ($_POST['etiqueta'] ?? ''));
+        $url = trim((string) ($_POST['url'] ?? '/'));
+        $orden = (int) ($_POST['orden'] ?? 0);
+
+        if ($etiqueta === '' || $url === '') {
+            $_SESSION['_flash_error'] = 'La etiqueta y URL del enlace son obligatorios.';
+            header('Location: /admin?tab=footer' . ($id > 0 ? '&edit_id=' . $id : ''));
+            exit;
+        }
+
+        try {
+            $data = [
+                'grupo'    => $grupo !== '' ? $grupo : 'Sitio',
+                'etiqueta' => $etiqueta,
+                'url'      => $url,
+                'orden'    => $orden,
+            ];
+
+            if ($id > 0) {
+                $this->footerService->updateLink($id, $data);
+                $_SESSION['_flash_success'] = 'Enlace del footer actualizado exitosamente.';
+            } else {
+                $this->footerService->createLink($data);
+                $_SESSION['_flash_success'] = 'Enlace del footer creado exitosamente.';
+            }
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al guardar el enlace: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=footer');
+        exit;
+    }
+
+    /**
+     * Eliminar un enlace del footer.
+     */
+    public function deleteFooterLink(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id > 0) {
+            try {
+                $this->footerService->deleteLink($id);
+                $_SESSION['_flash_success'] = 'Enlace del footer eliminado exitosamente.';
+            } catch (\Throwable $e) {
+                $_SESSION['_flash_error'] = 'Error al eliminar el enlace: ' . $e->getMessage();
+            }
+        }
+
+        header('Location: /admin?tab=footer');
+        exit;
+    }
+
+    /**
+     * Guardar enlaces a redes sociales del footer (edición de existentes).
+     */
+    public function saveFooterSocial(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $linkedin = trim((string) ($_POST['social_linkedin'] ?? ''));
+        $twitter = trim((string) ($_POST['social_twitter'] ?? ''));
+        $instagram = trim((string) ($_POST['social_instagram'] ?? ''));
+
+        try {
+            $data = [
+                'social_linkedin'  => $linkedin !== '' ? $linkedin : null,
+                'social_twitter'   => $twitter !== '' ? $twitter : null,
+                'social_instagram' => $instagram !== '' ? $instagram : null,
+            ];
+
+            $this->footerService->updateInfo($data);
+            $_SESSION['_flash_success'] = 'Redes sociales del footer actualizadas exitosamente.';
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al actualizar redes sociales: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=footer');
+        exit;
+    }
+
+    private function checkSuperAdminPermissions(): void
+    {
+        $user = authUser();
+        $role = strtolower((string) ($user['role_name'] ?? ''));
+        if ($role !== 'superadmin') {
+            http_response_code(403);
+            echo 'Acceso no autorizado. Se requiere rol SuperAdmin.';
+            exit;
+        }
     }
 
     private function checkAdminPermissions(): void
