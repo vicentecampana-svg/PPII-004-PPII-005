@@ -1060,8 +1060,43 @@ ALTER TABLE ONLY public.news_tag
 
 
 --
+-- Indices de Rendimiento (Performance Indexes)
+--
+
+-- Indices en Noticias (news): por estado y fecha, por fecha de publicacion, por autor, por editor y por titulo
+CREATE INDEX idx_news_status_published ON public.news USING btree (status_id, published_at DESC);
+CREATE INDEX idx_news_published_at ON public.news USING btree (published_at DESC);
+CREATE INDEX idx_news_author_created ON public.news USING btree (author_id, created_at DESC);
+CREATE INDEX idx_news_editor ON public.news USING btree (editor_id);
+CREATE INDEX idx_news_title ON public.news USING btree (title);
+
+-- Indices en Registro de Auditoria (audit_log): por usuario, por entidad y por fecha
+CREATE INDEX idx_audit_log_user_created ON public.audit_log USING btree (user_id, created_at DESC);
+CREATE INDEX idx_audit_log_entity ON public.audit_log USING btree (entity, entity_id);
+CREATE INDEX idx_audit_log_created_at ON public.audit_log USING btree (created_at DESC);
+
+-- Indices en Enlaces del Footer (enlaces_footer): por columna y orden
+CREATE INDEX idx_enlaces_footer_grupo_orden ON public.enlaces_footer USING btree (grupo, orden ASC);
+
+-- Indices en Relacion Noticias-Tags (news_tag)
+CREATE INDEX idx_news_tag_tag_id ON public.news_tag USING btree (tag_id);
+
+-- Indices en Usuarios (app_user)
+CREATE INDEX idx_app_user_role ON public.app_user USING btree (role_id);
+CREATE INDEX idx_app_user_active ON public.app_user USING btree (active);
+
+-- Indices en Proyectos y Servicios (project, service)
+CREATE INDEX idx_project_active ON public.project USING btree (active);
+CREATE INDEX idx_service_active ON public.service USING btree (active);
+
+-- Indices en Staff (staff_member)
+CREATE INDEX idx_staff_member_orden ON public.staff_member USING btree (orden ASC, id ASC);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 \unrestrict 7QUYGPQx6iLPUsV0sozO9TS0ZTuYLgWUJZTW2tkxIiS1j1K0zsMF7t8Z8iPmhXM
+
 
