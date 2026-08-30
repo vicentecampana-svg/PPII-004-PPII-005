@@ -26,6 +26,65 @@ class FooterService
         ];
     }
 
+    public function getLinkById(int $id): ?array
+    {
+        return $this->repo->findLinkById($id);
+    }
+
+    public function createLink(array $data): array
+    {
+        if (empty($data['etiqueta']) || trim($data['etiqueta']) === '') {
+            throw new \InvalidArgumentException('La etiqueta del enlace es obligatoria.');
+        }
+        if (empty($data['url']) || trim($data['url']) === '') {
+            throw new \InvalidArgumentException('La URL del enlace es obligatoria.');
+        }
+
+        $id = $this->repo->createLink([
+            'grupo'    => $data['grupo'] ?? 'Sitio',
+            'etiqueta' => trim($data['etiqueta']),
+            'url'      => trim($data['url']),
+            'orden'    => (int) ($data['orden'] ?? 0),
+        ]);
+
+        $this->audit->log(null, 'crear', 'enlaces_footer', $id, 'Enlace de footer creado: ' . $data['etiqueta']);
+
+        return $this->repo->findLinkById($id) ?? [];
+    }
+
+    public function updateLink(int $id, array $data): array
+    {
+        $existing = $this->repo->findLinkById($id);
+        if (!$existing) {
+            throw new \RuntimeException('Enlace del footer no encontrado.');
+        }
+
+        $fields = [];
+        if (array_key_exists('grupo', $data))    $fields['grupo'] = trim($data['grupo'] ?? 'Sitio');
+        if (array_key_exists('etiqueta', $data)) $fields['etiqueta'] = trim($data['etiqueta']);
+        if (array_key_exists('url', $data))      $fields['url'] = trim($data['url']);
+        if (array_key_exists('orden', $data))    $fields['orden'] = (int) ($data['orden'] ?? 0);
+
+        if ($fields) {
+            $this->repo->updateLink($id, $fields);
+        }
+
+        $this->audit->log(null, 'actualizar', 'enlaces_footer', $id, 'Enlace de footer actualizado: ' . ($data['etiqueta'] ?? $existing['etiqueta']));
+
+        return $this->repo->findLinkById($id) ?? [];
+    }
+
+    public function deleteLink(int $id): void
+    {
+        $existing = $this->repo->findLinkById($id);
+        if (!$existing) {
+            throw new \RuntimeException('Enlace del footer no encontrado.');
+        }
+
+        $this->repo->deleteLink($id);
+        $this->audit->log(null, 'eliminar', 'enlaces_footer', $id, 'Enlace de footer eliminado: ' . ($existing['etiqueta'] ?? ''));
+    }
+
     public function updateInfo(array $data): array
     {
         $existing = $this->repo->findInfo();

@@ -14,6 +14,30 @@ class FooterRepository
         );
     }
 
+    public function findLinkById(int $id): ?array
+    {
+        return dbFetchOne(
+            "SELECT id, grupo, etiqueta, url, orden
+             FROM enlaces_footer WHERE id = :id",
+            ['id' => $id]
+        );
+    }
+
+    public function createLink(array $data): int
+    {
+        return dbInsert('enlaces_footer', $data);
+    }
+
+    public function updateLink(int $id, array $data): int
+    {
+        return dbUpdate('enlaces_footer', $data, 'id = :id', ['id' => $id]);
+    }
+
+    public function deleteLink(int $id): int
+    {
+        return dbDelete('enlaces_footer', 'id = :id', ['id' => $id]);
+    }
+
     public function findInfo(): ?array
     {
         return dbFetchOne(
