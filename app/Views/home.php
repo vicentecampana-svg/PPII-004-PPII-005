@@ -73,7 +73,7 @@ declare(strict_types=1);
   <div class="container">
     <div class="section-rule section-rule-inline">
       <h2 class="section-title">Noticias</h2>
-      <a href="#noticias" class="btn btn-destructive btn-sm">Ver más</a>
+      <a href="/noticias" class="btn btn-destructive btn-sm">Ver más</a>
     </div>
     <div class="grid grid-noticias">
       <?php foreach ($noticias as $n) : ?>
@@ -84,7 +84,7 @@ declare(strict_types=1);
           <div class="card-body">
             <h3><?= htmlspecialchars($n['titulo'], ENT_QUOTES, 'UTF-8') ?></h3>
             <p><?= htmlspecialchars($n['resumen'], ENT_QUOTES, 'UTF-8') ?></p>
-            <a href="#noticias" class="read-more">Leer noticia</a>
+            <a href="/noticias/<?= (int) ($n['id'] ?? 1) ?>" class="read-more">Leer noticia</a>
           </div>
         </article>
       <?php endforeach; ?>

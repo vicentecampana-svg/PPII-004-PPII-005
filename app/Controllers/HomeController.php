@@ -119,6 +119,7 @@ final class HomeController extends Controller
         $items = (new NewsService())->getPublished(1, 3)['items'];
 
         return array_map(static fn(array $n): array => [
+            'id' => $n['id'],
             'titulo' => $n['title'],
             // La tabla `news` no tiene un campo de resumen dedicado: se usa
             // el subtítulo, y si no hay, se recorta el contenido.
