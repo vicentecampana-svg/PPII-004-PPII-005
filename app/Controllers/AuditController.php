@@ -31,7 +31,9 @@ class AuditController
 
     private function isSuperAdmin(): bool
     {
-        if (!authCheck()) return false;
+        if (!authCheck()) {
+            return false;
+        }
         return (authUser()['role_name'] ?? '') === 'superadmin';
     }
 }

@@ -12,7 +12,7 @@ final class LogoutController
     public function logout(): void
     {
         authLogout();
-        header('Location: /login');
+        header('Location: /');
         exit;
     }
 }

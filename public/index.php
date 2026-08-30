@@ -2,7 +2,16 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+// Autoloader PSR-4 para el namespace App\\ y helpers
+spl_autoload_register(static function (string $class): void {
+    if (str_starts_with($class, 'App\\')) {
+        $file = dirname(__DIR__) . '/app/' . str_replace('\\', '/', substr($class, 4)) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    }
+});
+require_once dirname(__DIR__) . '/app/helpers.php';
 
 sessionStart();
 
@@ -54,31 +63,27 @@ function matchRoute(string $routePath, string $uri): ?array
 }
 
 // ══════════════════════════════════════════════
-//  ROUTING
+//  ROUTING & SECURITY
 // ══════════════════════════════════════════════
 
-$method = $_SERVER['REQUEST_METHOD'];
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = rtrim($uri, '/') ?: '/';
+sendSecurityHeaders();
+handleCors();
 
-// CORS preflight
-if ($method === 'OPTIONS') {
-    http_response_code(204);
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token');
-    header('Access-Control-Max-Age: 86400');
-    exit;
-}
+$method = $_SERVER['REQUEST_METHOD'];
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+$uri = rtrim($uri, '/') ?: '/';
 
 // Definición de rutas API
 $routes = [
     'GET' => [
         '/'                        => [['App\Controllers\HomeController', 'index'],          []],
         '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
+        '/credits'                 => [['App\Controllers\CreditsController', 'index'],        []],
+        '/creditos'                => [['App\Controllers\CreditsController', 'index'],        []],
         '/login'                   => [['App\Controllers\LoginController', 'show'],          ['guest']],
-        '/logout'                  => [['App\Controllers\LogoutController', 'logout'],        []],
         '/admin'                   => [['App\Controllers\AdminController', 'index'],          ['auth', 'force_password_change']],
+        '/logout'                  => [['App\Controllers\LogoutController', 'logout'],        []],
+        '/cambiar-password'        => [['App\Controllers\PasswordController', 'show'],        ['auth']],
         '/api/auth/me'             => [['App\Controllers\AuthController', 'me'],             ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'index'],           []],
         '/api/news/{id}'           => [['App\Controllers\NewsController', 'show'],            []],
@@ -99,7 +104,11 @@ $routes = [
     ],
     'POST' => [
         '/login'                   => [['App\Controllers\LoginController', 'submit'],        ['guest', 'csrf']],
+        '/credits'                 => [['App\Controllers\CreditsController', 'submit'],       ['csrf']],
+        '/creditos'                => [['App\Controllers\CreditsController', 'submit'],       ['csrf']],
+        '/api/credits/contact'     => [['App\Controllers\CreditsApiController', 'contact'],   []],
         '/logout'                  => [['App\Controllers\LogoutController', 'logout'],        []],
+        '/cambiar-password'        => [['App\Controllers\PasswordController', 'submit'],      ['auth', 'csrf']],
         '/admin/proyectos'         => [['App\Controllers\AdminController', 'saveProject'],    ['auth', 'csrf']],
         '/admin/proyectos/delete'  => [['App\Controllers\AdminController', 'deleteProject'],  ['auth', 'csrf']],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
