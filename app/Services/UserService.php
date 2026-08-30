@@ -64,7 +64,7 @@ class UserService
             'must_change_password' => $data['must_change_password'] ?? false,
         ]);
 
-        $this->audit->log(null, 'crear', 'app_user', $id, 'Usuario creado: ' . $data['username']);
+        $this->audit->log(null, 'crear', 'user', $id, 'Usuario creado: ' . $data['username']);
 
         return $this->repo->findById($id);
     }
@@ -82,11 +82,21 @@ class UserService
         }
 
         $fields = [];
-        if (array_key_exists('username', $data))             $fields['username'] = $data['username'];
-        if (array_key_exists('email', $data))                $fields['email'] = $data['email'];
-        if (array_key_exists('role_id', $data))              $fields['role_id'] = (int) $data['role_id'];
-        if (array_key_exists('active', $data))               $fields['active'] = (bool) $data['active'];
-        if (array_key_exists('must_change_password', $data)) $fields['must_change_password'] = (bool) $data['must_change_password'];
+        if (array_key_exists('username', $data)) {
+            $fields['username'] = $data['username'];
+        }
+        if (array_key_exists('email', $data)) {
+            $fields['email'] = $data['email'];
+        }
+        if (array_key_exists('role_id', $data)) {
+            $fields['role_id'] = (int) $data['role_id'];
+        }
+        if (array_key_exists('active', $data)) {
+            $fields['active'] = (bool) $data['active'];
+        }
+        if (array_key_exists('must_change_password', $data)) {
+            $fields['must_change_password'] = (bool) $data['must_change_password'];
+        }
 
         if (isset($data['password']) && $data['password'] !== '') {
             $fields['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
@@ -96,7 +106,7 @@ class UserService
             $this->repo->update($id, $fields);
         }
 
-        $this->audit->log(null, 'actualizar', 'app_user', $id, 'Usuario actualizado: ' . ($data['username'] ?? $existing['username']));
+        $this->audit->log(null, 'actualizar', 'user', $id, 'Usuario actualizado: ' . ($data['username'] ?? $existing['username']));
 
         return $this->repo->findById($id);
     }
@@ -117,7 +127,7 @@ class UserService
             'must_change_password' => false,
         ]);
 
-        $this->audit->log(null, 'actualizar', 'app_user', $id, 'Contraseña restablecida para: ' . $existing['username']);
+        $this->audit->log(null, 'actualizar', 'user', $id, 'Contraseña restablecida para: ' . $existing['username']);
 
         return $this->repo->findById($id);
     }
@@ -142,7 +152,7 @@ class UserService
             'must_change_password' => false,
         ]);
 
-        $this->audit->log($id, 'actualizar', 'app_user', $id, 'Cambio de contraseña por el usuario: ' . $user['username']);
+        $this->audit->log($id, 'actualizar', 'user', $id, 'Cambio de contraseña por el usuario: ' . $user['username']);
 
         return $this->repo->findById($id);
     }
@@ -156,7 +166,7 @@ class UserService
 
         $this->repo->delete($id);
 
-        $this->audit->log(null, 'eliminar', 'app_user', $id, 'Usuario eliminado: ' . $existing['username']);
+        $this->audit->log(null, 'eliminar', 'user', $id, 'Usuario eliminado: ' . ($existing['username'] ?? ''));
     }
 
     public function getRoles(): array

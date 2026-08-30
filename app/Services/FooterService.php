@@ -9,10 +9,12 @@ use App\Repositories\FooterRepository;
 class FooterService
 {
     private FooterRepository $repo;
+    private AuditService $audit;
 
-    public function __construct()
+    public function __construct(?FooterRepository $repo = null, ?AuditService $audit = null)
     {
-        $this->repo = new FooterRepository();
+        $this->repo = $repo ?? new FooterRepository();
+        $this->audit = $audit ?? new AuditService();
     }
 
     public function getAll(): array
@@ -44,6 +46,8 @@ class FooterService
         if ($fields) {
             $this->repo->updateInfo($existing['id'], $fields);
         }
+
+        $this->audit->log(null, 'actualizar', 'footer_info', (int) $existing['id'], 'Información del footer actualizada');
 
         return $this->repo->findInfo();
     }
