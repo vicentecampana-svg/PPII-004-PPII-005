@@ -35,7 +35,8 @@ function handle(array $route): void
     $controller = new $class();
 
     if (isset($route['params'])) {
-        $controller->$action(...$route['params']);
+        $params = array_map(fn($v) => is_numeric($v) ? (int) $v : $v, $route['params']);
+        $controller->$action(...$params);
     } else {
         $controller->$action();
     }
@@ -78,6 +79,8 @@ $routes = [
     'GET' => [
         '/'                        => [['App\Controllers\HomeController', 'index'],          []],
         '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
+        '/noticias'                => [['App\Controllers\NoticiasController', 'index'],      []],
+        '/noticias/{id}'           => [['App\Controllers\NoticiasController', 'show'],       []],
         '/credits'                 => [['App\Controllers\CreditsController', 'index'],        []],
         '/creditos'                => [['App\Controllers\CreditsController', 'index'],        []],
         '/login'                   => [['App\Controllers\LoginController', 'show'],          ['guest']],

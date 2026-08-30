@@ -19,11 +19,13 @@ class NewsController
     {
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($_GET['per_page'] ?? 20)));
+        $query   = trim((string) ($_GET['q'] ?? $_GET['search'] ?? ''));
+        $tagId   = isset($_GET['tag_id']) && is_numeric($_GET['tag_id']) ? (int) $_GET['tag_id'] : (isset($_GET['tag']) && is_numeric($_GET['tag']) ? (int) $_GET['tag'] : null);
         $isAdmin = authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
 
         $data = $isAdmin
-            ? $this->service->getAll($page, $perPage)
-            : $this->service->getPublished($page, $perPage);
+            ? $this->service->getAll($page, $perPage, $query, $tagId)
+            : $this->service->getPublished($page, $perPage, $query, $tagId);
 
         respSuccess($data);
     }
