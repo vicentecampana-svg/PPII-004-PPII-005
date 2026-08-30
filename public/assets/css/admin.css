@@ -346,6 +346,73 @@
   background-color: var(--destructive-dark, #7d1c1a);
 }
 
+.admin-btn-icon.approve {
+  background-color: #78350f;
+  border-color: #78350f;
+  color: #ffffff;
+}
+
+.admin-btn-icon.approve:hover {
+  background-color: #92400e;
+}
+
+.admin-btn-icon.unapprove {
+  background-color: #ffffff;
+  border-color: var(--border);
+  color: #64748b;
+}
+
+.admin-btn-icon.unapprove:hover {
+  background-color: #f1f5f9;
+  color: var(--destructive, #9e2320);
+}
+
+.admin-badge-pending {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: #fef3c7;
+  color: #92400e;
+  text-transform: capitalize;
+  margin-right: 4px;
+}
+
+.admin-badge-approved {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  text-transform: capitalize;
+  margin-right: 4px;
+}
+
+.admin-item-excerpt {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+}
+
+.admin-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.admin-toggle-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
 /* Formulario lateral (Mockup derecho) */
 .admin-sidebar-card {
   background-color: #ebedf0;

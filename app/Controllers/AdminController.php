@@ -54,6 +54,8 @@ final class AdminController extends Controller
         $editingProject = null;
         $staffList = [];
         $editingStaff = null;
+        $newsList = [];
+        $editingNews = null;
 
         // Si la pestaña es proyectos y el usuario tiene permisos, cargar listado
         if ($tab === 'proyectos' && in_array($roleNormalized, ['superadmin', 'admin'], true)) {
@@ -85,6 +87,31 @@ final class AdminController extends Controller
             }
         }
 
+        // Si la pestaña es noticias y el usuario tiene permisos, cargar listado
+        if ($tab === 'noticias' && in_array($roleNormalized, ['superadmin', 'admin', 'redactor', 'editor'], true)) {
+            try {
+                $newsData = $this->newsService->getAll(1, 100);
+                $items = $newsData['items'] ?? [];
+
+                // Redactor solo ve sus propias noticias si la regla de negocio lo exige
+                if ($roleNormalized === 'redactor') {
+                    $items = array_values(array_filter($items, fn(array $n) => (int) ($n['author_id'] ?? 0) === (int) ($user['id'] ?? 0)));
+                }
+
+                $newsList = $items;
+
+                $editId = (int) ($_GET['edit_id'] ?? 0);
+                if ($editId > 0) {
+                    $editingNews = $this->newsService->getById($editId);
+                    if ($roleNormalized === 'redactor' && (int) ($editingNews['author_id'] ?? 0) !== (int) ($user['id'] ?? 0)) {
+                        $editingNews = null;
+                    }
+                }
+            } catch (\Throwable) {
+                // Degradar graciosamente
+            }
+        }
+
         $footer = ['links' => [], 'info' => ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl']];
         try {
             $footer = $this->footerService->getAll();
@@ -106,6 +133,8 @@ final class AdminController extends Controller
             'editingProject'  => $editingProject,
             'staffList'       => $staffList,
             'editingStaff'    => $editingStaff,
+            'newsList'        => $newsList,
+            'editingNews'     => $editingNews,
             'flashSuccess'    => $flashSuccess,
             'flashError'      => $flashError,
             'enlacesFooter'   => $footer['links'] ?? [],
@@ -254,6 +283,141 @@ final class AdminController extends Controller
         }
 
         header('Location: /admin?tab=staff');
+        exit;
+    }
+
+    /**
+     * Crear o actualizar una noticia desde el formulario del panel.
+     */
+    public function saveNews(): void
+    {
+        $user = authUser();
+        $role = strtolower((string) ($user['role_name'] ?? ''));
+        if (!in_array($role, ['superadmin', 'admin', 'editor', 'redactor'], true)) {
+            http_response_code(403);
+            echo 'Acceso no autorizado.';
+            exit;
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $subtitle = trim((string) ($_POST['subtitle'] ?? ''));
+        $content = trim((string) ($_POST['content'] ?? ''));
+        $image = trim((string) ($_POST['existing_image'] ?? ''));
+        $isApproved = isset($_POST['is_approved']) ? (bool) $_POST['is_approved'] : false;
+
+        if ($title === '' || $content === '') {
+            $_SESSION['_flash_error'] = 'El título y el contenido de la noticia son obligatorios.';
+            header('Location: /admin?tab=noticias' . ($id > 0 ? '&edit_id=' . $id : ''));
+            exit;
+        }
+
+        // Procesar subida de imagen si viene un archivo
+        if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+            $uploaded = $this->handleImageUpload($_FILES['image_file'], 'news_');
+            if ($uploaded !== null) {
+                $image = $uploaded;
+            }
+        }
+
+        try {
+            $data = [
+                'title'    => $title,
+                'subtitle' => $subtitle !== '' ? $subtitle : null,
+                'content'  => $content,
+                'image'    => $image !== '' ? $image : null,
+            ];
+
+            if ($id > 0) {
+                $existing = $this->newsService->getById($id);
+                if ($role === 'redactor' && (int) ($existing['author_id'] ?? 0) !== (int) $user['id']) {
+                    http_response_code(403);
+                    echo 'No tienes permiso para editar esta noticia.';
+                    exit;
+                }
+
+                $this->newsService->update($id, $data);
+
+                if (in_array($role, ['superadmin', 'admin', 'editor'], true)) {
+                    $this->newsService->updateStatus($id, $isApproved ? 'publicada' : 'pendiente');
+                }
+
+                $_SESSION['_flash_success'] = 'Noticia actualizada exitosamente.';
+            } else {
+                $created = $this->newsService->create($data, (int) $user['id']);
+                if ($isApproved && in_array($role, ['superadmin', 'admin', 'editor'], true)) {
+                    $this->newsService->updateStatus((int) $created['id'], 'publicada');
+                }
+                $_SESSION['_flash_success'] = 'Noticia creada exitosamente.';
+            }
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al guardar la noticia: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=noticias');
+        exit;
+    }
+
+    /**
+     * Eliminar una noticia.
+     */
+    public function deleteNews(): void
+    {
+        $user = authUser();
+        $role = strtolower((string) ($user['role_name'] ?? ''));
+        if (!in_array($role, ['superadmin', 'admin', 'editor', 'redactor'], true)) {
+            http_response_code(403);
+            echo 'Acceso no autorizado.';
+            exit;
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id > 0) {
+            try {
+                $existing = $this->newsService->getById($id);
+                if ($role === 'redactor' && (int) ($existing['author_id'] ?? 0) !== (int) $user['id']) {
+                    http_response_code(403);
+                    echo 'No tienes permiso para eliminar esta noticia.';
+                    exit;
+                }
+
+                $this->newsService->delete($id);
+                $_SESSION['_flash_success'] = 'Noticia eliminada exitosamente.';
+            } catch (\Throwable $e) {
+                $_SESSION['_flash_error'] = 'Error al eliminar la noticia: ' . $e->getMessage();
+            }
+        }
+
+        header('Location: /admin?tab=noticias');
+        exit;
+    }
+
+    /**
+     * Cambiar estado de publicación de una noticia.
+     */
+    public function toggleNewsStatus(): void
+    {
+        $user = authUser();
+        $role = strtolower((string) ($user['role_name'] ?? ''));
+        if (!in_array($role, ['superadmin', 'admin', 'editor'], true)) {
+            http_response_code(403);
+            echo 'Acceso no autorizado.';
+            exit;
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $status = trim((string) ($_POST['status'] ?? 'publicada'));
+
+        if ($id > 0) {
+            try {
+                $this->newsService->updateStatus($id, $status);
+                $_SESSION['_flash_success'] = 'Estado de la noticia actualizado a ' . $status . '.';
+            } catch (\Throwable $e) {
+                $_SESSION['_flash_error'] = 'Error al cambiar estado: ' . $e->getMessage();
+            }
+        }
+
+        header('Location: /admin?tab=noticias');
         exit;
     }
 
