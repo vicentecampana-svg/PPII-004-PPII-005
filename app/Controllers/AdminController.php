@@ -126,6 +126,18 @@ final class AdminController extends Controller
             // Degradar graciosamente
         }
 
+        $usersList = [];
+        $rolesList = [];
+        if ($tab === 'usuarios' && $roleNormalized === 'superadmin') {
+            try {
+                $usersData = $this->userService->getAll(1, 100);
+                $usersList = $usersData['items'] ?? [];
+                $rolesList = $this->userService->getRoles();
+            } catch (\Throwable) {
+                // Degradar graciosamente
+            }
+        }
+
         $flashSuccess = $_SESSION['_flash_success'] ?? null;
         $flashError   = $_SESSION['_flash_error'] ?? null;
         unset($_SESSION['_flash_success'], $_SESSION['_flash_error']);
@@ -146,6 +158,8 @@ final class AdminController extends Controller
             'footerLinks'        => $footer['links'] ?? [],
             'editingFooterLink'  => $editingFooterLink,
             'footerInfo'         => $footer['info'] ?? null,
+            'usersList'          => $usersList,
+            'rolesList'          => $rolesList,
             'flashSuccess'       => $flashSuccess,
             'flashError'         => $flashError,
             'enlacesFooter'      => $footer['links'] ?? [],
@@ -556,6 +570,54 @@ final class AdminController extends Controller
         }
 
         header('Location: /admin?tab=footer');
+        exit;
+    }
+
+    /**
+     * Actualizar el rol asignado a un usuario.
+     */
+    public function updateUserRole(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $userId = (int) ($_POST['user_id'] ?? 0);
+        $roleKey = strtolower(trim((string) ($_POST['role_key'] ?? '')));
+
+        if ($userId <= 0 || $roleKey === '') {
+            $_SESSION['_flash_error'] = 'Parámetros inválidos para actualización de rol.';
+            header('Location: /admin?tab=usuarios');
+            exit;
+        }
+
+        try {
+            $roles = $this->userService->getRoles();
+            $roleId = null;
+
+            // Mapear rol_key al ID de la base de datos
+            foreach ($roles as $r) {
+                $rName = strtolower((string) ($r['name'] ?? ''));
+                if ($roleKey === 'admin' && ($rName === 'admin' || $rName === 'superadmin')) {
+                    $roleId = (int) $r['id'];
+                    break;
+                }
+                if ($roleKey === $rName) {
+                    $roleId = (int) $r['id'];
+                    break;
+                }
+            }
+
+            if ($roleId === null) {
+                // Si no se encontró (ej. 'invitado' o fallback), buscar 'redactor' o el primer rol no admin
+                $roleId = 4;
+            }
+
+            $this->userService->update($userId, ['role_id' => $roleId]);
+            $_SESSION['_flash_success'] = 'Rol de usuario actualizado exitosamente.';
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al actualizar el rol del usuario: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=usuarios');
         exit;
     }
 

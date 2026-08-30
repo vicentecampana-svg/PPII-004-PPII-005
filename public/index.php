@@ -131,6 +131,7 @@ $routes = [
         '/admin/footer/links'          => [['App\Controllers\AdminController', 'saveFooterLink'],   ['auth', 'csrf']],
         '/admin/footer/links/delete'   => [['App\Controllers\AdminController', 'deleteFooterLink'], ['auth', 'csrf']],
         '/admin/footer/social'         => [['App\Controllers\AdminController', 'saveFooterSocial'], ['auth', 'csrf']],
+        '/admin/usuarios/role'         => [['App\Controllers\AdminController', 'updateUserRole'],   ['auth', 'csrf']],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
         '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth', 'csrf']],
