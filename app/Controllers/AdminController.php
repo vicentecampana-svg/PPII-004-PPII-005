@@ -52,6 +52,8 @@ final class AdminController extends Controller
 
         $projects = [];
         $editingProject = null;
+        $staffList = [];
+        $editingStaff = null;
 
         // Si la pestaña es proyectos y el usuario tiene permisos, cargar listado
         if ($tab === 'proyectos' && in_array($roleNormalized, ['superadmin', 'admin'], true)) {
@@ -62,6 +64,21 @@ final class AdminController extends Controller
                 $editId = (int) ($_GET['edit_id'] ?? 0);
                 if ($editId > 0) {
                     $editingProject = $this->projectService->getById($editId);
+                }
+            } catch (\Throwable) {
+                // Degradar graciosamente
+            }
+        }
+
+        // Si la pestaña es staff y el usuario tiene permisos, cargar listado
+        if ($tab === 'staff' && in_array($roleNormalized, ['superadmin', 'admin'], true)) {
+            try {
+                $staffData = $this->staffService->getAll(1, 100);
+                $staffList = $staffData['items'] ?? [];
+
+                $editId = (int) ($_GET['edit_id'] ?? 0);
+                if ($editId > 0) {
+                    $editingStaff = $this->staffService->getById($editId);
                 }
             } catch (\Throwable) {
                 // Degradar graciosamente
@@ -87,6 +104,8 @@ final class AdminController extends Controller
             'activeTab'       => $tab,
             'projects'        => $projects,
             'editingProject'  => $editingProject,
+            'staffList'       => $staffList,
+            'editingStaff'    => $editingStaff,
             'flashSuccess'    => $flashSuccess,
             'flashError'      => $flashError,
             'enlacesFooter'   => $footer['links'] ?? [],
@@ -167,6 +186,77 @@ final class AdminController extends Controller
         exit;
     }
 
+    /**
+     * Crear o actualizar un miembro del staff desde el formulario del panel.
+     */
+    public function saveStaff(): void
+    {
+        $this->checkAdminPermissions();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $position = trim((string) ($_POST['position'] ?? ''));
+        $description = trim((string) ($_POST['description'] ?? ''));
+        $photo = trim((string) ($_POST['existing_photo'] ?? ''));
+
+        if ($name === '') {
+            $_SESSION['_flash_error'] = 'El nombre del miembro del staff es obligatorio.';
+            header('Location: /admin?tab=staff' . ($id > 0 ? '&edit_id=' . $id : ''));
+            exit;
+        }
+
+        // Procesar subida de foto si viene un archivo
+        if (isset($_FILES['photo_file']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
+            $uploaded = $this->handleImageUpload($_FILES['photo_file'], 'staff_');
+            if ($uploaded !== null) {
+                $photo = $uploaded;
+            }
+        }
+
+        try {
+            $data = [
+                'name'        => $name,
+                'position'    => $position !== '' ? $position : null,
+                'description' => $description !== '' ? $description : null,
+                'photo'       => $photo !== '' ? $photo : null,
+            ];
+
+            if ($id > 0) {
+                $this->staffService->update($id, $data);
+                $_SESSION['_flash_success'] = 'Miembro del staff actualizado exitosamente.';
+            } else {
+                $this->staffService->create($data);
+                $_SESSION['_flash_success'] = 'Miembro del staff creado exitosamente.';
+            }
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al guardar el miembro del staff: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=staff');
+        exit;
+    }
+
+    /**
+     * Eliminar un miembro del staff.
+     */
+    public function deleteStaff(): void
+    {
+        $this->checkAdminPermissions();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id > 0) {
+            try {
+                $this->staffService->delete($id);
+                $_SESSION['_flash_success'] = 'Miembro del staff eliminado exitosamente.';
+            } catch (\Throwable $e) {
+                $_SESSION['_flash_error'] = 'Error al eliminar el miembro del staff: ' . $e->getMessage();
+            }
+        }
+
+        header('Location: /admin?tab=staff');
+        exit;
+    }
+
     private function checkAdminPermissions(): void
     {
         $user = authUser();
@@ -178,7 +268,7 @@ final class AdminController extends Controller
         }
     }
 
-    private function handleImageUpload(array $file): ?string
+    private function handleImageUpload(array $file, string $prefix = 'project_'): ?string
     {
         $uploadDir = dirname(__DIR__, 2) . '/storage/uploads';
         if (!is_dir($uploadDir)) {
@@ -193,7 +283,7 @@ final class AdminController extends Controller
             return null;
         }
 
-        $newFileName = 'project_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $newFileName = $prefix . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
         $targetPath = $uploadDir . '/' . $newFileName;
 
         if (move_uploaded_file((string) $file['tmp_name'], $targetPath)) {
