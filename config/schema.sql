@@ -244,6 +244,19 @@ CREATE SEQUENCE public.footer_info_id_seq
 
 ALTER SEQUENCE public.footer_info_id_seq OWNED BY public.footer_info.id;
 
+--
+-- Name: login_attempt; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.login_attempt (
+    id serial PRIMARY KEY,
+    ip character varying(45) NOT NULL,
+    email character varying(255) NOT NULL,
+    attempted_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    success boolean DEFAULT false NOT NULL
+);
+
+
 
 --
 -- Name: news; Type: TABLE; Schema: public; Owner: -
@@ -283,6 +296,16 @@ CREATE SEQUENCE public.news_id_seq
 --
 
 ALTER SEQUENCE public.news_id_seq OWNED BY public.news.id;
+
+--
+-- Name: news_tag; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.news_tag (
+    news_id integer NOT NULL,
+    tag_id integer NOT NULL
+);
+
 
 
 --
@@ -1008,6 +1031,32 @@ ALTER TABLE ONLY public.news
 
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES public.role(id);
+
+
+
+
+--
+-- Name: news_tag news_tag_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.news_tag
+    ADD CONSTRAINT news_tag_pkey PRIMARY KEY (news_id, tag_id);
+
+
+--
+-- Name: news_tag fk_news_tag_news; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.news_tag
+    ADD CONSTRAINT fk_news_tag_news FOREIGN KEY (news_id) REFERENCES public.news(id) ON DELETE CASCADE;
+
+
+--
+-- Name: news_tag fk_news_tag_tag; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.news_tag
+    ADD CONSTRAINT fk_news_tag_tag FOREIGN KEY (tag_id) REFERENCES public.tag(id) ON DELETE CASCADE;
 
 
 --

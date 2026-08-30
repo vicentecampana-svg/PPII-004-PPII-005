@@ -14,7 +14,7 @@ $navLinks = [
     ['href' => '/', 'label' => 'Sobre nosotros'],
     ['href' => '/proyectos', 'label' => 'Proyectos'],
     ['href' => '#staff', 'label' => 'Staff'],
-    ['href' => '#noticias', 'label' => 'Noticias'],
+    ['href' => '/noticias', 'label' => 'Noticias'],
     ['href' => '#contacto', 'label' => 'Contáctenos'],
 ];
 
