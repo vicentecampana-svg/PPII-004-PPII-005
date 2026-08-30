@@ -127,6 +127,7 @@ $routes = [
         '/admin/noticias'          => [['App\Controllers\AdminController', 'saveNews'],         ['auth', 'csrf']],
         '/admin/noticias/delete'   => [['App\Controllers\AdminController', 'deleteNews'],       ['auth', 'csrf']],
         '/admin/noticias/status'   => [['App\Controllers\AdminController', 'toggleNewsStatus'], ['auth', 'csrf']],
+        '/admin/sobre-nosotros'    => [['App\Controllers\AdminController', 'saveSobreNosotros'],['auth', 'csrf']],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
         '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth', 'csrf', 'role:superadmin,admin,editor,redactor']],
