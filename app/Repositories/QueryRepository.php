@@ -33,7 +33,7 @@ class QueryRepository
 
     public function updateStatus(int $id, string $status): int
     {
-        return dbUpdate('contact_request', ['status' => $status], 'id = :id', ['id' => $id]);
+        return dbUpdate('contact_request', ['status' => $status], 'id = ?', [$id]);
     }
 
     public function count(): int

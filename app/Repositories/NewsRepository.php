@@ -67,7 +67,7 @@ class NewsRepository
 
     public function update(int $id, array $data): int
     {
-        return dbUpdate('news', $data, 'id = :id', ['id' => $id]);
+        return dbUpdate('news', $data, 'id = ?', [$id]);
     }
 
     public function delete(int $id): int

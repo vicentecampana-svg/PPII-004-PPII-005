@@ -50,7 +50,7 @@ class UserRepository
 
     public function update(int $id, array $data): int
     {
-        return dbUpdate('app_user', $data, 'id = :id', ['id' => $id]);
+        return dbUpdate('app_user', $data, 'id = ?', [$id]);
     }
 
     public function delete(int $id): int
