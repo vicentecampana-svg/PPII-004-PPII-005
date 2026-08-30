@@ -42,6 +42,27 @@ $email ??= '';
       <?php endif; ?>
     </div>
 
+    <div class="field">
+      <label for="captcha">Código de seguridad</label>
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+        <img src="/captcha" alt="CAPTCHA" id="captcha-img"
+             style="height: 44px; border-radius: var(--radius); cursor: pointer;"
+             title="Haz clic para recargar el código"
+             onclick="this.src='/captcha?' + Date.now()">
+        <button type="button" class="btn" style="padding: 0 12px; height: 44px; background: #e2e8f0; color: #334155; border-radius: var(--radius); font-size: 0.85rem;"
+                onclick="document.getElementById('captcha-img').src='/captcha?' + Date.now()">
+          Recargar
+        </button>
+      </div>
+      <input
+        type="text" id="captcha" name="captcha"
+        placeholder="Ingresa el código" maxlength="10"
+        autocomplete="off" required>
+      <?php if (!empty($errors['captcha'])): ?>
+        <p class="field-error"><?= e($errors['captcha']) ?></p>
+      <?php endif; ?>
+    </div>
+
     <button type="submit" class="btn btn-destructive">Iniciar sesión</button>
   </form>
 </section>

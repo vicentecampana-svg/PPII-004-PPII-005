@@ -244,6 +244,19 @@ CREATE SEQUENCE public.footer_info_id_seq
 
 ALTER SEQUENCE public.footer_info_id_seq OWNED BY public.footer_info.id;
 
+--
+-- Name: login_attempt; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.login_attempt (
+    id serial PRIMARY KEY,
+    ip character varying(45) NOT NULL,
+    email character varying(255) NOT NULL,
+    attempted_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    success boolean DEFAULT false NOT NULL
+);
+
+
 
 --
 -- Name: news; Type: TABLE; Schema: public; Owner: -
