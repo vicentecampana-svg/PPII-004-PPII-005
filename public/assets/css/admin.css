@@ -280,6 +280,14 @@
   border: 1px solid var(--border);
 }
 
+.admin-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f5f9;
+  color: #94a3b8;
+}
+
 .admin-item-info {
   flex: 1;
   min-width: 0;
