@@ -126,6 +126,24 @@ final class AdminController extends Controller
             // Degradar graciosamente
         }
 
+        $usersList = [];
+        $rolesList = [];
+        $editingUser = null;
+        if ($tab === 'usuarios' && $roleNormalized === 'superadmin') {
+            try {
+                $usersData = $this->userService->getAll(1, 100);
+                $usersList = $usersData['items'] ?? [];
+                $rolesList = $this->userService->getRoles();
+
+                $editId = (int) ($_GET['edit_id'] ?? 0);
+                if ($editId > 0) {
+                    $editingUser = $this->userService->getById($editId);
+                }
+            } catch (\Throwable) {
+                // Degradar graciosamente
+            }
+        }
+
         $flashSuccess = $_SESSION['_flash_success'] ?? null;
         $flashError   = $_SESSION['_flash_error'] ?? null;
         unset($_SESSION['_flash_success'], $_SESSION['_flash_error']);
@@ -146,6 +164,9 @@ final class AdminController extends Controller
             'footerLinks'        => $footer['links'] ?? [],
             'editingFooterLink'  => $editingFooterLink,
             'footerInfo'         => $footer['info'] ?? null,
+            'usersList'          => $usersList,
+            'rolesList'          => $rolesList,
+            'editingUser'        => $editingUser,
             'flashSuccess'       => $flashSuccess,
             'flashError'         => $flashError,
             'enlacesFooter'      => $footer['links'] ?? [],
@@ -556,6 +577,148 @@ final class AdminController extends Controller
         }
 
         header('Location: /admin?tab=footer');
+        exit;
+    }
+
+    /**
+     * Actualizar el rol asignado a un usuario.
+     */
+    public function updateUserRole(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $userId = (int) ($_POST['user_id'] ?? 0);
+        $roleKey = strtolower(trim((string) ($_POST['role_key'] ?? '')));
+
+        if ($userId <= 0 || $roleKey === '') {
+            $_SESSION['_flash_error'] = 'Parámetros inválidos para actualización de rol.';
+            header('Location: /admin?tab=usuarios');
+            exit;
+        }
+
+        try {
+            $roles = $this->userService->getRoles();
+            $roleId = null;
+
+            // Mapear rol_key al ID de la base de datos
+            foreach ($roles as $r) {
+                $rName = strtolower((string) ($r['name'] ?? ''));
+                if ($roleKey === 'admin' && ($rName === 'admin' || $rName === 'superadmin')) {
+                    $roleId = (int) $r['id'];
+                    break;
+                }
+                if ($roleKey === $rName) {
+                    $roleId = (int) $r['id'];
+                    break;
+                }
+            }
+
+            if ($roleId === null) {
+                // Si no se encontró (ej. 'invitado' o fallback), buscar 'redactor' o el primer rol no admin
+                $roleId = 4;
+            }
+
+            $this->userService->update($userId, ['role_id' => $roleId]);
+            $_SESSION['_flash_success'] = 'Rol de usuario actualizado exitosamente.';
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al actualizar el rol del usuario: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=usuarios');
+        exit;
+    }
+
+    /**
+     * Crear o actualizar un usuario desde el formulario del panel.
+     */
+    public function saveUser(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $id       = (int) ($_POST['id'] ?? 0);
+        $email    = trim((string) ($_POST['email'] ?? ''));
+        $username = trim((string) ($_POST['username'] ?? ''));
+        $password = (string) ($_POST['password'] ?? '');
+        $roleId   = (int) ($_POST['role_id'] ?? 4);
+        $active   = !empty($_POST['active']);
+
+        if ($email === '' || $username === '') {
+            $_SESSION['_flash_error'] = 'El correo electrónico y nombre de usuario son obligatorios.';
+            header('Location: /admin?tab=usuarios' . ($id > 0 ? '&edit_id=' . $id : ''));
+            exit;
+        }
+
+        if ($id <= 0 && strlen($password) < 12) {
+            $_SESSION['_flash_error'] = 'La contraseña debe tener al menos 12 caracteres.';
+            header('Location: /admin?tab=usuarios');
+            exit;
+        }
+
+        $data = [
+            'email'    => $email,
+            'username' => $username,
+            'role_id'  => $roleId,
+            'active'   => $active,
+        ];
+
+        if ($password !== '') {
+            if (strlen($password) < 12) {
+                $_SESSION['_flash_error'] = 'La contraseña debe tener al menos 12 caracteres.';
+                header('Location: /admin?tab=usuarios' . ($id > 0 ? '&edit_id=' . $id : ''));
+                exit;
+            }
+            $data['password'] = $password;
+        }
+
+        try {
+            if ($id > 0) {
+                $this->userService->update($id, $data);
+                $_SESSION['_flash_success'] = 'Usuario actualizado exitosamente.';
+            } else {
+                $this->userService->create($data);
+                $_SESSION['_flash_success'] = 'Usuario creado exitosamente.';
+            }
+        } catch (\InvalidArgumentException $e) {
+            $errors = json_decode($e->getMessage(), true);
+            $_SESSION['_flash_error'] = is_array($errors) ? implode(' ', $errors) : $e->getMessage();
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al guardar el usuario: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=usuarios');
+        exit;
+    }
+
+    /**
+     * Eliminar un usuario.
+     */
+    public function deleteUser(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $currentUser = authUser();
+
+        if ($id <= 0) {
+            $_SESSION['_flash_error'] = 'ID de usuario inválido.';
+            header('Location: /admin?tab=usuarios');
+            exit;
+        }
+
+        if ($id === (int) ($currentUser['id'] ?? 0)) {
+            $_SESSION['_flash_error'] = 'No puedes eliminar tu propia cuenta en sesión.';
+            header('Location: /admin?tab=usuarios');
+            exit;
+        }
+
+        try {
+            $this->userService->delete($id);
+            $_SESSION['_flash_success'] = 'Usuario eliminado exitosamente.';
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al eliminar el usuario: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=usuarios');
         exit;
     }
 
