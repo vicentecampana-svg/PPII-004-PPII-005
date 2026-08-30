@@ -5,9 +5,17 @@ declare(strict_types=1);
 /**
  * @var array $user
  * @var string $activeTab
+ * @var array $projects
+ * @var array|null $editingProject
+ * @var string|null $flashSuccess
+ * @var string|null $flashError
  */
 $user ??= authUser() ?? [];
 $roleName = (string) ($user['role_name'] ?? 'Usuario');
+$projects ??= [];
+$editingProject ??= null;
+$flashSuccess ??= null;
+$flashError ??= null;
 
 // Definición de las pestañas del panel según la maqueta exacta
 $allTabs = [
@@ -64,8 +72,32 @@ $roleClass = match ($roleNormalized) {
       <?php endforeach; ?>
     </nav>
 
+    <!-- Alertas y Mensajes Flash -->
+    <?php if (!empty($flashSuccess)): ?>
+      <div class="admin-alert admin-alert-success" role="status">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span><?= e($flashSuccess) ?></span>
+      </div>
+    <?php endif; ?>
+
+    <?php if (!empty($flashError)): ?>
+      <div class="admin-alert admin-alert-error" role="alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span><?= e($flashError) ?></span>
+      </div>
+    <?php endif; ?>
+
     <!-- Contenido de la pestaña activa -->
-    <?php if (isset($allTabs[$activeTab])): ?>
+    <?php if ($activeTab === 'proyectos' && isset($visibleTabs['proyectos'])): ?>
+      <?php require __DIR__ . '/admin/proyectos.php'; ?>
+    <?php elseif (isset($allTabs[$activeTab])): ?>
       <div class="admin-tab-header">
         <h2 class="admin-tab-content-title"><?= e($allTabs[$activeTab]['title']) ?></h2>
       </div>

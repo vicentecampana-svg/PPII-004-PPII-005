@@ -386,9 +386,59 @@
   border-color: var(--brand);
 }
 
+.admin-img-preview-box {
+  width: 100%;
+  height: 110px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  border: 1px solid #ced4da;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-img-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-form-file {
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--foreground);
+}
+
+.admin-cancel-edit {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-decoration: underline;
+}
+
+.admin-cancel-edit:hover {
+  color: var(--destructive, #9e2320);
+}
+
+.admin-badge-draft {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .admin-btn-submit {
   width: 100%;
-  background-color: #b56c6c;
+  background-color: var(--destructive, #9e2320);
   color: #ffffff;
   border: none;
   border-radius: 4px;
@@ -402,7 +452,7 @@
 }
 
 .admin-btn-submit:hover {
-  background-color: var(--destructive, #9e2320);
+  background-color: var(--destructive-dark, #7d1c1a);
 }
 
 /* ══════════════════════════════════════════════
