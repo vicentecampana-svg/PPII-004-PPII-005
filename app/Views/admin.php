@@ -84,6 +84,5 @@ $roleClass = match ($roleNormalized) {
         <p>Pestaña no encontrada.</p>
       </div>
     <?php endif; ?>
-
   </div>
 </section>

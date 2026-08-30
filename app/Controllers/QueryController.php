@@ -89,7 +89,9 @@ class QueryController
 
     private function isAdminOrEditor(): bool
     {
-        if (!authCheck()) return false;
+        if (!authCheck()) {
+            return false;
+        }
         return in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
     }
 }
