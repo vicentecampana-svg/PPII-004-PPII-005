@@ -135,6 +135,7 @@ final class AdminController extends Controller
             'editingStaff'    => $editingStaff,
             'newsList'        => $newsList,
             'editingNews'     => $editingNews,
+            'siteContent'     => $footer['contenido'] ?? null,
             'flashSuccess'    => $flashSuccess,
             'flashError'      => $flashError,
             'enlacesFooter'   => $footer['links'] ?? [],
@@ -418,6 +419,42 @@ final class AdminController extends Controller
         }
 
         header('Location: /admin?tab=noticias');
+        exit;
+    }
+
+    /**
+     * Guardar cambios en el contenido institucional (Sobre nosotros, misión y visión).
+     */
+    public function saveSobreNosotros(): void
+    {
+        $this->checkAdminPermissions();
+
+        $sobreTitulo = trim((string) ($_POST['sobre_titulo'] ?? ''));
+        $sobreTexto = trim((string) ($_POST['sobre_texto'] ?? ''));
+        $misionTitulo = trim((string) ($_POST['mision_titulo'] ?? ''));
+        $misionTexto = trim((string) ($_POST['mision_texto'] ?? ''));
+
+        if ($sobreTitulo === '' || $sobreTexto === '') {
+            $_SESSION['_flash_error'] = 'El título y texto de Sobre Nosotros son obligatorios.';
+            header('Location: /admin?tab=sobre-nosotros');
+            exit;
+        }
+
+        try {
+            $data = [
+                'sobre_titulo'  => $sobreTitulo,
+                'sobre_texto'   => $sobreTexto,
+                'mision_titulo' => $misionTitulo !== '' ? $misionTitulo : null,
+                'mision_texto'  => $misionTexto !== '' ? $misionTexto : null,
+            ];
+
+            $this->footerService->updateContenido($data);
+            $_SESSION['_flash_success'] = 'Contenido de Sobre Nosotros guardado exitosamente.';
+        } catch (\Throwable $e) {
+            $_SESSION['_flash_error'] = 'Error al guardar el contenido: ' . $e->getMessage();
+        }
+
+        header('Location: /admin?tab=sobre-nosotros');
         exit;
     }
 

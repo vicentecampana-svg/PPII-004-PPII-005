@@ -101,6 +101,8 @@ $roleClass = match ($roleNormalized) {
       <?php require __DIR__ . '/admin/staff.php'; ?>
     <?php elseif ($activeTab === 'noticias' && isset($visibleTabs['noticias'])): ?>
       <?php require __DIR__ . '/admin/noticias.php'; ?>
+    <?php elseif ($activeTab === 'sobre-nosotros' && isset($visibleTabs['sobre-nosotros'])): ?>
+      <?php require __DIR__ . '/admin/sobre-nosotros.php'; ?>
     <?php elseif (isset($allTabs[$activeTab])): ?>
       <div class="admin-tab-header">
         <h2 class="admin-tab-content-title"><?= e($allTabs[$activeTab]['title']) ?></h2>

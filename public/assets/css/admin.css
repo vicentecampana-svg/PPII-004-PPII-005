@@ -413,6 +413,14 @@
   cursor: pointer;
 }
 
+.admin-full-card-wrapper {
+  max-width: 680px;
+}
+
+.admin-content-card {
+  padding: 24px;
+}
+
 /* Formulario lateral (Mockup derecho) */
 .admin-sidebar-card {
   background-color: #ebedf0;
