@@ -38,7 +38,7 @@ final class LoginController extends Controller
             'csrfToken'       => csrfToken(),
             'errors'          => $_SESSION['_login_errors'] ?? [],
             'email'           => $_SESSION['_login_email'] ?? '',
-            'enlacesFooter'   => $footer['links'],
+            'enlacesFooter'   => $footer['links'] ?? [],
             'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
 

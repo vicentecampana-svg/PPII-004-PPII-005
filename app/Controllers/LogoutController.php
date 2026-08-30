@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 /**
- * Cierre de sesión para la interfaz web.
+ * Controlador de cierre de sesión para la interfaz web.
  */
 final class LogoutController
 {

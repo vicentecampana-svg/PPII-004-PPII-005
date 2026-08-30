@@ -8,6 +8,8 @@ $pageTitle ??= 'SFL ULS Lab — Software Factory Lab Universidad de La Serena';
 $metaDescription ??= 'Software Factory Lab de la Universidad de La Serena: proyectos, servicios, staff y noticias del laboratorio de desarrollo de software.';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 
+$isLoggedIn = authCheck();
+
 $navLinks = [
     ['href' => '/', 'label' => 'Sobre nosotros'],
     ['href' => '/proyectos', 'label' => 'Proyectos'],
@@ -15,6 +17,10 @@ $navLinks = [
     ['href' => '/noticias', 'label' => 'Noticias'],
     ['href' => '#contacto', 'label' => 'Contáctenos'],
 ];
+
+if ($isLoggedIn) {
+    $navLinks[] = ['href' => '/admin', 'label' => 'Panel de administración'];
+}
 ?>
 <!doctype html>
 <html lang="es">
@@ -27,6 +33,11 @@ $navLinks = [
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/style.css">
+  <?php if (!empty($extraCss)): ?>
+    <?php foreach ((array) $extraCss as $css): ?>
+      <link rel="stylesheet" href="<?= htmlspecialchars($css, ENT_QUOTES, 'UTF-8') ?>">
+    <?php endforeach; ?>
+  <?php endif; ?>
 </head>
 <body>
 <div class="site">
@@ -39,19 +50,22 @@ $navLinks = [
       <div class="nav-actions">
         <nav class="main-nav" aria-label="Navegación principal">
           <ul>
-            <?php foreach ($navLinks as $link) : ?>
-              <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $link['href'] === $currentPath ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
+            <?php foreach ($navLinks as $link): ?>
+              <?php 
+                $isActive = ($link['href'] === $currentPath) || 
+                            ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
+              ?>
+              <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
             <?php endforeach; ?>
           </ul>
         </nav>
 
         <div class="header-actions">
           <span class="lang-badge">ES</span>
-          <?php if (authCheck()): ?>
-            <a href="/admin" class="login-link">Admin</a>
-            <a href="/logout" class="login-link" style="margin-left: 8px;">Salir</a>
+          <?php if ($isLoggedIn): ?>
+            <a href="/logout" class="login-link">Cerrar sesión</a>
           <?php else: ?>
-            <a href="/login" class="login-link">Iniciar sesión</a>
+            <a href="/login" class="login-link<?= $currentPath === '/login' ? ' active' : '' ?>">Iniciar sesión</a>
           <?php endif; ?>
         </div>
       </div>
@@ -66,8 +80,7 @@ $navLinks = [
         <?php foreach ($navLinks as $link) : ?>
           <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
-        <?php if (authCheck()): ?>
-          <li><a href="/admin">Admin</a></li>
+        <?php if ($isLoggedIn): ?>
           <li><a href="/logout">Cerrar sesión</a></li>
         <?php else: ?>
           <li><a href="/login">Iniciar sesión</a></li>
