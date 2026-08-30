@@ -31,6 +31,18 @@ class UserRepository
         );
     }
 
+    public function findWithPasswordById(int $id): ?array
+    {
+        return dbFetchOne(
+            "SELECT u.id, u.username, u.email, u.password, u.active, u.must_change_password,
+                    r.id AS role_id, r.name AS role_name
+             FROM app_user u
+             JOIN role r ON u.role_id = r.id
+             WHERE u.id = :id",
+            ['id' => $id]
+        );
+    }
+
     public function findByEmail(string $email): ?array
     {
         return dbFetchOne(
