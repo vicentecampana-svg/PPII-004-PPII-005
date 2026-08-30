@@ -16,7 +16,7 @@ final class AdminUsersTest extends TestCase
         $_SESSION = [];
     }
 
-    public function testUsuariosTabRendersUsersListAndRoleButtons(): void
+    public function testUsuariosTabRendersUsersListAndRoleButtonsAndCreateForm(): void
     {
         $_SESSION['user_id'] = 1;
         $_SESSION['username'] = 'superadmin';
@@ -30,6 +30,7 @@ final class AdminUsersTest extends TestCase
                 'username'  => 'admin',
                 'role_id'   => 1,
                 'role_name' => 'superadmin',
+                'active'    => true,
             ],
             [
                 'id'        => 2,
@@ -37,6 +38,7 @@ final class AdminUsersTest extends TestCase
                 'username'  => 'editor',
                 'role_id'   => 3,
                 'role_name' => 'editor',
+                'active'    => true,
             ],
             [
                 'id'        => 3,
@@ -44,6 +46,7 @@ final class AdminUsersTest extends TestCase
                 'username'  => 'guest',
                 'role_id'   => 4,
                 'role_name' => 'invitado',
+                'active'    => true,
             ],
             [
                 'id'        => 4,
@@ -51,6 +54,7 @@ final class AdminUsersTest extends TestCase
                 'username'  => 'redactor',
                 'role_id'   => 4,
                 'role_name' => 'redactor',
+                'active'    => true,
             ],
         ];
         $rolesList = [
@@ -59,6 +63,7 @@ final class AdminUsersTest extends TestCase
             ['id' => 3, 'name' => 'editor'],
             ['id' => 4, 'name' => 'redactor'],
         ];
+        $editingUser = null;
         $activeTab = 'usuarios';
 
         ob_start();
@@ -75,5 +80,44 @@ final class AdminUsersTest extends TestCase
         $this->assertStringContainsString('Redactor', $output);
         $this->assertStringContainsString('Invitado', $output);
         $this->assertStringContainsString('action="/admin/usuarios/role"', $output);
+        $this->assertStringContainsString('action="/admin/usuarios/delete"', $output);
+        $this->assertStringContainsString('Nuevo registro', $output);
+        $this->assertStringContainsString('Correo electrónico', $output);
+        $this->assertStringContainsString('Nombre de usuario', $output);
+        $this->assertStringContainsString('action="/admin/usuarios"', $output);
+    }
+
+    public function testEditingUserPopulatesForm(): void
+    {
+        $_SESSION['user_id'] = 1;
+        $_SESSION['username'] = 'superadmin';
+        $_SESSION['role_id'] = 1;
+        $_SESSION['role_name'] = 'SuperAdmin';
+
+        $usersList = [];
+        $rolesList = [
+            ['id' => 1, 'name' => 'superadmin'],
+            ['id' => 2, 'name' => 'admin'],
+            ['id' => 3, 'name' => 'editor'],
+            ['id' => 4, 'name' => 'redactor'],
+        ];
+        $editingUser = [
+            'id'        => 5,
+            'email'     => 'nuevo@ejemplo.cl',
+            'username'  => 'nuevo.usuario',
+            'role_id'   => 3,
+            'active'    => true,
+        ];
+        $activeTab = 'usuarios';
+
+        ob_start();
+        require dirname(__DIR__) . '/app/Views/admin/usuarios.php';
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Editar registro', $output);
+        $this->assertStringContainsString('nuevo@ejemplo.cl', $output);
+        $this->assertStringContainsString('nuevo.usuario', $output);
+        $this->assertStringContainsString('value="5"', $output);
+        $this->assertStringContainsString('Guardar cambios', $output);
     }
 }

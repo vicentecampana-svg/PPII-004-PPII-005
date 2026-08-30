@@ -602,6 +602,13 @@
   gap: 14px;
 }
 
+.admin-user-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .admin-user-email {
   font-size: 0.95rem;
   color: var(--foreground);
