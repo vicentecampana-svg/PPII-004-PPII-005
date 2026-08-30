@@ -421,17 +421,32 @@ function mediaUrl(?string $path, string $fallbackType = ''): string
         'proyecto' => '/assets/images/proyecto-1.jpg',
         'staff'    => '/assets/images/staff-1.jpg',
         'noticia'  => '/assets/images/noticia-1.jpg',
+        'servicio' => '/assets/images/proyecto-1.jpg',
     ];
 
-    if ($path === null || $path === '') {
+    if ($path === null || trim($path) === '') {
         return $fallbacks[$fallbackType] ?? '/assets/images/proyecto-1.jpg';
     }
 
-    if (str_starts_with($path, 'http') || str_starts_with($path, '/')) {
+    $path = trim($path);
+
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/assets/')) {
         return $path;
     }
 
-    return '/storage/uploads/' . $path;
+    if (str_starts_with($path, '/uploads/')) {
+        return $path;
+    }
+
+    if (str_starts_with($path, '/storage/uploads/')) {
+        return '/uploads/' . basename($path);
+    }
+
+    if (str_starts_with($path, '/')) {
+        return $path;
+    }
+
+    return '/uploads/' . ltrim($path, '/');
 }
 
 function e(?string $value): string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\FooterService;
+use App\Services\MediaService;
 use App\Services\NewsService;
 use App\Services\ProjectService;
 use App\Services\QueryService;
@@ -24,6 +25,7 @@ final class AdminController extends Controller
     private NewsService $newsService;
     private QueryService $queryService;
     private UserService $userService;
+    private MediaService $mediaService;
 
     public function __construct(
         ?FooterService $footerService = null,
@@ -32,7 +34,8 @@ final class AdminController extends Controller
         ?StaffService $staffService = null,
         ?NewsService $newsService = null,
         ?QueryService $queryService = null,
-        ?UserService $userService = null
+        ?UserService $userService = null,
+        ?MediaService $mediaService = null
     ) {
         $this->footerService = $footerService ?? new FooterService();
         $this->projectService = $projectService ?? new ProjectService();
@@ -41,6 +44,7 @@ final class AdminController extends Controller
         $this->newsService = $newsService ?? new NewsService();
         $this->queryService = $queryService ?? new QueryService();
         $this->userService = $userService ?? new UserService();
+        $this->mediaService = $mediaService ?? new MediaService();
     }
 
     public function index(): void
@@ -195,10 +199,17 @@ final class AdminController extends Controller
         }
 
         // Procesar subida de imagen si viene un archivo
-        if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
-            $uploaded = $this->handleImageUpload($_FILES['image_file']);
-            if ($uploaded !== null) {
-                $image = $uploaded;
+        if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
+            try {
+                $image = $this->mediaService->upload($_FILES['image_file'], 'project_');
+            } catch (\InvalidArgumentException $e) {
+                $_SESSION['_flash_error'] = $e->getMessage();
+                header('Location: /admin?tab=proyectos' . ($id > 0 ? '&edit_id=' . $id : ''));
+                exit;
+            } catch (\Throwable $e) {
+                $_SESSION['_flash_error'] = 'Error al subir la imagen: ' . $e->getMessage();
+                header('Location: /admin?tab=proyectos' . ($id > 0 ? '&edit_id=' . $id : ''));
+                exit;
             }
         }
 
@@ -267,10 +278,17 @@ final class AdminController extends Controller
         }
 
         // Procesar subida de foto si viene un archivo
-        if (isset($_FILES['photo_file']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
-            $uploaded = $this->handleImageUpload($_FILES['photo_file'], 'staff_');
-            if ($uploaded !== null) {
-                $photo = $uploaded;
+        if (isset($_FILES['photo_file']) && !empty($_FILES['photo_file']['name'])) {
+            try {
+                $photo = $this->mediaService->upload($_FILES['photo_file'], 'staff_');
+            } catch (\InvalidArgumentException $e) {
+                $_SESSION['_flash_error'] = $e->getMessage();
+                header('Location: /admin?tab=staff' . ($id > 0 ? '&edit_id=' . $id : ''));
+                exit;
+            } catch (\Throwable $e) {
+                $_SESSION['_flash_error'] = 'Error al subir la foto: ' . $e->getMessage();
+                header('Location: /admin?tab=staff' . ($id > 0 ? '&edit_id=' . $id : ''));
+                exit;
             }
         }
 
@@ -345,10 +363,17 @@ final class AdminController extends Controller
         }
 
         // Procesar subida de imagen si viene un archivo
-        if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
-            $uploaded = $this->handleImageUpload($_FILES['image_file'], 'news_');
-            if ($uploaded !== null) {
-                $image = $uploaded;
+        if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
+            try {
+                $image = $this->mediaService->upload($_FILES['image_file'], 'news_');
+            } catch (\InvalidArgumentException $e) {
+                $_SESSION['_flash_error'] = $e->getMessage();
+                header('Location: /admin?tab=noticias' . ($id > 0 ? '&edit_id=' . $id : ''));
+                exit;
+            } catch (\Throwable $e) {
+                $_SESSION['_flash_error'] = 'Error al subir la imagen: ' . $e->getMessage();
+                header('Location: /admin?tab=noticias' . ($id > 0 ? '&edit_id=' . $id : ''));
+                exit;
             }
         }
 
@@ -746,26 +771,10 @@ final class AdminController extends Controller
 
     private function handleImageUpload(array $file, string $prefix = 'project_'): ?string
     {
-        $uploadDir = dirname(__DIR__, 2) . '/storage/uploads';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
-        $fileName = basename((string) $file['name']);
-        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
-
-        if (!in_array($ext, $allowed, true)) {
+        try {
+            return $this->mediaService->upload($file, $prefix);
+        } catch (\Throwable) {
             return null;
         }
-
-        $newFileName = $prefix . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-        $targetPath = $uploadDir . '/' . $newFileName;
-
-        if (move_uploaded_file((string) $file['tmp_name'], $targetPath)) {
-            return $newFileName;
-        }
-
-        return null;
     }
 }

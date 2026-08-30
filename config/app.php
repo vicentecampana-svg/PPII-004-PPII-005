@@ -14,7 +14,9 @@ return [
         'password' => getenv('PG_PASSWORD') ?: '',
     ],
 
-    'storage_path' => dirname(__DIR__) . '/storage/uploads',
+    'storage_path'    => dirname(__DIR__) . '/public/uploads',
+    'storage_url'     => '/uploads',
+    'max_upload_size' => 5242880, // 5MB
 
     'base_url' => '/',
 

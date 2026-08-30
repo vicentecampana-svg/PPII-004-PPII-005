@@ -143,6 +143,8 @@ $routes = [
         '/api/queries'             => [['App\Controllers\QueryController', 'store'],          []],
         '/api/users'               => [['App\Controllers\UserController', 'store'],           ['auth', 'csrf', 'role:superadmin,admin']],
         '/api/tags'                => [['App\Controllers\TagController', 'store'],            ['auth', 'csrf', 'role:superadmin,admin,editor']],
+        '/api/media/upload'        => [['App\Controllers\MediaController', 'upload'],         ['auth']],
+        '/api/upload'              => [['App\Controllers\MediaController', 'upload'],         ['auth']],
     ],
     'PUT' => [
         '/api/news/{id}'           => [['App\Controllers\NewsController', 'update'],         ['auth', 'csrf', 'role:superadmin,admin,editor,redactor']],
@@ -165,6 +167,7 @@ $routes = [
         '/api/tags/{id}'           => [['App\Controllers\TagController', 'destroy'],          ['auth', 'csrf', 'role:superadmin,admin,editor']],
         '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'destroy'],      ['auth', 'csrf', 'role:superadmin,admin']],
         '/api/services/{id}'       => [['App\Controllers\ServiceController', 'destroy'],      ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/media'               => [['App\Controllers\MediaController', 'destroy'],        ['auth']],
     ],
 ];
 
