@@ -17,4 +17,11 @@ return [
     'storage_path' => dirname(__DIR__) . '/storage/uploads',
 
     'base_url' => '/',
+
+    'cors' => [
+        'allowed_origins' => array_filter(
+            array_map('trim', explode(',', getenv('CORS_ALLOWED_ORIGINS') ?: 'http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000,http://localhost:5173'))
+        ),
+        'allow_credentials' => true,
+    ],
 ];

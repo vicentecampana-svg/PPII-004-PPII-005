@@ -2,7 +2,18 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../vendor/autoload.php';
+// Autoloader PSR-4 para el namespace App\ y helpers
+spl_autoload_register(static function (string $class): void {
+    if (str_starts_with($class, 'App\\')) {
+        $file = dirname(__DIR__) . '/app/' . str_replace('\\', '/', substr($class, 4)) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    }
+});
+require_once dirname(__DIR__) . '/app/helpers.php';
+
+sessionStart();
 
 // ══════════════════════════════════════════════
 //  HANDLER — ejecuta controller + middleware
@@ -74,7 +85,12 @@ $routes = [
     'GET' => [
         '/'                        => [['App\Controllers\HomeController', 'index'],          []],
         '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
+        '/credits'                 => [['App\Controllers\CreditsController', 'index'],        []],
+        '/creditos'                => [['App\Controllers\CreditsController', 'index'],        []],
         '/login'                   => [['App\Controllers\LoginController', 'show'],          ['guest']],
+        '/admin'                   => [['App\Controllers\AdminController', 'index'],          ['auth', 'force_password_change']],
+        '/logout'                  => [['App\Controllers\LogoutController', 'logout'],        []],
+        '/cambiar-password'        => [['App\Controllers\PasswordController', 'show'],        ['auth']],
         '/api/auth/me'             => [['App\Controllers\AuthController', 'me'],             ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'index'],           []],
         '/api/news/{id}'           => [['App\Controllers\NewsController', 'show'],            []],
@@ -95,6 +111,11 @@ $routes = [
     ],
     'POST' => [
         '/login'                   => [['App\Controllers\LoginController', 'submit'],        ['guest', 'csrf']],
+        '/credits'                 => [['App\Controllers\CreditsController', 'submit'],       ['csrf']],
+        '/creditos'                => [['App\Controllers\CreditsController', 'submit'],       ['csrf']],
+        '/api/credits/contact'     => [['App\Controllers\CreditsApiController', 'contact'],   []],
+        '/logout'                  => [['App\Controllers\LogoutController', 'logout'],        []],
+        '/cambiar-password'        => [['App\Controllers\PasswordController', 'submit'],      ['auth', 'csrf']],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
         '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth', 'csrf']],

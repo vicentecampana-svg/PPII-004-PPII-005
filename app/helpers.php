@@ -32,12 +32,13 @@ function db(): PDO
     if ($pdo === null) {
         $db = config('db');
 
-        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s', $db['host'], $db['port'], $db['database']);
+        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s;connect_timeout=2', $db['host'], $db['port'], $db['database']);
 
         $pdo = new PDO($dsn, $db['username'], $db['password'], [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_TIMEOUT            => 2,
         ]);
     }
 
@@ -73,12 +74,12 @@ function dbInsert(string $table, array $data): int
 
 function dbUpdate(string $table, array $data, string $where, array $whereParams = []): int
 {
-    $setParts = [];
     $params = [];
+    $setParts = [];
     foreach ($data as $col => $val) {
-        $paramKey = 'set_' . $col;
-        $setParts[] = "{$col} = :{$paramKey}";
-        $params[$paramKey] = $val;
+        $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
+        $setParts[] = "{$col} = :{$placeholder}";
+        $params[$placeholder] = $val;
     }
     $set = implode(', ', $setParts);
     $sql = "UPDATE {$table} SET {$set} WHERE {$where}";
