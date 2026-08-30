@@ -9,7 +9,7 @@ declare(strict_types=1);
 <div class="container proyectos-page">
   <h1>Proyectos / Servicios</h1>
   <div class="proyectos-grid">
-    <?php foreach ($proyectos as $p): ?>
+    <?php foreach ($proyectos as $p) : ?>
       <article class="proyecto-tile">
         <h2><?= htmlspecialchars($p['titulo'], ENT_QUOTES, 'UTF-8') ?></h2>
         <img src="<?= htmlspecialchars(mediaUrl($p['imagen_url'], 'proyecto'), ENT_QUOTES, 'UTF-8') ?>"

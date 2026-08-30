@@ -284,7 +284,6 @@ CREATE SEQUENCE public.news_id_seq
 
 ALTER SEQUENCE public.news_id_seq OWNED BY public.news.id;
 
-
 --
 -- Name: news_tag; Type: TABLE; Schema: public; Owner: -
 --
@@ -293,6 +292,7 @@ CREATE TABLE public.news_tag (
     news_id integer NOT NULL,
     tag_id integer NOT NULL
 );
+
 
 
 --
@@ -635,7 +635,7 @@ COPY public.enlaces_footer (id, grupo, etiqueta, url, orden, created_at, updated
 --
 
 COPY public.footer_info (id, email, phone, address, copyright_text, social_facebook, social_linkedin, social_twitter, social_instagram, social_youtube) FROM stdin;
-1	contacto@techhub.cl	+56912345678	Av. Ra├║l Valenzuela 123, La Serena	┬® 2026 Tech Hub ULS	\N	\N	\N	\N	\N
+1	contacto@techhub.cl	+56912345678	Av. Raúl Valenzuela 123, La Serena	© 2026 Tech Hub ULS	\N	\N	\N	\N	\N
 \.
 
 
@@ -645,7 +645,7 @@ COPY public.footer_info (id, email, phone, address, copyright_text, social_faceb
 
 COPY public.news (id, author_id, editor_id, status_id, tag_id, title, subtitle, content, image, publication_date, created_at, updated_at) FROM stdin;
 1	1	\N	2	\N	Tech Hub ULS inicia nuevo semestre de proyectos	Se abren las postulaciones para integrar el laboratorio	El laboratorio Tech Hub ULS de la Universidad de La Serena inicia sus actividades del segundo semestre 2026. Se buscan estudiantes interesados en desarrollar proyectos reales.	noticia-1.jpg	2026-08-19 05:09:31.216664	2026-08-19 05:09:31.216664	\N
-2	1	\N	1	\N	Hackathon de Innovaci??n 2026	Evento de 48 horas de desarrollo intensivo	Se realizar?? una hackathon donde los equipos deber??n crear soluciones tecnol??gicas para problem??ticas regionales.	noticia-1.jpg	\N	2026-08-19 05:09:31.216664	\N
+2	1	\N	1	\N	Hackathon de Innovación 2026	Evento de 48 horas de desarrollo intensivo	Se realizará una hackathon donde los equipos deberán crear soluciones tecnológicas para problemáticas regionales.	noticia-1.jpg	\N	2026-08-19 05:09:31.216664	\N
 3	1	\N	1	\N	Test API	Sub	Contenido	\N	\N	2026-08-19 05:12:26.010673	\N
 4	1	\N	1	\N	Test API	Sub	Contenido	\N	\N	2026-08-19 05:22:11.076139	\N
 5	1	\N	1	\N	Delete Test	x	x	\N	\N	2026-08-19 05:23:58.539241	\N
@@ -668,9 +668,9 @@ COPY public.news_status (id, name) FROM stdin;
 --
 
 COPY public.project (id, name, description, image, link, active) FROM stdin;
-1	Sistema de Gesti??n Acad??mica	Plataforma para gesti??n de notas y asistencia universitaria	proyecto-1.jpg	https://github.com/techhub/gestion-academica	t
-2	App de Seguimiento de Salud	Aplicaci??n m??vil para monitoreo de signos vitales	proyecto-1.jpg	https://github.com/techhub/salud-app	t
-3	Portal de Vinculaci??n con el Medio	Sitio web que conecta proyectos estudiantiles con la comunidad	proyecto-1.jpg	\N	t
+1	Sistema de Gestión Académica	Plataforma para gestión de notas y asistencia universitaria	proyecto-1.jpg	https://github.com/techhub/gestion-academica	t
+2	App de Seguimiento de Salud	Aplicación móvil para monitoreo de signos vitales	proyecto-1.jpg	https://github.com/techhub/salud-app	t
+3	Portal de Vinculación con el Medio	Sitio web que conecta proyectos estudiantiles con la comunidad	proyecto-1.jpg	\N	t
 4	Test Project	Desc	\N	\N	t
 5	Test Project	Desc	\N	\N	t
 \.
@@ -682,9 +682,9 @@ COPY public.project (id, name, description, image, link, active) FROM stdin;
 
 COPY public.role (id, name, description) FROM stdin;
 1	superadmin	Acceso total al sistema
-2	admin	Gesti├│n de contenido y usuarios
-3	editor	Edici├│n de contenido
-4	redactor	Creaci├│n de noticias propias
+2	admin	Gestión de contenido y usuarios
+3	editor	Edición de contenido
+4	redactor	Creación de noticias propias
 \.
 
 
@@ -693,9 +693,9 @@ COPY public.role (id, name, description) FROM stdin;
 --
 
 COPY public.service (id, name, description, image, link, active) FROM stdin;
-1	Desarrollo de Software a la Medida	Creamos soluciones digitales adaptadas a las necesidades de tu organizaci??n	proyecto-1.jpg	\N	t
-2	Consultor??a en Tecnolog??a	Asesor??a t??cnica para la transformaci??n digital de empresas y organizaciones	proyecto-1.jpg	\N	t
-3	Capacitaci??n en Programaci??n	Cursos y talleres de programaci??n para estudiantes y profesionales	proyecto-1.jpg	\N	t
+1	Desarrollo de Software a la Medida	Creamos soluciones digitales adaptadas a las necesidades de tu organización	proyecto-1.jpg	\N	t
+2	Consultoría en Tecnología	Asesoría técnica para la transformación digital de empresas y organizaciones	proyecto-1.jpg	\N	t
+3	Capacitación en Programación	Cursos y talleres de programación para estudiantes y profesionales	proyecto-1.jpg	\N	t
 4	Test Service	Desc	\N	\N	t
 5	Test Service	Desc	\N	\N	t
 \.
@@ -706,8 +706,8 @@ COPY public.service (id, name, description, image, link, active) FROM stdin;
 --
 
 COPY public.staff_member (id, name, "position", photo, description) FROM stdin;
-1	Carlos M??ndez	Director del Laboratorio	staff-1.jpg	Ingeniero en Computaci??n, Mag??ster en Inform??tica. L??der del Tech Hub ULS.
-2	Ana Sof??a Riquelme	Coordinadora de Proyectos	staff-1.jpg	Ingeniera en Computaci??n con experiencia en gesti??n de desarrollo de software.
+1	Carlos Méndez	Director del Laboratorio	staff-1.jpg	Ingeniero en Computación, Magíster en Informática. Líder del Tech Hub ULS.
+2	Ana Sofía Riquelme	Coordinadora de Proyectos	staff-1.jpg	Ingeniera en Computación con experiencia en gestión de desarrollo de software.
 3	Pedro Contreras	Desarrollador Full Stack	staff-1.jpg	Especialista en PHP, JavaScript y bases de datos PostgreSQL.
 4	Test Staff	Dev	\N	\N
 5	Test Staff	Dev	\N	\N
@@ -1018,6 +1018,8 @@ ALTER TABLE ONLY public.news
 
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES public.role(id);
+
+
 
 
 --

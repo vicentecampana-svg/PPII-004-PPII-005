@@ -24,15 +24,44 @@ final class HomeController extends Controller
 {
     public function index(): void
     {
-        $footer = (new FooterService())->getAll();
+        try {
+            $footer = (new FooterService())->getAll();
+        } catch (\Throwable) {
+            $footer = ['links' => [], 'info' => null, 'contenido' => null];
+        }
+
+        try {
+            $proyectos = $this->proyectos();
+        } catch (\Throwable) {
+            $proyectos = [];
+        }
+
+        try {
+            $staff = $this->staff();
+        } catch (\Throwable) {
+            $staff = [];
+        }
+
+        try {
+            $noticias = $this->noticias();
+        } catch (\Throwable) {
+            $noticias = [];
+        }
 
         $this->render('home', [
-            'contenido' => $this->contenido($footer['contenido']),
-            'proyectos' => $this->proyectos(),
-            'staff' => $this->staff(),
-            'noticias' => $this->noticias(),
+            'contenido'     => $this->contenido($footer['contenido']),
+            'proyectos'     => $proyectos,
+            'staff'         => $staff,
+            'noticias'      => $noticias,
             'enlacesFooter' => $footer['links'],
-            'contacto' => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
+            'contacto'      => $footer['info'] ?? [
+                'address'          => 'La Serena, Chile',
+                'email'            => 'contacto@sfl.uls.cl',
+                'copyright_text'   => '© SFL. Todos los derechos reservados',
+                'social_linkedin'  => '#',
+                'social_twitter'   => '#',
+                'social_instagram' => '#',
+            ],
         ]);
     }
 
