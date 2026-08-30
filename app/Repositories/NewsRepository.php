@@ -12,8 +12,8 @@ class NewsRepository
         $params['limit'] = $limit;
         $params['offset'] = $offset;
 
-        $sql = "SELECT n.id, n.title, n.subtitle, n.content, n.image, n.publication_date,
-                       n.created_at, n.updated_at,
+        $sql = "SELECT n.id, n.author_id, n.editor_id, n.status_id, n.title, n.subtitle, n.content,
+                       n.image, n.publication_date, n.created_at, n.updated_at,
                        ns.name AS status,
                        u.username AS author,
                        STRING_AGG(DISTINCT t.name, ', ') AS tag,
@@ -40,8 +40,8 @@ class NewsRepository
         $params['limit'] = $limit;
         $params['offset'] = $offset;
 
-        $sql = "SELECT n.id, n.title, n.subtitle, n.content, n.image, n.publication_date,
-                       n.created_at, n.updated_at,
+        $sql = "SELECT n.id, n.author_id, n.editor_id, n.status_id, n.title, n.subtitle, n.content,
+                       n.image, n.publication_date, n.created_at, n.updated_at,
                        ns.name AS status,
                        u.username AS author,
                        STRING_AGG(DISTINCT t.name, ', ') AS tag,
@@ -64,8 +64,8 @@ class NewsRepository
 
     public function findById(int $id): ?array
     {
-        $sql = "SELECT n.id, n.title, n.subtitle, n.content, n.image, n.publication_date,
-                       n.created_at, n.updated_at,
+        $sql = "SELECT n.id, n.author_id, n.editor_id, n.status_id, n.title, n.subtitle, n.content,
+                       n.image, n.publication_date, n.created_at, n.updated_at,
                        ns.name AS status,
                        u.username AS author,
                        STRING_AGG(DISTINCT t.name, ', ') AS tag,

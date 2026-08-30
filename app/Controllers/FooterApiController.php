@@ -23,11 +23,6 @@ class FooterApiController
 
     public function update(): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         $data = getJsonInput();
 
         try {
@@ -38,13 +33,5 @@ class FooterApiController
         } catch (\Exception $e) {
             respServerError();
         }
-    }
-
-    private function isAdminOrEditor(): bool
-    {
-        if (!authCheck()) {
-            return false;
-        }
-        return in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
     }
 }

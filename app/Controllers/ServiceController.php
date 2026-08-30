@@ -19,7 +19,7 @@ class ServiceController
     {
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($_GET['per_page'] ?? 20)));
-        $isAdmin = $this->isAdminOrEditor();
+        $isAdmin = authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
 
         $data = $this->service->getAll($page, $perPage, $isAdmin);
         respSuccess($data);
@@ -34,7 +34,7 @@ class ServiceController
             return;
         }
 
-        if (!$item['active'] && !$this->isAdminOrEditor()) {
+        if (!$item['active'] && !(authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true))) {
             respNotFound();
             return;
         }
@@ -44,11 +44,6 @@ class ServiceController
 
     public function store(): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         $data = getJsonInput();
 
         try {
@@ -63,11 +58,6 @@ class ServiceController
 
     public function update(int $id): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         $data = getJsonInput();
 
         try {
@@ -84,11 +74,6 @@ class ServiceController
 
     public function updateStatus(int $id): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         $data = getJsonInput();
         $active = $data['active'] ?? null;
 
@@ -109,11 +94,6 @@ class ServiceController
 
     public function destroy(int $id): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         try {
             $this->service->delete($id);
             respNoContent();
@@ -122,13 +102,5 @@ class ServiceController
         } catch (\Exception $e) {
             respServerError();
         }
-    }
-
-    private function isAdminOrEditor(): bool
-    {
-        if (!authCheck()) {
-            return false;
-        }
-        return in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
     }
 }

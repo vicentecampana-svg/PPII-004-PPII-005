@@ -17,23 +17,10 @@ class AuditController
 
     public function index(): void
     {
-        if (!$this->isSuperAdmin()) {
-            respForbidden();
-            return;
-        }
-
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($_GET['per_page'] ?? 50)));
 
         $data = $this->service->getAll($page, $perPage);
         respSuccess($data);
-    }
-
-    private function isSuperAdmin(): bool
-    {
-        if (!authCheck()) {
-            return false;
-        }
-        return (authUser()['role_name'] ?? '') === 'superadmin';
     }
 }

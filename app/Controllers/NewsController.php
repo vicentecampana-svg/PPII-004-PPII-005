@@ -32,18 +32,36 @@ class NewsController
 
     public function show(int $id): void
     {
-        $isAdmin = authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
+        $user = authUser();
+        $role = $user['role_name'] ?? '';
+        $isAdminOrEditor = authCheck() && in_array($role, ['superadmin', 'admin', 'editor'], true);
 
-        $item = $isAdmin
-            ? $this->service->getById($id)
-            : $this->service->getPublishedById($id);
+        $item = $this->service->getById($id);
 
         if (!$item) {
             respNotFound();
             return;
         }
 
-        respSuccess($item);
+        // Si es pública, cualquiera puede verla
+        if ($item['status'] === 'publicada') {
+            respSuccess($item);
+            return;
+        }
+
+        // Si es admin/editor, puede verla en cualquier estado
+        if ($isAdminOrEditor) {
+            respSuccess($item);
+            return;
+        }
+
+        // Si es redactor, solo puede verla si es el autor
+        if ($role === 'redactor' && (int) ($item['author_id'] ?? 0) === (int) ($user['id'] ?? 0)) {
+            respSuccess($item);
+            return;
+        }
+
+        respNotFound();
     }
 
     public function store(): void
@@ -70,6 +88,26 @@ class NewsController
         if (!authCheck()) {
             respUnauthorized();
             return;
+        }
+
+        $user = authUser();
+        $isRedactor = ($user['role_name'] ?? '') === 'redactor';
+
+        $existing = $this->service->getById($id);
+        if (!$existing) {
+            respNotFound();
+            return;
+        }
+
+        if ($isRedactor) {
+            if ((int) ($existing['author_id'] ?? 0) !== (int) ($user['id'] ?? 0)) {
+                respForbidden('No tienes permiso para modificar noticias de otros redactores.');
+                return;
+            }
+            if (($existing['status'] ?? '') !== 'pendiente') {
+                respForbidden('Solo puedes modificar noticias en estado pendiente.');
+                return;
+            }
         }
 
         $data = getJsonInput();
@@ -118,6 +156,26 @@ class NewsController
         if (!authCheck()) {
             respUnauthorized();
             return;
+        }
+
+        $user = authUser();
+        $isRedactor = ($user['role_name'] ?? '') === 'redactor';
+
+        $existing = $this->service->getById($id);
+        if (!$existing) {
+            respNotFound();
+            return;
+        }
+
+        if ($isRedactor) {
+            if ((int) ($existing['author_id'] ?? 0) !== (int) ($user['id'] ?? 0)) {
+                respForbidden('No tienes permiso para eliminar noticias de otros redactores.');
+                return;
+            }
+            if (($existing['status'] ?? '') !== 'pendiente') {
+                respForbidden('Solo puedes eliminar noticias en estado pendiente.');
+                return;
+            }
         }
 
         try {
