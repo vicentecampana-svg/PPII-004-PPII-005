@@ -625,7 +625,7 @@ COPY public.contact_request (id, name, email, phone, subject, message, sent_at, 
 --
 
 COPY public.contenido_sitio (id, clave, sobre_titulo, sobre_texto, mision_titulo, mision_texto, vision_titulo, vision_texto, objetivos_titulo, objetivos_texto, politicas_titulo, politicas_texto, created_at, updated_at) FROM stdin;
-1	home	Sobre nosotros	TECH HUB ULS es el laboratorio de desarrollo de software de la Universidad de La Serena. Nuestro equipo trabaja en proyectos reales que apoyan a la comunidad universitaria y regional.	Misi?n, visi?n y objetivos	Nuestra misi?n es formar profesionales competentes mediante la experiencia pr?ctica en desarrollo de software, fomentando la innovaci?n, el trabajo en equipo y la vinculaci?n con el medio.	\N	\N	\N	\N	\N	\N	2026-08-19 04:39:32.817084	\N
+1	home	Sobre nosotros	Software Factory Lab es la fábrica de software de la Universidad de La Serena, donde estudiantes y profesionales desarrollan soluciones digitales reales para instituciones y empresas de la región, bajo estándares de la industria.	Misión, visión y objetivos	Formar talento tecnológico mediante la práctica en proyectos reales, entregando productos de calidad que aporten valor al desarrollo regional. Buscamos ser un referente en innovación, transferencia tecnológica y vinculación con el medio.	\N	\N	\N	\N	\N	\N	2026-08-19 04:39:32.817084	\N
 \.
 
 
@@ -639,7 +639,7 @@ COPY public.enlaces_footer (id, grupo, etiqueta, url, orden, created_at, updated
 3	Sitio	Staff	/staff	3	2026-08-19 04:39:32.819186	\N
 4	Contenido	Noticias	/noticias	1	2026-08-19 04:39:32.819186	\N
 5	Contenido	Contacto	/contacto	2	2026-08-19 04:39:32.819186	\N
-6	Contenido	Iniciar sesi?n	/login	3	2026-08-19 04:39:32.819186	\N
+6	Contenido	Iniciar sesión	/login	3	2026-08-19 04:39:32.819186	\N
 \.
 
 
