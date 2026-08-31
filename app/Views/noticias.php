@@ -15,108 +15,98 @@ $tags ??= [];
 $selectedTagId ??= null;
 $query ??= '';
 ?>
-<section class="section section-surface" style="padding: 48px 0; min-height: 70vh;">
+<section class="section noticias-page-section">
   <div class="container">
-    <div style="margin-bottom: 32px;">
-      <h1 class="section-title" style="margin-bottom: 12px;">Noticias y Novedades</h1>
-      <p style="color: var(--muted-foreground); max-width: 600px;">
-        Entérate de las últimas actividades, lanzamientos y proyectos realizados por el Software Factory Lab.
-      </p>
+    <!-- Buscador superior -->
+    <div class="noticias-search-wrapper">
+      <form method="get" action="/noticias" class="noticias-search-form">
+        <div class="noticias-search-input-group">
+          <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            name="q"
+            value="<?= e($query) ?>"
+            placeholder="Buscar"
+            class="noticias-search-input"
+            aria-label="Buscar noticias">
+          <?php if ($selectedTagId): ?>
+            <input type="hidden" name="tag_id" value="<?= (int) $selectedTagId ?>">
+          <?php endif; ?>
+          <?php if ($query !== ''): ?>
+            <a href="/noticias<?= $selectedTagId ? '?tag_id=' . (int) $selectedTagId : '' ?>" class="search-clear-btn" aria-label="Limpiar búsqueda">&times;</a>
+          <?php endif; ?>
+        </div>
+      </form>
+      <div class="noticias-search-divider"></div>
     </div>
 
-    <!-- Buscador y Filtros -->
-    <form method="get" action="/noticias" style="margin-bottom: 32px; display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: flex; gap: 12px; max-width: 600px;">
-        <input
-          type="text"
-          name="q"
-          value="<?= e($query) ?>"
-          placeholder="Buscar por título o contenido..."
-          style="flex: 1; height: 42px; padding: 0 16px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; font-size: 0.95rem;">
-        <?php if ($selectedTagId): ?>
-          <input type="hidden" name="tag_id" value="<?= (int) $selectedTagId ?>">
-        <?php endif; ?>
-        <button type="submit" class="btn btn-destructive" style="padding: 0 20px; height: 42px; font-weight: 600;">
-          Buscar
-        </button>
-        <?php if ($query !== '' || $selectedTagId !== null): ?>
-          <a href="/noticias" class="btn" style="padding: 0 16px; height: 42px; line-height: 40px; background: #e2e8f0; color: #334155; border-radius: var(--radius);">
-            Limpiar
+    <!-- Filtros de tags si existen -->
+    <?php if (!empty($tags)): ?>
+      <div class="noticias-tag-filters">
+        <span class="tag-filter-label">Temas:</span>
+        <a href="/noticias<?= $query !== '' ? '?q=' . urlencode($query) : '' ?>"
+           class="tag-filter-pill <?= $selectedTagId === null ? 'active' : '' ?>">
+          Todos
+        </a>
+        <?php foreach ($tags as $t): ?>
+          <?php
+            $params = [];
+            if ($query !== '') $params['q'] = $query;
+            $params['tag_id'] = $t['id'];
+            $linkUrl = '/noticias?' . http_build_query($params);
+            $isActive = $selectedTagId === (int) $t['id'];
+          ?>
+          <a href="<?= e($linkUrl) ?>" class="tag-filter-pill <?= $isActive ? 'active' : '' ?>">
+            <?= e($t['name']) ?>
           </a>
-        <?php endif; ?>
+        <?php endforeach; ?>
       </div>
+    <?php endif; ?>
 
-      <!-- Filtro por Temas / Tags -->
-      <?php if (!empty($tags)): ?>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-          <span style="font-size: 0.875rem; font-weight: 600; color: var(--muted-foreground); margin-right: 4px;">Filtrar por tema:</span>
-          <a href="/noticias<?= $query !== '' ? '?q=' . urlencode($query) : '' ?>"
-             style="padding: 4px 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 500; text-decoration: none; <?= $selectedTagId === null ? 'background: var(--brand); color: white;' : 'background: #e2e8f0; color: #475569;' ?>">
-            Todos
-          </a>
-          <?php foreach ($tags as $t): ?>
-            <?php
-              $params = [];
-              if ($query !== '') $params['q'] = $query;
-              $params['tag_id'] = $t['id'];
-              $linkUrl = '/noticias?' . http_build_query($params);
-              $isActive = $selectedTagId === (int) $t['id'];
-            ?>
-            <a href="<?= e($linkUrl) ?>"
-               style="padding: 4px 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 500; text-decoration: none; <?= $isActive ? 'background: var(--brand); color: white;' : 'background: #e2e8f0; color: #475569;' ?>">
-              <?= e($t['name']) ?>
-            </a>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
-    </form>
+    <!-- Título de sección -->
+    <div class="noticias-section-header">
+      <h2 class="noticias-heading">
+        <?= $query !== '' ? 'Resultados de búsqueda: "' . e($query) . '"' : 'Noticias más recientes' ?>
+      </h2>
+    </div>
 
     <!-- Listado de Noticias -->
     <?php if (empty($noticias)): ?>
-      <div style="background: white; padding: 48px; text-align: center; border-radius: var(--radius); box-shadow: var(--shadow-card);">
-        <p style="font-size: 1.1rem; color: var(--muted-foreground);">No se encontraron noticias que coincidan con la búsqueda.</p>
-        <a href="/noticias" class="btn btn-destructive" style="margin-top: 16px; display: inline-block;">Ver todas las noticias</a>
+      <div class="noticias-empty-card">
+        <p>No se encontraron noticias que coincidan con la búsqueda.</p>
+        <a href="/noticias" class="btn btn-destructive" style="margin-top: 16px;">Ver todas las noticias</a>
       </div>
     <?php else: ?>
-      <div class="grid grid-noticias" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+      <div class="noticias-grid">
         <?php foreach ($noticias as $n): ?>
-          <article class="card" style="display: flex; flex-direction: column; background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card);">
-            <img src="<?= htmlspecialchars(mediaUrl($n['image'] ?? null, 'noticia'), ENT_QUOTES, 'UTF-8') ?>"
-                 alt="<?= htmlspecialchars($n['title'], ENT_QUOTES, 'UTF-8') ?>"
-                 loading="lazy" class="card-img card-img-16-9" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;">
-            <div class="card-body" style="padding: 20px; display: flex; flex-direction: column; flex: 1;">
-              <?php if (!empty($n['tags'])): ?>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
-                  <?php foreach ($n['tags'] as $t): ?>
-                    <span style="font-size: 0.75rem; background: rgba(50, 101, 160, 0.1); color: var(--brand); padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                      <?= e($t['name']) ?>
-                    </span>
-                  <?php endforeach; ?>
-                </div>
-              <?php elseif (!empty($n['tag'])): ?>
-                <div style="margin-bottom: 8px;">
-                  <span style="font-size: 0.75rem; background: rgba(50, 101, 160, 0.1); color: var(--brand); padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                    <?= e($n['tag']) ?>
-                  </span>
-                </div>
-              <?php endif; ?>
-
-              <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; line-height: 1.3;">
-                <a href="/noticias/<?= (int) $n['id'] ?>" style="color: inherit; text-decoration: none;">
-                  <?= htmlspecialchars($n['title'], ENT_QUOTES, 'UTF-8') ?>
+          <?php
+            $newsId = (int) ($n['id'] ?? 1);
+            $title = $n['title'] ?? '';
+            $author = $n['author'] ?? 'Periodista';
+            $image = $n['image'] ?? null;
+            $summary = $n['subtitle'] ?: mb_strimwidth(strip_tags($n['content'] ?? ''), 0, 140, '…');
+          ?>
+          <article class="noticia-card">
+            <a href="/noticias/<?= $newsId ?>" class="noticia-card-img-link" tabindex="-1">
+              <img src="<?= htmlspecialchars(mediaUrl($image, 'noticia'), ENT_QUOTES, 'UTF-8') ?>"
+                   alt="<?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?>"
+                   loading="lazy"
+                   class="noticia-card-img">
+            </a>
+            <div class="noticia-card-content">
+              <h3 class="noticia-card-title">
+                <a href="/noticias/<?= $newsId ?>">
+                  <?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?>
                 </a>
               </h3>
-
-              <p style="color: var(--muted-foreground); font-size: 0.9rem; flex: 1; margin-bottom: 16px;">
-                <?= htmlspecialchars($n['subtitle'] ?: mb_strimwidth(strip_tags($n['content'] ?? ''), 0, 140, '…'), ENT_QUOTES, 'UTF-8') ?>
-              </p>
-
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border);">
-                <span style="font-size: 0.8rem; color: var(--muted-foreground);">
-                  <?= !empty($n['publication_date']) ? date('d/m/Y', strtotime($n['publication_date'])) : '' ?>
-                </span>
-                <a href="/noticias/<?= (int) $n['id'] ?>" class="btn btn-destructive btn-sm" style="font-size: 0.85rem; padding: 4px 12px;">
-                  Leer noticia
+              <p class="noticia-card-author">por: <?= htmlspecialchars($author, ENT_QUOTES, 'UTF-8') ?></p>
+              <p class="noticia-card-summary"><?= htmlspecialchars($summary, ENT_QUOTES, 'UTF-8') ?></p>
+              <div class="noticia-card-actions">
+                <a href="/noticias/<?= $newsId ?>" class="btn btn-destructive btn-sm">
+                  Ver más
                 </a>
               </div>
             </div>

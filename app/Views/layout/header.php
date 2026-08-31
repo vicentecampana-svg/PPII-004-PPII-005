@@ -13,9 +13,10 @@ $isLoggedIn = authCheck();
 $navLinks = [
     ['href' => '/', 'label' => 'Sobre nosotros'],
     ['href' => '/proyectos', 'label' => 'Proyectos'],
-    ['href' => '#staff', 'label' => 'Staff'],
+    ['href' => '/servicios', 'label' => 'Servicios'],
+    ['href' => '/staff', 'label' => 'Staff'],
     ['href' => '/noticias', 'label' => 'Noticias'],
-    ['href' => '#contacto', 'label' => 'Contáctenos'],
+    ['href' => '/contacto', 'label' => 'Contáctenos'],
 ];
 
 if ($isLoggedIn) {
