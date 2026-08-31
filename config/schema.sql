@@ -1060,6 +1060,26 @@ ALTER TABLE ONLY public.news_tag
 
 
 --
+-- Name: password_reset_token; Type: TABLE; Schema: public; Owner: -
+-- Issue: #15 — Recuperar contraseña por correo
+--
+
+CREATE TABLE IF NOT EXISTS public.password_reset_token (
+    id         BIGSERIAL    PRIMARY KEY,
+    user_id    INTEGER      NOT NULL
+                            REFERENCES public.app_user(id) ON DELETE CASCADE,
+    token      CHAR(64)     NOT NULL,   -- hash SHA-256 del token plano
+    expires_at TIMESTAMPTZ  NOT NULL,
+    used       BOOLEAN      NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_prt_token       ON public.password_reset_token (token);
+CREATE INDEX IF NOT EXISTS idx_prt_user_id     ON public.password_reset_token (user_id);
+CREATE INDEX IF NOT EXISTS idx_prt_expires_at  ON public.password_reset_token (expires_at);
+
+
+--
 -- Indices de Rendimiento (Performance Indexes)
 --
 
@@ -1091,6 +1111,7 @@ CREATE INDEX idx_service_active ON public.service USING btree (active);
 
 -- Indices en Staff (staff_member)
 CREATE INDEX idx_staff_member_orden ON public.staff_member USING btree (orden ASC, id ASC);
+
 
 
 --

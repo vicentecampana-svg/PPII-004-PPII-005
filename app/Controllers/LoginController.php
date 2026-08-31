@@ -38,11 +38,12 @@ final class LoginController extends Controller
             'csrfToken'       => csrfToken(),
             'errors'          => $_SESSION['_login_errors'] ?? [],
             'email'           => $_SESSION['_login_email'] ?? '',
+            'flashSuccess'    => $_SESSION['_login_flash_success'] ?? null,
             'enlacesFooter'   => $footer['links'] ?? [],
             'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
 
-        unset($_SESSION['_login_errors'], $_SESSION['_login_email']);
+        unset($_SESSION['_login_errors'], $_SESSION['_login_email'], $_SESSION['_login_flash_success']);
     }
 
     public function submit(): void

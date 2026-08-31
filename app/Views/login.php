@@ -6,9 +6,11 @@ declare(strict_types=1);
  * @var string $csrfToken
  * @var array $errors
  * @var string $email
+ * @var string|null $flashSuccess  Mensaje de éxito de otras acciones (ej: contraseña restablecida).
  */
-$errors ??= [];
-$email ??= '';
+$errors       ??= [];
+$email        ??= '';
+$flashSuccess ??= null;
 ?>
 <section class="login-section">
   <form class="login-card" method="post" action="/login" novalidate>
@@ -74,6 +76,18 @@ $email ??= '';
       <?php endif; ?>
     </div>
 
+    <?php if (!empty($flashSuccess)): ?>
+      <p style="margin-bottom: 16px; padding: 10px 12px; border-radius: var(--radius);
+                background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);
+                color: #15803d; font-size: 0.8125rem;">
+        <?= e($flashSuccess) ?>
+      </p>
+    <?php endif; ?>
+
     <button type="submit" class="btn btn-destructive">Iniciar sesión</button>
+
+    <p style="text-align: center; margin-top: 14px; font-size: 0.875rem;">
+      <a href="/recuperar-password" style="color: var(--primary, #0f172a);">¿Olvidaste tu contraseña?</a>
+    </p>
   </form>
 </section>
