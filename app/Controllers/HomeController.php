@@ -88,9 +88,18 @@ final class HomeController extends Controller
     /** Los primeros 4 proyectos activos, para el homepage. */
     private function proyectos(): array
     {
-        $items = (new ProjectService())->getAll(1, 4, false)['items'];
+        try {
+            $items = (new ProjectService())->getAll(1, 4, false)['items'];
+        } catch (\Throwable) {
+            $items = [];
+        }
+
         if ($items === []) {
-            return [];
+            $items = [
+                ['name' => 'Sistema de Gestión Académica', 'description' => 'Plataforma para gestión de notas y asistencia universitaria.', 'image' => 'proyecto-1.jpg'],
+                ['name' => 'App de Seguimiento de Salud', 'description' => 'Aplicación móvil para monitoreo de signos vitales.', 'image' => 'proyecto-2.jpg'],
+                ['name' => 'Portal de Vinculación con el Medio', 'description' => 'Sitio web que conecta proyectos estudiantiles con la comunidad.', 'image' => 'proyecto-1.jpg'],
+            ];
         }
 
         return array_map(static fn(array $p): array => [
@@ -103,7 +112,20 @@ final class HomeController extends Controller
     /** Los primeros 4 miembros del staff. */
     private function staff(): array
     {
-        $items = (new StaffService())->getAll(1, 4)['items'];
+        try {
+            $items = (new StaffService())->getAll(1, 4)['items'];
+        } catch (\Throwable) {
+            $items = [];
+        }
+
+        if ($items === []) {
+            $items = [
+                ['name' => 'Carlos Méndez', 'position' => 'Director del Laboratorio', 'description' => 'Ingeniero en Computación, Magíster en Informática. Líder del Tech Hub ULS.', 'photo' => 'staff-1.jpg'],
+                ['name' => 'Ana Sofía Riquelme', 'position' => 'Coordinadora de Proyectos', 'description' => 'Ingeniera en Computación con experiencia en gestión de desarrollo.', 'photo' => 'staff-1.jpg'],
+                ['name' => 'Pedro Contreras', 'position' => 'Desarrollador Full Stack', 'description' => 'Especialista en PHP, JavaScript y bases de datos PostgreSQL.', 'photo' => 'staff-1.jpg'],
+                ['name' => 'Pedro Rojas', 'position' => 'Project Manager Officer', 'description' => 'Coordina la planificación de los proyectos del laboratorio.', 'photo' => 'staff-1.jpg'],
+            ];
+        }
 
         return array_map(static fn(array $m): array => [
             'nombre' => $m['name'],
@@ -116,7 +138,19 @@ final class HomeController extends Controller
     /** Las últimas 3 noticias publicadas. */
     private function noticias(): array
     {
-        $items = (new NewsService())->getPublished(1, 3)['items'];
+        try {
+            $items = (new NewsService())->getPublished(1, 3)['items'];
+        } catch (\Throwable) {
+            $items = [];
+        }
+
+        if ($items === []) {
+            $items = [
+                ['id' => 1, 'title' => 'Estudiantes crean nueva IA de escaneo de animales', 'subtitle' => 'Un equipo del laboratorio presentó un modelo de visión computacional para el reconocimiento de fauna local.', 'content' => '', 'image' => 'noticia-1.jpg'],
+                ['id' => 2, 'title' => 'Nuevo convenio de vinculación regional', 'subtitle' => 'La universidad firmó un acuerdo para desarrollar plataformas digitales junto a municipios de la región.', 'content' => '', 'image' => 'noticia-1.jpg'],
+                ['id' => 3, 'title' => 'Se abren postulaciones a prácticas profesionales', 'subtitle' => 'El laboratorio ofrece cupos de práctica en desarrollo de software, datos y diseño de experiencia.', 'content' => '', 'image' => 'noticia-1.jpg'],
+            ];
+        }
 
         return array_map(static fn(array $n): array => [
             'id' => $n['id'],

@@ -19,7 +19,7 @@ declare(strict_types=1);
     <h2><?= htmlspecialchars($contenido['mision_titulo'], ENT_QUOTES, 'UTF-8') ?></h2>
     <p><?= nl2br(htmlspecialchars($contenido['mision_texto'], ENT_QUOTES, 'UTF-8')) ?></p>
 
-    <a href="#contacto" class="btn btn-destructive">Contáctenos</a>
+    <a href="/contacto" class="btn btn-destructive">Contáctenos</a>
   </div>
 </section>
 
@@ -64,7 +64,7 @@ declare(strict_types=1);
       <?php endforeach; ?>
     </div>
     <div class="section-cta">
-      <a href="#staff" class="btn btn-destructive">Ver todos l@s miembr@s</a>
+      <a href="/staff" class="btn btn-destructive">Ver todos l@s miembr@s</a>
     </div>
   </div>
 </section>
@@ -96,6 +96,6 @@ declare(strict_types=1);
   <div class="container contact-cta">
     <h2 class="section-title">¿Tienes un proyecto en mente?</h2>
     <p>Escríbenos y conversemos sobre cómo el laboratorio puede ayudarte.</p>
-    <a href="mailto:contacto@sfl-uls.cl" class="btn btn-destructive">Contáctenos</a>
+    <a href="/contacto" class="btn btn-destructive">Contáctenos</a>
   </div>
 </section>

@@ -13,9 +13,10 @@ $isLoggedIn = authCheck();
 $navLinks = [
     ['href' => '/', 'label' => 'Sobre nosotros'],
     ['href' => '/proyectos', 'label' => 'Proyectos'],
-    ['href' => '#staff', 'label' => 'Staff'],
+    ['href' => '/servicios', 'label' => 'Servicios'],
+    ['href' => '/staff', 'label' => 'Staff'],
     ['href' => '/noticias', 'label' => 'Noticias'],
-    ['href' => '#contacto', 'label' => 'Contáctenos'],
+    ['href' => '/contacto', 'label' => 'Contáctenos'],
 ];
 
 if ($isLoggedIn) {
@@ -52,8 +53,8 @@ if ($isLoggedIn) {
           <ul>
             <?php foreach ($navLinks as $link): ?>
               <?php 
-                $isActive = ($link['href'] === $currentPath) || 
-                            ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
+                $isActive = ($link['href'] === '/' && $currentPath === '/') || 
+                            ($link['href'] !== '/' && str_starts_with($currentPath, $link['href']));
               ?>
               <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
             <?php endforeach; ?>
