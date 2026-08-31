@@ -3,7 +3,7 @@
     "description": "Proyecto Tech Hub ULS",
     "type": "project",
     "require": {
-        "php": "^8.5"
+        "php": "^8.2"
     },
     "autoload": {
         "psr-4": {
