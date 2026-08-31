@@ -21,9 +21,9 @@ El sistema proporciona una plataforma integral para la divulgación y administra
 
 El proyecto está diseñado bajo una arquitectura limpia **MVC** con separación de responsabilidades mediante el patrón **Service-Repository**, sin frameworks pesados, maximizando el rendimiento y la mantenibilidad.
 
-- **Lenguaje**: PHP 8.3 (tipado estricto `declare(strict_types=1)`).
+- **Lenguaje**: PHP 8.2 (tipado estricto `declare(strict_types=1)`).
 - **Base de Datos**: PostgreSQL 15+ (acceso vía PDO y consultas preparadas).
-- **Servidor Web / Contenedores**: Apache 2.4 con `mod_rewrite` sobre Docker.
+- **Servidor Web / Contenedores**: Apache 2.4 con `mod_rewrite` sobre Docker (PHP 8.2).
 - **Frontend**: HTML5 semántico, CSS3 corporativo (diseño responsivo propio) y JavaScript vainilla.
 - **Seguridad**: Protección contra ataques CSRF mediante tokens por sesión, sanitización estricta XSS, autenticación segura con `password_hash()` (Argon2id/Bcrypt), control de acceso basado en roles (RBAC) y código de seguridad CAPTCHA.
 - **Pruebas**: PHPUnit 10+.
@@ -49,7 +49,7 @@ El proyecto está diseñado bajo una arquitectura limpia **MVC** con separación
 │   └── index.php        # Front Controller y enrutador HTTP
 ├── storage/             # Almacenamiento local persistente
 ├── tests/               # Suite completa de pruebas unitarias y de integración
-├── Dockerfile.dev       # Definición del contenedor Apache + PHP 8.3
+├── Dockerfile.dev       # Definición del contenedor Apache + PHP 8.2
 ├── docker-compose.dev.yml # Orquestación del entorno de desarrollo (Web + Postgres)
 ├── README.dev.md        # Guía detallada del entorno de desarrollo local
 ├── README.hosting.md    # Guía de despliegue y puesta en producción

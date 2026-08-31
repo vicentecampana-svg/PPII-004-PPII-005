@@ -7,10 +7,10 @@ Esta guía detalla los pasos y consideraciones para desplegar la plataforma **So
 ## 1. Requisitos del Servidor
 
 - **Sistema Operativo**: Linux (Ubuntu Server 22.04 LTS / Debian 12 recomendados).
-- **PHP**: Versión 8.3 o superior con extensiones:
-  - `php8.3-cli`, `php8.3-fpm` o `libapache2-mod-php8.3`
-  - `php8.3-pgsql`, `php8.3-pdo-pgsql`
-  - `php8.3-curl`, `php8.3-mbstring`, `php8.3-xml`, `php8.3-gd`
+- **PHP**: Versión 8.2 o superior con extensiones:
+  - `php8.2-cli`, `php8.2-fpm` o `libapache2-mod-php8.2`
+  - `php8.2-pgsql`, `php8.2-pdo-pgsql`
+  - `php8.2-curl`, `php8.2-mbstring`, `php8.2-xml`, `php8.2-gd`
 - **Base de Datos**: PostgreSQL 15+.
 - **Servidor Web**: Apache 2.4 (con `mod_rewrite` habilitado) o Nginx.
 - **Gestor de paquetes**: Composer 2+.
@@ -154,7 +154,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -193,5 +193,5 @@ Para desplegar una nueva versión del código en producción:
 cd /var/www/sfl-uls
 sudo git pull origin main
 sudo composer install --no-dev --optimize-autoloader
-sudo systemctl reload apache2 # o systemctl reload php8.3-fpm
+sudo systemctl reload apache2 # o systemctl reload php8.2-fpm
 ```

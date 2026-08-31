@@ -49,7 +49,7 @@ docker compose -f docker-compose.dev.yml exec web ./vendor/bin/phpunit --testdox
 
 ### Opción 2: Localmente en la máquina del desarrollador
 
-Si tienes PHP 8.3 y Composer instalados localmente:
+Si tienes PHP 8.2 y Composer instalados localmente:
 
 ```bash
 # Ejecutar toda la suite
