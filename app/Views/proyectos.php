@@ -7,7 +7,7 @@ declare(strict_types=1);
  */
 ?>
 <div class="container proyectos-page">
-  <h1>Proyectos / Servicios</h1>
+  <h1>Proyectos de SFL</h1>
   <div class="proyectos-grid">
     <?php foreach ($proyectos as $p) : ?>
       <article class="proyecto-tile">
