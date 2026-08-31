@@ -50,7 +50,7 @@ class FooterRepository
 
     public function updateInfo(int $id, array $data): int
     {
-        return dbUpdate('footer_info', $data, 'id = :id', ['id' => $id]);
+        return dbUpdate('footer_info', $data, 'id = ?', [$id]);
     }
 
     public function findContenido(): ?array
@@ -65,6 +65,6 @@ class FooterRepository
 
     public function updateContenido(int $id, array $data): int
     {
-        return dbUpdate('contenido_sitio', $data, 'id = :id', ['id' => $id]);
+        return dbUpdate('contenido_sitio', $data, 'id = ?', [$id]);
     }
 }

@@ -44,7 +44,7 @@ class ServiceRepository
 
     public function update(int $id, array $data): int
     {
-        return dbUpdate('service', $data, 'id = :id', ['id' => $id]);
+        return dbUpdate('service', $data, 'id = ?', [$id]);
     }
 
     public function delete(int $id): int

@@ -44,7 +44,7 @@ class ProjectRepository
 
     public function update(int $id, array $data): int
     {
-        return dbUpdate('project', $data, 'id = :id', ['id' => $id]);
+        return dbUpdate('project', $data, 'id = ?', [$id]);
     }
 
     public function delete(int $id): int
