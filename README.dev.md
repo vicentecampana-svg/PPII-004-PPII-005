@@ -9,11 +9,11 @@ No necesitas instalar PHP, Apache, Postgres ni Composer, todo corre en Docker.
 
 ---
 
-## 1. Clonar el repo
+## 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/USUARIO/Proyecto_Tech_Hub_ULS.git
-cd Proyecto_Tech_Hub_ULS
+git clone https://github.com/vicentecampana-svg/PPII-004-PPII-005.git
+cd PPII-004-PPII-005
 ```
 
 ---
@@ -131,4 +131,8 @@ docker compose -f docker-compose.dev.yml up --build
 
 ---
 
+## 📚 Documentación Relacionada
 
+- 📖 [Documentación Principal (`README.md`)](README.md)
+- 🌐 [Guía de Despliegue en Producción / Hosting (`README.hosting.md`)](README.hosting.md)
+- 🧪 [Guía de Pruebas Automatizadas (`README.test.md`)](README.test.md)
