@@ -41,11 +41,12 @@ if ($isLoggedIn) {
   <?php endif; ?>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 <div class="site">
-  <header class="site-header">
+  <header class="site-header" role="banner">
     <div class="container header-bar">
-      <a href="/" class="brand" aria-label="SFL ULS Lab — inicio">
-        <img src="/assets/images/logo-sfl-color.png" alt="SFL ULS Lab" width="120" height="40" class="brand-logo">
+      <a href="/" class="brand" aria-label="SFL ULS Lab — Volver al inicio">
+        <img src="/assets/images/logo-sfl-color.png" alt="Software Factory Lab Universidad de La Serena" width="120" height="40" class="brand-logo">
       </a>
 
       <div class="nav-actions">
@@ -54,40 +55,46 @@ if ($isLoggedIn) {
             <?php foreach ($navLinks as $link): ?>
               <?php 
                 $isActive = ($link['href'] === '/' && $currentPath === '/') || 
-                            ($link['href'] !== '/' && str_starts_with($currentPath, $link['href']));
+                            ($link['href'] !== '/' && !str_starts_with($link['href'], '#') && str_starts_with($currentPath, $link['href'])) ||
+                            ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
               ?>
-              <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
+              <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active" aria-current="page"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
             <?php endforeach; ?>
           </ul>
         </nav>
 
         <div class="header-actions">
-          <span class="lang-badge">ES</span>
+          <span class="lang-badge" aria-label="Idioma actual: Español">ES</span>
           <?php if ($isLoggedIn): ?>
             <a href="/logout" class="login-link">Cerrar sesión</a>
           <?php else: ?>
-            <a href="/login" class="login-link<?= $currentPath === '/login' ? ' active' : '' ?>">Iniciar sesión</a>
+            <a href="/login" class="login-link<?= $currentPath === '/login' ? ' active' : '' ?>"<?= $currentPath === '/login' ? ' aria-current="page"' : '' ?>>Iniciar sesión</a>
           <?php endif; ?>
         </div>
       </div>
 
-      <button type="button" class="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav" onclick="document.getElementById('mobile-nav').classList.toggle('open'); this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');">
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
         <span></span><span></span><span></span>
       </button>
     </div>
 
-    <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación móvil">
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación móvil" aria-hidden="true">
       <ul>
         <?php foreach ($navLinks as $link) : ?>
-          <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
+          <?php 
+            $isActive = ($link['href'] === '/' && $currentPath === '/') || 
+                        ($link['href'] !== '/' && !str_starts_with($link['href'], '#') && str_starts_with($currentPath, $link['href'])) ||
+                        ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
+          ?>
+          <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active" aria-current="page"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
         <?php if ($isLoggedIn): ?>
           <li><a href="/logout">Cerrar sesión</a></li>
         <?php else: ?>
-          <li><a href="/login">Iniciar sesión</a></li>
+          <li><a href="/login"<?= $currentPath === '/login' ? ' class="active" aria-current="page"' : '' ?>>Iniciar sesión</a></li>
         <?php endif; ?>
       </ul>
     </nav>
   </header>
 
-  <main class="site-main">
+  <main id="main-content" class="site-main" tabindex="-1">

@@ -33,7 +33,7 @@ class StaffRepository
 
     public function update(int $id, array $data): int
     {
-        return dbUpdate('staff_member', $data, 'id = :id', ['id' => $id]);
+        return dbUpdate('staff_member', $data, 'id = ?', [$id]);
     }
 
     public function delete(int $id): int

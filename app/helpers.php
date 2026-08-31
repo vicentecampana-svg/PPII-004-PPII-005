@@ -28,18 +28,28 @@ function config(?string $key = null, mixed $default = null): mixed
 function db(): PDO
 {
     static $pdo = null;
+    static $connectionFailed = false;
+
+    if ($connectionFailed) {
+        throw new PDOException('Conexión a base de datos no disponible.');
+    }
 
     if ($pdo === null) {
         $db = config('db');
 
         $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s;connect_timeout=2', $db['host'], $db['port'], $db['database']);
 
-        $pdo = new PDO($dsn, $db['username'], $db['password'], [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-            PDO::ATTR_TIMEOUT            => 2,
-        ]);
+        try {
+            $pdo = new PDO($dsn, $db['username'], $db['password'], [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+                PDO::ATTR_TIMEOUT            => 2,
+            ]);
+        } catch (PDOException $e) {
+            $connectionFailed = true;
+            throw $e;
+        }
     }
 
     return $pdo;

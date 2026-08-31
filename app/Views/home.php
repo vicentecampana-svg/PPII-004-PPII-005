@@ -11,7 +11,7 @@ declare(strict_types=1);
 ?>
 <section class="hero" id="sobre-nosotros">
   <div class="container hero-inner">
-    <img src="/assets/images/logo-sfl-color.png" alt="SFL ULS Lab" width="260" height="86" class="hero-logo">
+    <img src="/assets/images/logo-sfl-color.png" alt="Software Factory Lab Universidad de La Serena" width="260" height="86" class="hero-logo">
 
     <h1><?= htmlspecialchars($contenido['sobre_titulo'], ENT_QUOTES, 'UTF-8') ?></h1>
     <p><?= nl2br(htmlspecialchars($contenido['sobre_texto'], ENT_QUOTES, 'UTF-8')) ?></p>

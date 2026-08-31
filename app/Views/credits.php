@@ -55,7 +55,7 @@ $miembros ??= [];
 </section>
 
 <!-- Modal de Contacto -->
-<div id="credits-modal" class="credits-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+<div id="credits-modal" class="credits-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-subtitle">
   <div class="credits-modal-card">
     <div class="credits-modal-header">
       <div>
@@ -73,24 +73,24 @@ $miembros ??= [];
       <input type="hidden" name="member_key" id="modal-member-key" value="">
 
       <div class="form-group">
-        <label for="contact-name">Tu nombre <span class="required">*</span></label>
-        <input type="text" id="contact-name" name="name" required minlength="2" maxlength="150" placeholder="Ej. Juan Pérez" autocomplete="name">
+        <label for="contact-name">Tu nombre <span class="required" aria-hidden="true">*</span></label>
+        <input type="text" id="contact-name" name="name" required minlength="2" maxlength="150" placeholder="Ej. Juan Pérez" autocomplete="name" aria-required="true">
       </div>
 
       <div class="form-group">
-        <label for="contact-email">Tu correo electrónico <span class="required">*</span></label>
-        <input type="email" id="contact-email" name="email" required maxlength="150" placeholder="nombre@correo.com" autocomplete="email">
+        <label for="contact-email">Tu correo electrónico <span class="required" aria-hidden="true">*</span></label>
+        <input type="email" id="contact-email" name="email" required maxlength="150" placeholder="nombre@correo.com" autocomplete="email" aria-required="true">
       </div>
 
       <div class="form-group">
-        <label for="contact-message">Mensaje <span class="required">*</span></label>
-        <textarea id="contact-message" name="message" rows="4" required minlength="5" maxlength="5000" placeholder="Escribe tu mensaje o consulta..."></textarea>
+        <label for="contact-message">Mensaje <span class="required" aria-hidden="true">*</span></label>
+        <textarea id="contact-message" name="message" rows="4" required minlength="5" maxlength="5000" placeholder="Escribe tu mensaje o consulta..." aria-required="true"></textarea>
       </div>
 
       <div class="credits-modal-actions">
         <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancelar</button>
         <button type="submit" class="btn btn-primary" id="modal-submit-btn">
-          <span id="submit-spinner" class="spinner" style="display: none;"></span>
+          <span id="submit-spinner" class="spinner" style="display: none;" aria-hidden="true"></span>
           <span id="submit-text">Enviar mensaje</span>
         </button>
       </div>
@@ -112,8 +112,10 @@ $miembros ??= [];
     const submitBtn = document.getElementById('modal-submit-btn');
     const submitText = document.getElementById('submit-text');
     const submitSpinner = document.getElementById('submit-spinner');
+    let lastActiveElement = null;
 
-    function openModal(memberKey, memberName, memberRole) {
+    function openModal(memberKey, memberName, memberRole, triggeringElement) {
+      lastActiveElement = triggeringElement || document.activeElement;
       memberKeyInput.value = memberKey;
       titleEl.textContent = 'Contactar a ' + memberName;
       subtitleEl.textContent = memberRole;
@@ -133,6 +135,9 @@ $miembros ??= [];
       document.body.style.overflow = '';
       alertSuccess.style.display = 'none';
       alertError.style.display = 'none';
+      if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+        lastActiveElement.focus();
+      }
     }
 
     document.querySelectorAll('.btn-contact-member').forEach(btn => {
@@ -140,7 +145,7 @@ $miembros ??= [];
         const key = this.dataset.memberKey;
         const name = this.dataset.memberName;
         const role = this.dataset.memberRole;
-        openModal(key, name, role);
+        openModal(key, name, role, this);
       });
     });
 
@@ -154,8 +159,27 @@ $miembros ??= [];
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && modal.classList.contains('open')) {
+      if (!modal.classList.contains('open')) return;
+
+      if (e.key === 'Escape') {
         closeModal();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusableElements = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
       }
     });
 

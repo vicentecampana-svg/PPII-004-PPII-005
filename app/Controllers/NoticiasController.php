@@ -39,9 +39,13 @@ final class NoticiasController extends Controller
 
         try {
             $data = $this->newsService->getPublished($page, $perPage, $query, $tagId);
+        } catch (\Throwable) {
+            $data = ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage, 'total_pages' => 0];
+        }
+
+        try {
             $tags = $this->tagService->getAll();
         } catch (\Throwable) {
-            $data = ['items' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 1];
             $tags = [];
         }
 
@@ -70,10 +74,10 @@ final class NoticiasController extends Controller
             'metaDescription' => 'Noticias, eventos y novedades del Software Factory Lab de la Universidad de La Serena.',
             'noticias'        => $noticias,
             'pagination'      => [
-                'total'       => $data['total'],
-                'page'        => $data['page'],
-                'perPage'     => $data['per_page'],
-                'totalPages'  => $data['total_pages'],
+                'total'       => $data['total'] ?? 0,
+                'page'        => $data['page'] ?? $page,
+                'perPage'     => $data['per_page'] ?? $perPage,
+                'totalPages'  => $data['total_pages'] ?? 0,
             ],
             'tags'            => $tags,
             'selectedTagId'   => $tagId,
@@ -92,25 +96,11 @@ final class NoticiasController extends Controller
         }
 
         $newsId = (int) $id;
-        $noticia = null;
 
         try {
             $noticia = $this->newsService->getPublishedById($newsId);
         } catch (\Throwable) {
             $noticia = null;
-        }
-
-        if (!$noticia) {
-            $sample = $this->sampleNews();
-            foreach ($sample as $item) {
-                if ((int) $item['id'] === $newsId) {
-                    $noticia = $item;
-                    break;
-                }
-            }
-            if (!$noticia && !empty($sample)) {
-                $noticia = $sample[0];
-            }
         }
 
         if (!$noticia) {
@@ -133,7 +123,7 @@ final class NoticiasController extends Controller
 
         $this->render('noticia', [
             'pageTitle'       => ($noticia['title'] ?? 'Noticia') . ' — SFL ULS Lab',
-            'metaDescription' => ($noticia['subtitle'] ?? '') ?: mb_strimwidth(strip_tags($noticia['content'] ?? ''), 0, 160, '…'),
+            'metaDescription' => ($noticia['subtitle'] ?? '') ?: mb_strimwidth(strip_tags((string) ($noticia['content'] ?? '')), 0, 160, '…'),
             'noticia'         => $noticia,
             'otrasNoticias'   => $otrasNoticias,
             'enlacesFooter'   => $footer['links'] ?? [],
