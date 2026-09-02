@@ -9,11 +9,11 @@ No necesitas instalar PHP, Apache, Postgres ni Composer, todo corre en Docker.
 
 ---
 
-## 1. Clonar el repo
+## 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/USUARIO/Proyecto_Tech_Hub_ULS.git
-cd Proyecto_Tech_Hub_ULS
+git clone https://github.com/vicentecampana-svg/PPII-004-PPII-005.git
+cd PPII-004-PPII-005
 ```
 
 ---
@@ -22,6 +22,12 @@ cd Proyecto_Tech_Hub_ULS
 
 ```powershell
 Copy-Item .env.example .env
+```
+
+O en Linux y macOS:
+
+```bash
+cp .env.example .env
 ```
 
 Edítalo con los valores que quieras (usuario, password, puertos, etc). El
@@ -61,15 +67,21 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ---
 ## 5. Cargar el schema en la base de datos
 
+### En Windows (PowerShell)
 ```powershell
-Get-Content .env | ForEach-Object {
-    if ($_ -match '^\s*([^#=][^=]*)=(.*)$') {
-        [System.Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim())
-    }
-}
+docker compose -f docker-compose.dev.yml cp config/schema.sql postgres:/tmp/schema.sql
+```
+y luego:
 
-Get-Content config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres `
-  psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB
+```powershell
+docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/schema.sql'
+```
+
+### En Linux y macOS (Bash/Zsh)
+
+```bash
+export $(grep -v '^#' .env | xargs)
+cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 
 Esto lee tu `.env` y usa esos valores, no importa qué usuario/base hayas
@@ -116,4 +128,8 @@ docker compose -f docker-compose.dev.yml up --build
 
 ---
 
+## 📚 Documentación Relacionada
 
+- 📖 [Documentación Principal (`README.md`)](README.md)
+- 🌐 [Guía de Despliegue en Producción / Hosting (`README.hosting.md`)](README.hosting.md)
+- 🧪 [Guía de Pruebas Automatizadas (`README.test.md`)](README.test.md)
