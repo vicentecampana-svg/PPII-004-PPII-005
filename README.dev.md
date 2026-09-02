@@ -68,16 +68,13 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ## 5. Cargar el schema en la base de datos
 
 ### En Windows (PowerShell)
+```powershell
+docker compose -f docker-compose.dev.yml cp config/schema.sql postgres:/tmp/schema.sql
+```
+y luego:
 
 ```powershell
-Get-Content .env | ForEach-Object {
-    if ($_ -match '^\s*([^#=][^=]*)=(.*)$') {
-        [System.Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim())
-    }
-}
-
-Get-Content config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres `
-  psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB
+docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/schema.sql'
 ```
 
 ### En Linux y macOS (Bash/Zsh)
