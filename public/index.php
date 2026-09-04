@@ -1,27 +1,213 @@
 <?php
-#prueba para ver si funciona todo bien
+
 declare(strict_types=1);
 
-$host = getenv('PG_HOST');
-$port = getenv('PG_PORT');
-$database = getenv('PG_DATABASE');
-$user = getenv('PG_USER');
-$password = getenv('PG_PASSWORD');
+// Autoloader PSR-4 para el namespace App\ y helpers
+spl_autoload_register(static function (string $class): void {
+    if (str_starts_with($class, 'App\\')) {
+        $file = dirname(__DIR__) . '/app/' . str_replace('\\', '/', substr($class, 4)) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    }
+});
+require_once dirname(__DIR__) . '/app/helpers.php';
 
-try {
-    $pdo = new PDO(
-        "pgsql:host={$host};port={$port};dbname={$database}",
-        $user,
-        $password,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-        ]
-    );
+sessionStart();
 
-    echo '<h1>Proyecto Tech Hub ULS</h1>';
-    echo '<p>PHP funciona correctamente.</p>';
-    echo '<p>Conexión con PostgreSQL exitosa.</p>';
-} catch (PDOException $exception) {
-    echo '<h1>Error de conexión</h1>';
-    echo '<p>' . htmlspecialchars($exception->getMessage()) . '</p>';
+// ══════════════════════════════════════════════
+//  HANDLER — ejecuta controller + middleware
+// ══════════════════════════════════════════════
+
+function handle(array $route): void
+{
+    foreach ($route['middleware'] as $mw) {
+        if (str_starts_with($mw, 'role:')) {
+            $roles = explode(',', substr($mw, 5));
+            mwRole(...$roles);
+            continue;
+        }
+
+        match ($mw) {
+            'csrf'  => mwCsrf(),
+            'auth'  => mwAuth(),
+            'guest' => mwGuest(),
+            'force_password_change' => mwForcePasswordChange(),
+            default => null,
+        };
+    }
+
+    [$class, $action] = $route['handler'];
+    $controller = new $class();
+
+    if (isset($route['params'])) {
+        $params = array_map(fn($v) => is_numeric($v) ? (int) $v : $v, $route['params']);
+        $controller->$action(...$params);
+    } else {
+        $controller->$action();
+    }
+}
+
+function matchRoute(string $routePath, string $uri): ?array
+{
+    $routeParts = explode('/', trim($routePath, '/'));
+    $uriParts = explode('/', trim($uri, '/'));
+
+    if (count($routeParts) !== count($uriParts)) {
+        return null;
+    }
+
+    $params = [];
+    foreach ($routeParts as $i => $part) {
+        if (preg_match('/^\{(\w+)\}$/', $part, $matches)) {
+            $value = $uriParts[$i];
+            $params[$matches[1]] = is_numeric($value) ? (int) $value : $value;
+        } elseif ($part !== $uriParts[$i]) {
+            return null;
+        }
+    }
+
+    return $params;
+}
+
+// ══════════════════════════════════════════════
+//  ROUTING & SECURITY
+// ══════════════════════════════════════════════
+
+sendSecurityHeaders();
+handleCors();
+
+$method = $_SERVER['REQUEST_METHOD'];
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+$uri = rtrim($uri, '/') ?: '/';
+
+// Definición de rutas API
+$routes = [
+    'GET' => [
+        '/'                        => [['App\Controllers\HomeController', 'index'],          []],
+        '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
+        '/servicios'               => [['App\Controllers\ServiciosController', 'index'],     []],
+        '/staff'                   => [['App\Controllers\StaffWebController', 'index'],      []],
+        '/noticias'                => [['App\Controllers\NoticiasController', 'index'],      []],
+        '/noticias/{id}'           => [['App\Controllers\NoticiasController', 'show'],       []],
+        '/contacto'                => [['App\Controllers\ContactoController', 'index'],      []],
+        '/contactenos'             => [['App\Controllers\ContactoController', 'index'],      []],
+        '/credits'                 => [['App\Controllers\CreditsController', 'index'],        []],
+        '/creditos'                => [['App\Controllers\CreditsController', 'index'],        []],
+        '/login'                        => [['App\Controllers\LoginController', 'show'],              ['guest']],
+        '/captcha'                      => [['App\Controllers\CaptchaController', 'show'],            []],
+        '/api/captcha'                  => [['App\Controllers\CaptchaController', 'api'],             []],
+        '/admin'                        => [['App\Controllers\AdminController', 'index'],              ['auth', 'force_password_change']],
+        '/logout'                       => [['App\Controllers\LogoutController', 'logout'],            []],
+        '/cambiar-password'             => [['App\Controllers\PasswordController', 'show'],            ['auth']],
+        '/recuperar-password'           => [['App\Controllers\PasswordRecoveryController', 'showRequest'],  ['guest']],
+        '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'showReset'],    ['guest']],
+        '/api/auth/me'             => [['App\Controllers\AuthController', 'me'],             ['auth']],
+        '/api/news'                => [['App\Controllers\NewsController', 'index'],           []],
+        '/api/news/{id}'           => [['App\Controllers\NewsController', 'show'],            []],
+        '/api/projects'            => [['App\Controllers\ProjectController', 'index'],        []],
+        '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'show'],         []],
+        '/api/services'            => [['App\Controllers\ServiceController', 'index'],        []],
+        '/api/services/{id}'       => [['App\Controllers\ServiceController', 'show'],         []],
+        '/api/staff'               => [['App\Controllers\StaffController', 'index'],          []],
+        '/api/staff/{id}'          => [['App\Controllers\StaffController', 'show'],           []],
+        '/api/queries'             => [['App\Controllers\QueryController', 'index'],          ['auth', 'role:superadmin,admin,editor']],
+        '/api/queries/{id}'        => [['App\Controllers\QueryController', 'show'],           ['auth', 'role:superadmin,admin,editor']],
+        '/api/users'               => [['App\Controllers\UserController', 'index'],           ['auth', 'role:superadmin,admin']],
+        '/api/users/{id}'          => [['App\Controllers\UserController', 'show'],            ['auth', 'role:superadmin,admin']],
+        '/api/roles'               => [['App\Controllers\UserController', 'roles'],           ['auth', 'role:superadmin,admin']],
+        '/api/tags'                => [['App\Controllers\TagController', 'index'],            []],
+        '/api/audits'              => [['App\Controllers\AuditController', 'index'],          ['auth', 'role:superadmin']],
+        '/api/footer'              => [['App\Controllers\FooterApiController', 'show'],       []],
+    ],
+    'POST' => [
+        '/login'                        => [['App\Controllers\LoginController', 'submit'],                  ['guest', 'csrf']],
+        '/contacto'                     => [['App\Controllers\ContactoController', 'submit'],              ['csrf']],
+        '/credits'                      => [['App\Controllers\CreditsController', 'submit'],               ['csrf']],
+        '/creditos'                     => [['App\Controllers\CreditsController', 'submit'],               ['csrf']],
+        '/api/credits/contact'          => [['App\Controllers\CreditsApiController', 'contact'],           []],
+        '/logout'                       => [['App\Controllers\LogoutController', 'logout'],                []],
+        '/cambiar-password'             => [['App\Controllers\PasswordController', 'submit'],              ['auth', 'csrf']],
+        '/recuperar-password'           => [['App\Controllers\PasswordRecoveryController', 'submitRequest'], ['guest', 'csrf']],
+        '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'submitReset'],  ['guest', 'csrf']],
+
+        '/admin/proyectos'         => [['App\Controllers\AdminController', 'saveProject'],    ['auth', 'csrf']],
+        '/admin/proyectos/delete'  => [['App\Controllers\AdminController', 'deleteProject'],  ['auth', 'csrf']],
+        '/admin/staff'             => [['App\Controllers\AdminController', 'saveStaff'],      ['auth', 'csrf']],
+        '/admin/staff/delete'      => [['App\Controllers\AdminController', 'deleteStaff'],    ['auth', 'csrf']],
+        '/admin/noticias'          => [['App\Controllers\AdminController', 'saveNews'],         ['auth', 'csrf']],
+        '/admin/noticias/delete'   => [['App\Controllers\AdminController', 'deleteNews'],       ['auth', 'csrf']],
+        '/admin/noticias/status'   => [['App\Controllers\AdminController', 'toggleNewsStatus'], ['auth', 'csrf']],
+        '/admin/sobre-nosotros'    => [['App\Controllers\AdminController', 'saveSobreNosotros'],['auth', 'csrf']],
+        '/admin/footer/links'          => [['App\Controllers\AdminController', 'saveFooterLink'],   ['auth', 'csrf']],
+        '/admin/footer/links/delete'   => [['App\Controllers\AdminController', 'deleteFooterLink'], ['auth', 'csrf']],
+        '/admin/footer/social'         => [['App\Controllers\AdminController', 'saveFooterSocial'], ['auth', 'csrf']],
+        '/admin/usuarios'              => [['App\Controllers\AdminController', 'saveUser'],         ['auth', 'csrf']],
+        '/admin/usuarios/delete'       => [['App\Controllers\AdminController', 'deleteUser'],       ['auth', 'csrf']],
+        '/admin/usuarios/role'         => [['App\Controllers\AdminController', 'updateUserRole'],   ['auth', 'csrf']],
+        '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
+        '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
+        '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth', 'csrf', 'role:superadmin,admin,editor,redactor']],
+        '/api/projects'            => [['App\Controllers\ProjectController', 'store'],        ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/services'            => [['App\Controllers\ServiceController', 'store'],        ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/staff'               => [['App\Controllers\StaffController', 'store'],          ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/queries'             => [['App\Controllers\QueryController', 'store'],          []],
+        '/api/users'               => [['App\Controllers\UserController', 'store'],           ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/tags'                => [['App\Controllers\TagController', 'store'],            ['auth', 'csrf', 'role:superadmin,admin,editor']],
+        '/api/media/upload'        => [['App\Controllers\MediaController', 'upload'],         ['auth']],
+        '/api/upload'              => [['App\Controllers\MediaController', 'upload'],         ['auth']],
+    ],
+    'PUT' => [
+        '/api/news/{id}'           => [['App\Controllers\NewsController', 'update'],         ['auth', 'csrf', 'role:superadmin,admin,editor,redactor']],
+        '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'update'],      ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/services/{id}'       => [['App\Controllers\ServiceController', 'update'],      ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/staff/{id}'          => [['App\Controllers\StaffController', 'update'],        ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/users/{id}'          => [['App\Controllers\UserController', 'update'],         ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/footer'              => [['App\Controllers\FooterApiController', 'update'],    ['auth', 'csrf', 'role:superadmin,admin']],
+    ],
+    'PATCH' => [
+        '/api/news/{id}/status'       => [['App\Controllers\NewsController', 'updateStatus'],      ['auth', 'csrf', 'role:superadmin,admin,editor']],
+        '/api/projects/{id}/status'   => [['App\Controllers\ProjectController', 'updateStatus'],   ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/services/{id}/status'   => [['App\Controllers\ServiceController', 'updateStatus'],   ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/queries/{id}/status'    => [['App\Controllers\QueryController', 'updateStatus'],     ['auth', 'csrf', 'role:superadmin,admin,editor']],
+    ],
+    'DELETE' => [
+        '/api/news/{id}'           => [['App\Controllers\NewsController', 'destroy'],         ['auth', 'csrf', 'role:superadmin,admin,editor,redactor']],
+        '/api/staff/{id}'          => [['App\Controllers\StaffController', 'destroy'],        ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/users/{id}'          => [['App\Controllers\UserController', 'destroy'],         ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/tags/{id}'           => [['App\Controllers\TagController', 'destroy'],          ['auth', 'csrf', 'role:superadmin,admin,editor']],
+        '/api/projects/{id}'       => [['App\Controllers\ProjectController', 'destroy'],      ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/services/{id}'       => [['App\Controllers\ServiceController', 'destroy'],      ['auth', 'csrf', 'role:superadmin,admin']],
+        '/api/media'               => [['App\Controllers\MediaController', 'destroy'],        ['auth']],
+    ],
+];
+
+// Buscar ruta exacta
+if (isset($routes[$method][$uri])) {
+    [$handler, $middleware] = $routes[$method][$uri];
+    handle(['handler' => $handler, 'middleware' => $middleware]);
+    exit;
+}
+
+// Buscar ruta dinámica
+if (isset($routes[$method])) {
+    foreach ($routes[$method] as $routePath => [$handler, $middleware]) {
+        if (!str_contains($routePath, '{')) {
+            continue;
+        }
+
+        $params = matchRoute($routePath, $uri);
+        if ($params !== null) {
+            handle(['handler' => $handler, 'middleware' => $middleware, 'params' => $params]);
+            exit;
+        }
+    }
+}
+
+// 404
+if (isApiRequest()) {
+    respNotFound();
+} else {
+    http_response_code(404);
+    echo '<h1>404 - No encontrado</h1>';
 }

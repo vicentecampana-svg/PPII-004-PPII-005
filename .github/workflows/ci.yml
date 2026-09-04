@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "Backend" ]
+  pull_request:
+    branches: [ "main", "Backend" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.5'
+        tools: composer:v2
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: PHP Syntax Check
+      run: find app/ -name "*.php" -exec php -l {} \;
+
+    - name: Run PHP CodeSniffer
+      run: vendor/bin/phpcs -n --standard=PSR12 app/
+
+    - name: Run Tests
+      run: vendor/bin/phpunit
