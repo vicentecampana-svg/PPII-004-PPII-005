@@ -8,20 +8,13 @@ $pageTitle ??= 'SFL ULS Lab — Software Factory Lab Universidad de La Serena';
 $metaDescription ??= 'Software Factory Lab de la Universidad de La Serena: proyectos, servicios, staff y noticias del laboratorio de desarrollo de software.';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 
-$isLoggedIn = authCheck();
-
 $navLinks = [
     ['href' => '/', 'label' => 'Sobre nosotros'],
     ['href' => '/proyectos', 'label' => 'Proyectos'],
-    ['href' => '/servicios', 'label' => 'Servicios'],
-    ['href' => '/staff', 'label' => 'Staff'],
-    ['href' => '/noticias', 'label' => 'Noticias'],
-    ['href' => '/contacto', 'label' => 'Contáctenos'],
+    ['href' => '#staff', 'label' => 'Staff'],
+    ['href' => '#noticias', 'label' => 'Noticias'],
+    ['href' => '#contacto', 'label' => 'Contáctenos'],
 ];
-
-if ($isLoggedIn) {
-    $navLinks[] = ['href' => '/admin', 'label' => 'Panel de administración'];
-}
 ?>
 <!doctype html>
 <html lang="es">
@@ -34,67 +27,43 @@ if ($isLoggedIn) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/style.css">
-  <?php if (!empty($extraCss)): ?>
-    <?php foreach ((array) $extraCss as $css): ?>
-      <link rel="stylesheet" href="<?= htmlspecialchars($css, ENT_QUOTES, 'UTF-8') ?>">
-    <?php endforeach; ?>
-  <?php endif; ?>
 </head>
 <body>
-<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 <div class="site">
-  <header class="site-header" role="banner">
+  <header class="site-header">
     <div class="container header-bar">
-      <a href="/" class="brand" aria-label="SFL ULS Lab — Volver al inicio">
-        <img src="/assets/images/logo-sfl-color.png" alt="Software Factory Lab Universidad de La Serena" width="120" height="40" class="brand-logo">
+      <a href="/" class="brand" aria-label="SFL ULS Lab — inicio">
+        <img src="/assets/images/logo-sfl-color.png" alt="SFL ULS Lab" width="120" height="40" class="brand-logo">
       </a>
 
       <div class="nav-actions">
         <nav class="main-nav" aria-label="Navegación principal">
           <ul>
             <?php foreach ($navLinks as $link): ?>
-              <?php 
-                $isActive = ($link['href'] === '/' && $currentPath === '/') || 
-                            ($link['href'] !== '/' && !str_starts_with($link['href'], '#') && str_starts_with($currentPath, $link['href'])) ||
-                            ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
-              ?>
-              <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active" aria-current="page"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
+              <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $link['href'] === $currentPath ? ' class="active"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
             <?php endforeach; ?>
           </ul>
         </nav>
 
         <div class="header-actions">
-          <span class="lang-badge" aria-label="Idioma actual: Español">ES</span>
-          <?php if ($isLoggedIn): ?>
-            <a href="/logout" class="login-link">Cerrar sesión</a>
-          <?php else: ?>
-            <a href="/login" class="login-link<?= $currentPath === '/login' ? ' active' : '' ?>"<?= $currentPath === '/login' ? ' aria-current="page"' : '' ?>>Iniciar sesión</a>
-          <?php endif; ?>
+          <span class="lang-badge">ES</span>
+          <a href="#" class="login-link">Iniciar sesión</a>
         </div>
       </div>
 
-      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
+      <button type="button" class="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav" onclick="document.getElementById('mobile-nav').classList.toggle('open'); this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');">
         <span></span><span></span><span></span>
       </button>
     </div>
 
-    <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación móvil" aria-hidden="true">
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación móvil">
       <ul>
-        <?php foreach ($navLinks as $link) : ?>
-          <?php 
-            $isActive = ($link['href'] === '/' && $currentPath === '/') || 
-                        ($link['href'] !== '/' && !str_starts_with($link['href'], '#') && str_starts_with($currentPath, $link['href'])) ||
-                        ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
-          ?>
-          <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active" aria-current="page"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
+        <?php foreach ($navLinks as $link): ?>
+          <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
-        <?php if ($isLoggedIn): ?>
-          <li><a href="/logout">Cerrar sesión</a></li>
-        <?php else: ?>
-          <li><a href="/login"<?= $currentPath === '/login' ? ' class="active" aria-current="page"' : '' ?>>Iniciar sesión</a></li>
-        <?php endif; ?>
+        <li><a href="#">Iniciar sesión</a></li>
       </ul>
     </nav>
   </header>
 
-  <main id="main-content" class="site-main" tabindex="-1">
+  <main class="site-main">

@@ -38,6 +38,11 @@ class StaffController
 
     public function store(): void
     {
+        if (!$this->isAdminOrEditor()) {
+            respForbidden();
+            return;
+        }
+
         $data = getJsonInput();
 
         try {
@@ -52,6 +57,11 @@ class StaffController
 
     public function update(int $id): void
     {
+        if (!$this->isAdminOrEditor()) {
+            respForbidden();
+            return;
+        }
+
         $data = getJsonInput();
 
         try {
@@ -68,6 +78,11 @@ class StaffController
 
     public function destroy(int $id): void
     {
+        if (!$this->isAdminOrEditor()) {
+            respForbidden();
+            return;
+        }
+
         try {
             $this->service->delete($id);
             respNoContent();
@@ -76,5 +91,11 @@ class StaffController
         } catch (\Exception $e) {
             respServerError();
         }
+    }
+
+    private function isAdminOrEditor(): bool
+    {
+        if (!authCheck()) return false;
+        return in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
     }
 }

@@ -9,12 +9,10 @@ use App\Repositories\TagRepository;
 class TagService
 {
     private TagRepository $repo;
-    private AuditService $audit;
 
-    public function __construct(?TagRepository $repo = null, ?AuditService $audit = null)
+    public function __construct()
     {
-        $this->repo = $repo ?? new TagRepository();
-        $this->audit = $audit ?? new AuditService();
+        $this->repo = new TagRepository();
     }
 
     public function getAll(): array
@@ -34,9 +32,6 @@ class TagService
         }
 
         $id = $this->repo->create(['name' => $data['name']]);
-
-        $this->audit->log(null, 'crear', 'tag', $id, 'Etiqueta creada: ' . $data['name']);
-
         return $this->repo->findById($id);
     }
 
@@ -48,7 +43,5 @@ class TagService
         }
 
         $this->repo->delete($id);
-
-        $this->audit->log(null, 'eliminar', 'tag', $id, 'Etiqueta eliminada: ' . ($existing['name'] ?? ''));
     }
 }

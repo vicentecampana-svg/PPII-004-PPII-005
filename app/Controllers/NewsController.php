@@ -19,49 +19,29 @@ class NewsController
     {
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($_GET['per_page'] ?? 20)));
-        $query   = trim((string) ($_GET['q'] ?? $_GET['search'] ?? ''));
-        $tagId   = isset($_GET['tag_id']) && is_numeric($_GET['tag_id']) ? (int) $_GET['tag_id'] : (isset($_GET['tag']) && is_numeric($_GET['tag']) ? (int) $_GET['tag'] : null);
         $isAdmin = authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
 
         $data = $isAdmin
-            ? $this->service->getAll($page, $perPage, $query, $tagId)
-            : $this->service->getPublished($page, $perPage, $query, $tagId);
+            ? $this->service->getAll($page, $perPage)
+            : $this->service->getPublished($page, $perPage);
 
         respSuccess($data);
     }
 
     public function show(int $id): void
     {
-        $user = authUser();
-        $role = $user['role_name'] ?? '';
-        $isAdminOrEditor = authCheck() && in_array($role, ['superadmin', 'admin', 'editor'], true);
+        $isAdmin = authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
 
-        $item = $this->service->getById($id);
+        $item = $isAdmin
+            ? $this->service->getById($id)
+            : $this->service->getPublishedById($id);
 
         if (!$item) {
             respNotFound();
             return;
         }
 
-        // Si es pública, cualquiera puede verla
-        if ($item['status'] === 'publicada') {
-            respSuccess($item);
-            return;
-        }
-
-        // Si es admin/editor, puede verla en cualquier estado
-        if ($isAdminOrEditor) {
-            respSuccess($item);
-            return;
-        }
-
-        // Si es redactor, solo puede verla si es el autor
-        if ($role === 'redactor' && (int) ($item['author_id'] ?? 0) === (int) ($user['id'] ?? 0)) {
-            respSuccess($item);
-            return;
-        }
-
-        respNotFound();
+        respSuccess($item);
     }
 
     public function store(): void
@@ -88,26 +68,6 @@ class NewsController
         if (!authCheck()) {
             respUnauthorized();
             return;
-        }
-
-        $user = authUser();
-        $isRedactor = ($user['role_name'] ?? '') === 'redactor';
-
-        $existing = $this->service->getById($id);
-        if (!$existing) {
-            respNotFound();
-            return;
-        }
-
-        if ($isRedactor) {
-            if ((int) ($existing['author_id'] ?? 0) !== (int) ($user['id'] ?? 0)) {
-                respForbidden('No tienes permiso para modificar noticias de otros redactores.');
-                return;
-            }
-            if (($existing['status'] ?? '') !== 'pendiente') {
-                respForbidden('Solo puedes modificar noticias en estado pendiente.');
-                return;
-            }
         }
 
         $data = getJsonInput();
@@ -156,26 +116,6 @@ class NewsController
         if (!authCheck()) {
             respUnauthorized();
             return;
-        }
-
-        $user = authUser();
-        $isRedactor = ($user['role_name'] ?? '') === 'redactor';
-
-        $existing = $this->service->getById($id);
-        if (!$existing) {
-            respNotFound();
-            return;
-        }
-
-        if ($isRedactor) {
-            if ((int) ($existing['author_id'] ?? 0) !== (int) ($user['id'] ?? 0)) {
-                respForbidden('No tienes permiso para eliminar noticias de otros redactores.');
-                return;
-            }
-            if (($existing['status'] ?? '') !== 'pendiente') {
-                respForbidden('Solo puedes eliminar noticias en estado pendiente.');
-                return;
-            }
         }
 
         try {

@@ -9,12 +9,10 @@ use App\Repositories\StaffRepository;
 class StaffService
 {
     private StaffRepository $repo;
-    private AuditService $audit;
 
-    public function __construct(?StaffRepository $repo = null, ?AuditService $audit = null)
+    public function __construct()
     {
-        $this->repo = $repo ?? new StaffRepository();
-        $this->audit = $audit ?? new AuditService();
+        $this->repo = new StaffRepository();
     }
 
     public function getAll(int $page, int $perPage): array
@@ -52,8 +50,6 @@ class StaffService
             'description' => $data['description'] ?? null,
         ]);
 
-        $this->audit->log(null, 'crear', 'staff_member', $id, 'Miembro del equipo creado: ' . $data['name']);
-
         return $this->repo->findById($id);
     }
 
@@ -70,24 +66,14 @@ class StaffService
         }
 
         $fields = [];
-        if (array_key_exists('name', $data)) {
-            $fields['name'] = $data['name'];
-        }
-        if (array_key_exists('position', $data)) {
-            $fields['position'] = $data['position'] ?? null;
-        }
-        if (array_key_exists('photo', $data)) {
-            $fields['photo'] = $data['photo'] ?? null;
-        }
-        if (array_key_exists('description', $data)) {
-            $fields['description'] = $data['description'] ?? null;
-        }
+        if (array_key_exists('name', $data))        $fields['name'] = $data['name'];
+        if (array_key_exists('position', $data))     $fields['position'] = $data['position'] ?? null;
+        if (array_key_exists('photo', $data))        $fields['photo'] = $data['photo'] ?? null;
+        if (array_key_exists('description', $data))  $fields['description'] = $data['description'] ?? null;
 
         if ($fields) {
             $this->repo->update($id, $fields);
         }
-
-        $this->audit->log(null, 'actualizar', 'staff_member', $id, 'Miembro del equipo actualizado: ' . ($data['name'] ?? $existing['name']));
 
         return $this->repo->findById($id);
     }
@@ -100,8 +86,6 @@ class StaffService
         }
 
         $this->repo->delete($id);
-
-        $this->audit->log(null, 'eliminar', 'staff_member', $id, 'Miembro del equipo eliminado: ' . ($existing['name'] ?? ''));
     }
 
     private function validate(array $data, bool $partial = false): array

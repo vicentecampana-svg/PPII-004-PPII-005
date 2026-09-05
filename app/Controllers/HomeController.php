@@ -4,71 +4,52 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Services\FooterService;
-use App\Services\NewsService;
-use App\Services\ProjectService;
-use App\Services\StaffService;
+use App\Repositories\ProyectoRepository;
+use App\Repositories\SiteRepository;
+use App\Services\Database;
+use PDOException;
 
 /**
  * Página de inicio: presentación del laboratorio, proyectos destacados,
  * staff y noticias recientes.
  *
- * Los datos vienen de los mismos Services que usa la API (Backend): las
- * páginas públicas se comportan como un visitante anónimo del API
- * (sin sesión ⇒ solo se listan proyectos/noticias activos y publicados).
- * Solo la sección "Sobre nosotros" tiene contenido de respaldo hardcodeado
- * (si `contenido_sitio` aún no tiene una fila 'home'); las demás secciones
- * simplemente no muestran tarjetas si la tabla está vacía.
+ * Todas las secciones intentan leer desde PostgreSQL primero; si las
+ * tablas todavía no existen (base de datos recién creada) o la conexión
+ * no está disponible, se usa contenido de respaldo para que la página
+ * nunca se vea vacía o rota.
  */
 final class HomeController extends Controller
 {
     public function index(): void
     {
-        try {
-            $footer = (new FooterService())->getAll();
-        } catch (\Throwable) {
-            $footer = ['links' => [], 'info' => null, 'contenido' => null];
-        }
-
-        try {
-            $proyectos = $this->proyectos();
-        } catch (\Throwable) {
-            $proyectos = [];
-        }
-
-        try {
-            $staff = $this->staff();
-        } catch (\Throwable) {
-            $staff = [];
-        }
-
-        try {
-            $noticias = $this->noticias();
-        } catch (\Throwable) {
-            $noticias = [];
-        }
-
         $this->render('home', [
-            'contenido'     => $this->contenido($footer['contenido']),
-            'proyectos'     => $proyectos,
-            'staff'         => $staff,
-            'noticias'      => $noticias,
-            'enlacesFooter' => $footer['links'],
-            'contacto'      => $footer['info'] ?? [
-                'address'          => 'La Serena, Chile',
-                'email'            => 'contacto@sfl.uls.cl',
-                'copyright_text'   => '© SFL. Todos los derechos reservados',
-                'social_linkedin'  => '#',
-                'social_twitter'   => '#',
-                'social_instagram' => '#',
-            ],
+            'contenido' => $this->fetchContenido(),
+            'proyectos' => $this->fetchProyectos(),
+            'staff' => $this->fetchStaff(),
+            'noticias' => $this->fetchNoticias(),
+            'enlacesFooter' => (new SiteRepository())->enlacesFooter(),
+            'contacto' => (new SiteRepository())->contactoInfo(),
         ]);
     }
 
-    private function contenido(?array $row): array
+    private function fetchContenido(): array
     {
-        if ($row !== null) {
-            return $row;
+        $pdo = Database::connect();
+
+        if ($pdo !== null) {
+            try {
+                $stmt = $pdo->prepare(
+                    'SELECT sobre_titulo, sobre_texto, mision_titulo, mision_texto
+                     FROM contenido_sitio WHERE clave = :clave LIMIT 1'
+                );
+                $stmt->execute(['clave' => 'home']);
+                $row = $stmt->fetch();
+                if ($row !== false) {
+                    return $row;
+                }
+            } catch (PDOException) {
+                // Tabla aún no existe o falló la consulta: usar respaldo.
+            }
         }
 
         return [
@@ -85,80 +66,104 @@ final class HomeController extends Controller
         ];
     }
 
-    /** Los primeros 4 proyectos activos, para el homepage. */
-    private function proyectos(): array
+    private function fetchProyectos(): array
     {
-        try {
-            $items = (new ProjectService())->getAll(1, 4, false)['items'];
-        } catch (\Throwable) {
-            $items = [];
-        }
-
-        if ($items === []) {
-            $items = [
-                ['name' => 'Sistema de Gestión Académica', 'description' => 'Plataforma para gestión de notas y asistencia universitaria.', 'image' => 'proyecto-1.jpg'],
-                ['name' => 'App de Seguimiento de Salud', 'description' => 'Aplicación móvil para monitoreo de signos vitales.', 'image' => 'proyecto-2.jpg'],
-                ['name' => 'Portal de Vinculación con el Medio', 'description' => 'Sitio web que conecta proyectos estudiantiles con la comunidad.', 'image' => 'proyecto-1.jpg'],
-            ];
-        }
-
-        return array_map(static fn(array $p): array => [
-            'titulo' => $p['name'],
-            'descripcion' => $p['description'] ?? '',
-            'imagen_url' => $p['image'] ?? null,
-        ], $items);
+        return (new ProyectoRepository())->findFeatured(4);
     }
 
-    /** Los primeros 4 miembros del staff. */
-    private function staff(): array
+    private function fetchStaff(): array
     {
-        try {
-            $items = (new StaffService())->getAll(1, 4)['items'];
-        } catch (\Throwable) {
-            $items = [];
+        $pdo = Database::connect();
+
+        if ($pdo !== null) {
+            try {
+                $stmt = $pdo->query(
+                    'SELECT id, nombre, cargo, descripcion, imagen_url FROM staff
+                     ORDER BY orden ASC, created_at ASC LIMIT 4'
+                );
+                $rows = $stmt->fetchAll();
+                if ($rows !== false && count($rows) > 0) {
+                    return $rows;
+                }
+            } catch (PDOException) {
+                // Tabla aún no existe o falló la consulta: usar respaldo.
+            }
         }
 
-        if ($items === []) {
-            $items = [
-                ['name' => 'Carlos Méndez', 'position' => 'Director del Laboratorio', 'description' => 'Ingeniero en Computación, Magíster en Informática. Líder del Tech Hub ULS.', 'photo' => 'staff-1.jpg'],
-                ['name' => 'Ana Sofía Riquelme', 'position' => 'Coordinadora de Proyectos', 'description' => 'Ingeniera en Computación con experiencia en gestión de desarrollo.', 'photo' => 'staff-1.jpg'],
-                ['name' => 'Pedro Contreras', 'position' => 'Desarrollador Full Stack', 'description' => 'Especialista en PHP, JavaScript y bases de datos PostgreSQL.', 'photo' => 'staff-1.jpg'],
-                ['name' => 'Pedro Rojas', 'position' => 'Project Manager Officer', 'description' => 'Coordina la planificación de los proyectos del laboratorio.', 'photo' => 'staff-1.jpg'],
-            ];
-        }
-
-        return array_map(static fn(array $m): array => [
-            'nombre' => $m['name'],
-            'cargo' => $m['position'] ?? '',
-            'descripcion' => $m['description'] ?? '',
-            'imagen_url' => $m['photo'] ?? null,
-        ], $items);
+        return [
+            [
+                'id' => 'fernando-flores',
+                'nombre' => 'Fernando Flores Cortijo',
+                'cargo' => 'Project Manager Officer',
+                'descripcion' => 'Coordina la planificación de los proyectos del laboratorio y el vínculo con las contrapartes.',
+                'imagen_url' => null,
+            ],
+            [
+                'id' => 'luis-hernandez',
+                'nombre' => 'Luis Hernández Comunez',
+                'cargo' => 'Analista de Riesgos',
+                'descripcion' => 'Responsable del análisis de riesgos, calidad y aseguramiento de los entregables de cada proyecto.',
+                'imagen_url' => null,
+            ],
+            [
+                'id' => 'bernardo-llanos',
+                'nombre' => 'Bernardo Llanos',
+                'cargo' => 'Arquitecto de Software',
+                'descripcion' => 'Define la arquitectura técnica de las soluciones y acompaña al equipo de desarrollo.',
+                'imagen_url' => null,
+            ],
+            [
+                'id' => 'camila-rojas',
+                'nombre' => 'Camila Rojas',
+                'cargo' => 'Diseñadora UX/UI',
+                'descripcion' => 'Diseña la experiencia de uso y los sistemas visuales de los productos digitales.',
+                'imagen_url' => null,
+            ],
+        ];
     }
 
-    /** Las últimas 3 noticias publicadas. */
-    private function noticias(): array
+    private function fetchNoticias(): array
     {
-        try {
-            $items = (new NewsService())->getPublished(1, 3)['items'];
-        } catch (\Throwable) {
-            $items = [];
+        $pdo = Database::connect();
+
+        if ($pdo !== null) {
+            try {
+                $stmt = $pdo->query(
+                    'SELECT id, slug, titulo, resumen, imagen_url FROM noticias
+                     WHERE publicada = true ORDER BY created_at DESC LIMIT 3'
+                );
+                $rows = $stmt->fetchAll();
+                if ($rows !== false && count($rows) > 0) {
+                    return $rows;
+                }
+            } catch (PDOException) {
+                // Tabla aún no existe o falló la consulta: usar respaldo.
+            }
         }
 
-        if ($items === []) {
-            $items = [
-                ['id' => 1, 'title' => 'Estudiantes crean nueva IA de escaneo de animales', 'subtitle' => 'Un equipo del laboratorio presentó un modelo de visión computacional para el reconocimiento de fauna local.', 'content' => '', 'image' => 'noticia-1.jpg'],
-                ['id' => 2, 'title' => 'Nuevo convenio de vinculación regional', 'subtitle' => 'La universidad firmó un acuerdo para desarrollar plataformas digitales junto a municipios de la región.', 'content' => '', 'image' => 'noticia-1.jpg'],
-                ['id' => 3, 'title' => 'Se abren postulaciones a prácticas profesionales', 'subtitle' => 'El laboratorio ofrece cupos de práctica en desarrollo de software, datos y diseño de experiencia.', 'content' => '', 'image' => 'noticia-1.jpg'],
-            ];
-        }
-
-        return array_map(static fn(array $n): array => [
-            'id' => $n['id'],
-            'titulo' => $n['title'],
-            // La tabla `news` no tiene un campo de resumen dedicado: se usa
-            // el subtítulo, y si no hay, se recorta el contenido.
-            'resumen' => $n['subtitle'] ?: mb_strimwidth(strip_tags($n['content'] ?? ''), 0, 160, '…'),
-            'imagen_url' => $n['image'] ?? null,
-        ], $items);
+        return [
+            [
+                'id' => 'nueva-ia-escaneo',
+                'slug' => 'nueva-ia-escaneo',
+                'titulo' => 'Estudiantes crean nueva IA de escaneo de animales',
+                'resumen' => 'Un equipo del laboratorio presentó un modelo de visión computacional para el reconocimiento de fauna local.',
+                'imagen_url' => null,
+            ],
+            [
+                'id' => 'convenio-regional',
+                'slug' => 'convenio-regional',
+                'titulo' => 'Nuevo convenio de vinculación regional',
+                'resumen' => 'La universidad firmó un acuerdo para desarrollar plataformas digitales junto a municipios de la región.',
+                'imagen_url' => null,
+            ],
+            [
+                'id' => 'practicas-profesionales',
+                'slug' => 'practicas-profesionales',
+                'titulo' => 'Se abren postulaciones a prácticas profesionales',
+                'resumen' => 'El laboratorio ofrece cupos de práctica en desarrollo de software, datos y diseño de experiencia.',
+                'imagen_url' => null,
+            ],
+        ];
     }
+
 }

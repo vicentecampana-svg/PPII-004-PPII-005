@@ -39,20 +39,11 @@ Ejemplo:
 ```env
 APP_ENV=development
 APP_PORT=8080
-APP_URL=http://localhost:8080
 
 POSTGRES_DB=techhub
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_PORT=5433
-
-MAIL_DRIVER=log
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASS=
-SMTP_FROM=no-reply@techhub.uls.cl
-SMTP_FROM_NAME=TechHub ULS
 ```
 
 ---
