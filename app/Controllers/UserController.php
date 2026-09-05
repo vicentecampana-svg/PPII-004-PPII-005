@@ -17,11 +17,6 @@ class UserController
 
     public function index(): void
     {
-        if (!$this->isSuperAdmin()) {
-            respForbidden();
-            return;
-        }
-
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($_GET['per_page'] ?? 20)));
 
@@ -31,11 +26,6 @@ class UserController
 
     public function show(int $id): void
     {
-        if (!$this->isSuperAdmin()) {
-            respForbidden();
-            return;
-        }
-
         $item = $this->service->getById($id);
 
         if (!$item) {
@@ -48,11 +38,6 @@ class UserController
 
     public function store(): void
     {
-        if (!$this->isSuperAdmin()) {
-            respForbidden();
-            return;
-        }
-
         $data = getJsonInput();
 
         try {
@@ -67,11 +52,6 @@ class UserController
 
     public function update(int $id): void
     {
-        if (!$this->isSuperAdmin()) {
-            respForbidden();
-            return;
-        }
-
         $data = getJsonInput();
 
         try {
@@ -88,11 +68,6 @@ class UserController
 
     public function destroy(int $id): void
     {
-        if (!$this->isSuperAdmin()) {
-            respForbidden();
-            return;
-        }
-
         try {
             $this->service->delete($id);
             respNoContent();
@@ -105,18 +80,7 @@ class UserController
 
     public function roles(): void
     {
-        if (!$this->isSuperAdmin()) {
-            respForbidden();
-            return;
-        }
-
         $roles = $this->service->getRoles();
         respSuccess($roles);
-    }
-
-    private function isSuperAdmin(): bool
-    {
-        if (!authCheck()) return false;
-        return (authUser()['role_name'] ?? '') === 'superadmin';
     }
 }

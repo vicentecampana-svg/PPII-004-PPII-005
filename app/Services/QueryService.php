@@ -9,10 +9,12 @@ use App\Repositories\QueryRepository;
 class QueryService
 {
     private QueryRepository $repo;
+    private AuditService $audit;
 
-    public function __construct()
+    public function __construct(?QueryRepository $repo = null, ?AuditService $audit = null)
     {
-        $this->repo = new QueryRepository();
+        $this->repo = $repo ?? new QueryRepository();
+        $this->audit = $audit ?? new AuditService();
     }
 
     public function getAll(int $page, int $perPage): array
@@ -53,6 +55,8 @@ class QueryService
             'status'  => 'pendiente',
         ]);
 
+        $this->audit->log(null, 'crear', 'contact_request', $id, 'Consulta recibida de: ' . $data['name']);
+
         return $this->repo->findById($id);
     }
 
@@ -71,6 +75,10 @@ class QueryService
         }
 
         $this->repo->updateStatus($id, $status);
+
+        $action = $status === 'archivado' ? 'archivar' : 'cambiar_estado';
+        $this->audit->log(null, $action, 'contact_request', $id, "Estado de consulta cambiado a {$status}");
+
         return $this->repo->findById($id);
     }
 

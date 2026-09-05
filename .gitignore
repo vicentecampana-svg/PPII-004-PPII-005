@@ -1,3 +1,34 @@
+# Environment & Secrets
 .env
-vendor/
+.env.backup
+.env.*.local
+
+# Composer dependencies
+/vendor/
+
+# Mockup & Design Reference (local only)
 lovable-project/
+mockup/
+
+# Testing cache & coverage
+.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+
+# Operating System & IDE metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+*:Zone.Identifier
+*Zone.Identifier*
+
+# IDE & Editor configs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
