@@ -31,11 +31,6 @@ class QueryController
 
     public function index(): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($_GET['per_page'] ?? 20)));
 
@@ -45,11 +40,6 @@ class QueryController
 
     public function show(int $id): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         $item = $this->service->getById($id);
 
         if (!$item) {
@@ -62,11 +52,6 @@ class QueryController
 
     public function updateStatus(int $id): void
     {
-        if (!$this->isAdminOrEditor()) {
-            respForbidden();
-            return;
-        }
-
         $data = getJsonInput();
         $status = $data['status'] ?? '';
 
@@ -85,11 +70,5 @@ class QueryController
         } catch (\Exception $e) {
             respServerError();
         }
-    }
-
-    private function isAdminOrEditor(): bool
-    {
-        if (!authCheck()) return false;
-        return in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
     }
 }

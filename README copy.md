@@ -1,1 +1,0 @@
-# Proyecto_techHub_y_software_factory_lab

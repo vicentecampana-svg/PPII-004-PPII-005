@@ -10,9 +10,9 @@ class AuditService
 {
     private AuditRepository $repo;
 
-    public function __construct()
+    public function __construct(?AuditRepository $repo = null)
     {
-        $this->repo = new AuditRepository();
+        $this->repo = $repo ?? new AuditRepository();
     }
 
     public function getAll(int $page, int $perPage): array
@@ -31,8 +31,13 @@ class AuditService
         ];
     }
 
-    public function log(int $userId, string $action, string $entity, int $entityId, string $details = ''): int
+    public function log(?int $userId, string $action, string $entity, int $entityId, string $details = ''): int
     {
+        if ($userId === null) {
+            $user = authUser();
+            $userId = $user ? (int) $user['id'] : 1;
+        }
+
         return $this->repo->log($userId, $action, $entity, $entityId, $details);
     }
 }
