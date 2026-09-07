@@ -61,6 +61,17 @@ POSTGRES_USER=sfl_user
 POSTGRES_PASSWORD=TuPasswordSuperSeguro123!
 POSTGRES_HOST=127.0.0.1
 POSTGRES_PORT=5432
+
+# Correo (recuperación de contraseña — issue #15)
+# Sin estas variables los correos se loguean en storage/logs/mail_dev.log.
+# Confirmar credenciales con el equipo de sistemas de la ULS.
+MAIL_DRIVER=smtp
+SMTP_HOST=smtp.uls.cl
+SMTP_PORT=587
+SMTP_USER=no-reply@uls.cl
+SMTP_PASS=
+SMTP_FROM=no-reply@uls.cl
+SMTP_FROM_NAME=TechHub ULS
 ```
 
 > ⚠️ **Importante**: Asegúrate de que el archivo `.env` tenga permisos restrictivos para que solo el usuario del servidor web pueda leerlo (`chmod 600 .env`).
