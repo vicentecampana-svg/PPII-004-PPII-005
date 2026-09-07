@@ -35,7 +35,7 @@ declare(strict_types=1);
           <div class="card-body">
             <h3><?= htmlspecialchars($p['titulo'], ENT_QUOTES, 'UTF-8') ?></h3>
             <p><?= htmlspecialchars($p['descripcion'], ENT_QUOTES, 'UTF-8') ?></p>
-            <a href="/proyectos" class="btn btn-destructive btn-sm">Ver más</a>
+            <a href="<?= !empty($p['id']) ? '/proyectos/' . (int) $p['id'] : '/proyectos' ?>" class="btn btn-destructive btn-sm">Ver más</a>
           </div>
         </article>
       <?php endforeach; ?>

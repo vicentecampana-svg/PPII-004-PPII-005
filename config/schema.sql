@@ -446,7 +446,8 @@ CREATE TABLE public.staff_member (
     name character varying(150) NOT NULL,
     "position" character varying(100),
     photo character varying(255),
-    description text
+    description text,
+    orden integer DEFAULT 0 NOT NULL
 );
 
 
@@ -597,8 +598,8 @@ ALTER TABLE ONLY public.tag ALTER COLUMN id SET DEFAULT nextval('public.tag_id_s
 
 COPY public.app_user (id, role_id, username, email, password, active, must_change_password) FROM stdin;
 1	1	admin	admin@techhub.cl	$2y$12$WdqdYonkoKQm1E8msfwkYu92sj5JykU5DUN8nbMqbBAfmqfQR84Yq	t	f
-2	2	editor1	editor@techhub.cl	\\\\\\.svQph9Te2jhy64UxDg5tU.qpxvsKhBTzXRZVCf.	t	f
-3	3	redactor1	redactor@techhub.cl	\\\\\\.svQph9Te2jhy64UxDg5tU.qpxvsKhBTzXRZVCf.	t	f
+2	2	editor1	editor@techhub.cl	$2y$12$QHeO3iESmYSn02nxJlXYUO.nCZD6bcOJpqzlBCSHAWtbGq3UFjLW6	t	f
+3	3	redactor1	redactor@techhub.cl	$2y$12$QHeO3iESmYSn02nxJlXYUO.nCZD6bcOJpqzlBCSHAWtbGq3UFjLW6	t	f
 5	3	testu	test@test.cl	$2y$12$no5d/WikL3JdHZOV2jGPcejco.4V096zMLPgqrbCdIwBylvoOSdUG	t	f
 \.
 
@@ -1084,8 +1085,8 @@ CREATE INDEX IF NOT EXISTS idx_prt_expires_at  ON public.password_reset_token (e
 --
 
 -- Indices en Noticias (news): por estado y fecha, por fecha de publicacion, por autor, por editor y por titulo
-CREATE INDEX idx_news_status_published ON public.news USING btree (status_id, published_at DESC);
-CREATE INDEX idx_news_published_at ON public.news USING btree (published_at DESC);
+CREATE INDEX idx_news_status_published ON public.news USING btree (status_id, publication_date DESC);
+CREATE INDEX idx_news_published_at ON public.news USING btree (publication_date DESC);
 CREATE INDEX idx_news_author_created ON public.news USING btree (author_id, created_at DESC);
 CREATE INDEX idx_news_editor ON public.news USING btree (editor_id);
 CREATE INDEX idx_news_title ON public.news USING btree (title);

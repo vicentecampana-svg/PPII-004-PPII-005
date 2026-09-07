@@ -456,6 +456,17 @@ function mediaUrl(?string $path, string $fallbackType = ''): string
         return $path;
     }
 
+    // Nombre de archivo "pelado" (sin ruta): normalmente es un upload real
+    // guardado en public/uploads/. Pero algunos registros de ejemplo guardan
+    // el nombre de una imagen de demo que solo existe en public/assets/images/
+    // (datos semilla de config/schema.sql); en ese caso hay que servirla desde
+    // ahí, porque en /uploads/ nunca existió y se vería como imagen rota.
+    $baseName = basename($path);
+
+    if (is_file(dirname(__DIR__) . '/public/assets/images/' . $baseName)) {
+        return '/assets/images/' . $baseName;
+    }
+
     return '/uploads/' . ltrim($path, '/');
 }
 

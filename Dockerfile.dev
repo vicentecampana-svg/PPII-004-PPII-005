@@ -24,6 +24,13 @@ RUN sed -ri \
 # hacia index.php; por defecto Apache trae AllowOverride None.
 RUN sed -ri 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
+COPY docker/dev-entrypoint.sh /usr/local/bin/dev-entrypoint.sh
+RUN chmod +x /usr/local/bin/dev-entrypoint.sh
+
 WORKDIR /var/www/html
 
 EXPOSE 80
+
+# Se mantiene el ENTRYPOINT de la imagen base (docker-php-entrypoint) y solo se
+# reemplaza el CMD, para no perder la inicialización estándar de PHP/Apache.
+CMD ["/usr/local/bin/dev-entrypoint.sh"]

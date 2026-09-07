@@ -103,6 +103,7 @@ final class HomeController extends Controller
         }
 
         return array_map(static fn(array $p): array => [
+            'id' => $p['id'] ?? null,
             'titulo' => $p['name'],
             'descripcion' => $p['description'] ?? '',
             'imagen_url' => $p['image'] ?? null,

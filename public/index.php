@@ -86,6 +86,7 @@ $routes = [
     'GET' => [
         '/'                        => [['App\Controllers\HomeController', 'index'],          []],
         '/proyectos'               => [['App\Controllers\ProyectosController', 'index'],     []],
+        '/proyectos/{id}'          => [['App\Controllers\ProyectosController', 'show'],      []],
         '/servicios'               => [['App\Controllers\ServiciosController', 'index'],     []],
         '/staff'                   => [['App\Controllers\StaffWebController', 'index'],      []],
         '/noticias'                => [['App\Controllers\NoticiasController', 'index'],      []],
