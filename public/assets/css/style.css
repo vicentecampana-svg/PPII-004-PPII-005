@@ -738,8 +738,8 @@ a {
 /* Credits Page */
 .credits-section {
   position: relative;
-  background: #254282;
-  color: #ffffff;
+  background: var(--surface);
+  color: var(--foreground);
   padding: 60px 16px 80px;
   min-height: calc(100vh - 400px);
 }
@@ -782,7 +782,7 @@ a {
 .credits-title {
   font-size: 2.25rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--foreground);
   letter-spacing: -0.02em;
 }
 
@@ -807,15 +807,13 @@ a {
 .credits-role {
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
-  opacity: 0.95;
+  color: var(--foreground);
 }
 
 .credits-name {
   font-size: 1rem;
   font-weight: 400;
-  color: #ffffff;
-  opacity: 0.9;
+  color: var(--muted-foreground);
 }
 
 .btn-contact-member {

@@ -649,7 +649,7 @@ COPY public.enlaces_footer (id, grupo, etiqueta, url, orden, created_at, updated
 --
 
 COPY public.footer_info (id, email, phone, address, copyright_text, social_facebook, social_linkedin, social_twitter, social_instagram, social_youtube) FROM stdin;
-1	contacto@techhub.cl	+56912345678	Av. Raúl Valenzuela 123, La Serena	© 2026 Tech Hub ULS	\N	\N	\N	\N	\N
+1	contacto@techhub.cl	+56912345678	Av. Raúl Valenzuela 123, La Serena	© 2026 Software Factory Lab	\N	\N	\N	\N	\N
 \.
 
 
