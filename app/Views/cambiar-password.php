@@ -13,11 +13,11 @@ $errors ??= [];
   <form class="login-card" method="post" action="/cambiar-password" novalidate>
     <h1>Cambiar Contraseña</h1>
 
-    <?php if (!empty($errors['general'])): ?>
+    <?php if (!empty($errors['general'])) : ?>
       <p class="form-error" role="alert" aria-live="assertive"><?= e($errors['general']) ?></p>
     <?php endif; ?>
 
-    <?php if (!empty($success)): ?>
+    <?php if (!empty($success)) : ?>
       <p role="status" aria-live="polite" style="margin-top: 16px; padding: 10px 12px; border-radius: var(--radius); background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #15803d; font-size: 0.8125rem; font-weight: 600;">
         <?= e($success) ?>
       </p>
@@ -34,7 +34,7 @@ $errors ??= [];
         aria-required="true"
         <?= !empty($errors['current_password']) ? 'aria-invalid="true" aria-describedby="current-password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['current_password'])): ?>
+      <?php if (!empty($errors['current_password'])) : ?>
         <p class="field-error" id="current-password-error" role="alert"><?= e($errors['current_password']) ?></p>
       <?php endif; ?>
     </div>
@@ -48,7 +48,7 @@ $errors ??= [];
         aria-required="true"
         <?= !empty($errors['new_password']) ? 'aria-invalid="true" aria-describedby="new-password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['new_password'])): ?>
+      <?php if (!empty($errors['new_password'])) : ?>
         <p class="field-error" id="new-password-error" role="alert"><?= e($errors['new_password']) ?></p>
       <?php endif; ?>
     </div>
@@ -62,7 +62,7 @@ $errors ??= [];
         aria-required="true"
         <?= !empty($errors['confirm_password']) ? 'aria-invalid="true" aria-describedby="confirm-password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['confirm_password'])): ?>
+      <?php if (!empty($errors['confirm_password'])) : ?>
         <p class="field-error" id="confirm-password-error" role="alert"><?= e($errors['confirm_password']) ?></p>
       <?php endif; ?>
     </div>

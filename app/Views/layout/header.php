@@ -34,10 +34,10 @@ if ($isLoggedIn) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/style.css">
-  <?php if (!empty($extraCss)): ?>
-    <?php foreach ((array) $extraCss as $css): ?>
+  <?php if (!empty($extraCss)) : ?>
+        <?php foreach ((array) $extraCss as $css) : ?>
       <link rel="stylesheet" href="<?= htmlspecialchars($css, ENT_QUOTES, 'UTF-8') ?>">
-    <?php endforeach; ?>
+        <?php endforeach; ?>
   <?php endif; ?>
 </head>
 <body>
@@ -52,12 +52,12 @@ if ($isLoggedIn) {
       <div class="nav-actions">
         <nav class="main-nav" aria-label="Navegación principal">
           <ul>
-            <?php foreach ($navLinks as $link): ?>
-              <?php 
-                $isActive = ($link['href'] === '/' && $currentPath === '/') || 
+            <?php foreach ($navLinks as $link) : ?>
+                <?php
+                $isActive = ($link['href'] === '/' && $currentPath === '/') ||
                             ($link['href'] !== '/' && !str_starts_with($link['href'], '#') && str_starts_with($currentPath, $link['href'])) ||
                             ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
-              ?>
+                ?>
               <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active" aria-current="page"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
             <?php endforeach; ?>
           </ul>
@@ -65,9 +65,9 @@ if ($isLoggedIn) {
 
         <div class="header-actions">
           <span class="lang-badge" aria-label="Idioma actual: Español">ES</span>
-          <?php if ($isLoggedIn): ?>
+          <?php if ($isLoggedIn) : ?>
             <a href="/logout" class="login-link">Cerrar sesión</a>
-          <?php else: ?>
+          <?php else : ?>
             <a href="/login" class="login-link<?= $currentPath === '/login' ? ' active' : '' ?>"<?= $currentPath === '/login' ? ' aria-current="page"' : '' ?>>Iniciar sesión</a>
           <?php endif; ?>
         </div>
@@ -81,16 +81,16 @@ if ($isLoggedIn) {
     <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación móvil" aria-hidden="true">
       <ul>
         <?php foreach ($navLinks as $link) : ?>
-          <?php 
-            $isActive = ($link['href'] === '/' && $currentPath === '/') || 
+            <?php
+            $isActive = ($link['href'] === '/' && $currentPath === '/') ||
                         ($link['href'] !== '/' && !str_starts_with($link['href'], '#') && str_starts_with($currentPath, $link['href'])) ||
                         ($link['href'] === '/admin' && str_starts_with($currentPath, '/admin'));
-          ?>
+            ?>
           <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active" aria-current="page"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
-        <?php if ($isLoggedIn): ?>
+        <?php if ($isLoggedIn) : ?>
           <li><a href="/logout">Cerrar sesión</a></li>
-        <?php else: ?>
+        <?php else : ?>
           <li><a href="/login"<?= $currentPath === '/login' ? ' class="active" aria-current="page"' : '' ?>>Iniciar sesión</a></li>
         <?php endif; ?>
       </ul>

@@ -33,7 +33,7 @@ $otrosProyectos ??= [];
       <?= nl2br(htmlspecialchars($proyecto['descripcion'] ?? '', ENT_QUOTES, 'UTF-8')) ?>
     </div>
 
-    <?php if (!empty($proyecto['link'])): ?>
+    <?php if (!empty($proyecto['link'])) : ?>
       <div class="section-cta">
         <a href="<?= htmlspecialchars($proyecto['link'], ENT_QUOTES, 'UTF-8') ?>" class="btn btn-destructive" target="_blank" rel="noopener noreferrer">
           Ver proyecto
@@ -43,7 +43,7 @@ $otrosProyectos ??= [];
 
     <div class="noticia-detail-divider"></div>
 
-    <?php if (!empty($otrosProyectos)): ?>
+    <?php if (!empty($otrosProyectos)) : ?>
       <section class="noticia-related-section">
         <h2 class="noticia-related-heading">Otros proyectos</h2>
 

@@ -20,22 +20,22 @@ $otrasNoticias ??= [];
     <!-- Encabezado de la noticia -->
     <header class="noticia-detail-header text-center">
       <h1 class="noticia-detail-title">
-        <?= strtoupper(htmlspecialchars($noticia['title'] ?? '', ENT_QUOTES, 'UTF-8')) ?>
+        <?= mb_strtoupper(htmlspecialchars($noticia['title'] ?? '', ENT_QUOTES, 'UTF-8'), 'UTF-8') ?>
       </h1>
 
       <p class="noticia-detail-author">
         <em>Redactor: <?= htmlspecialchars($noticia['author'] ?? 'Periodista', ENT_QUOTES, 'UTF-8') ?></em>
       </p>
 
-      <?php if (!empty($noticia['subtitle'])): ?>
+      <?php if (!empty($noticia['subtitle'])) : ?>
         <p class="noticia-detail-lead">
-          <?= nl2br(htmlspecialchars($noticia['subtitle'], ENT_QUOTES, 'UTF-8')) ?>
+            <?= nl2br(htmlspecialchars($noticia['subtitle'], ENT_QUOTES, 'UTF-8')) ?>
         </p>
       <?php endif; ?>
     </header>
 
     <!-- Imagen Principal -->
-    <?php if (!empty($noticia['image'])): ?>
+    <?php if (!empty($noticia['image'])) : ?>
       <div class="noticia-detail-hero">
         <img src="<?= htmlspecialchars(mediaUrl($noticia['image'], 'noticia'), ENT_QUOTES, 'UTF-8') ?>"
              alt="<?= htmlspecialchars($noticia['title'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
@@ -52,19 +52,19 @@ $otrasNoticias ??= [];
     <div class="noticia-detail-divider"></div>
 
     <!-- Otras noticias relevantes -->
-    <?php if (!empty($otrasNoticias)): ?>
+    <?php if (!empty($otrasNoticias)) : ?>
       <section class="noticia-related-section">
         <h2 class="noticia-related-heading">Otras noticias relevantes</h2>
 
         <div class="noticias-grid noticia-related-grid">
-          <?php foreach ($otrasNoticias as $rel): ?>
-            <?php
-              $relId = (int) ($rel['id'] ?? 1);
-              $relTitle = $rel['title'] ?? '';
-              $relAuthor = $rel['author'] ?? 'Periodista';
-              $relImage = $rel['image'] ?? null;
-              $relSummary = $rel['subtitle'] ?: mb_strimwidth(strip_tags($rel['content'] ?? ''), 0, 120, '…');
-            ?>
+          <?php foreach ($otrasNoticias as $rel) : ?>
+                <?php
+                $relId = (int) ($rel['id'] ?? 1);
+                $relTitle = $rel['title'] ?? '';
+                $relAuthor = $rel['author'] ?? 'Periodista';
+                $relImage = $rel['image'] ?? null;
+                $relSummary = $rel['subtitle'] ?: mb_strimwidth(strip_tags($rel['content'] ?? ''), 0, 120, '…');
+                ?>
             <article class="noticia-card">
               <a href="/noticias/<?= $relId ?>" class="noticia-card-img-link" tabindex="-1">
                 <img src="<?= htmlspecialchars(mediaUrl($relImage, 'noticia'), ENT_QUOTES, 'UTF-8') ?>"

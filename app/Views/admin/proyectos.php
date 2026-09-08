@@ -17,13 +17,13 @@ $editingProject ??= null;
       <h2 class="admin-tab-content-title">Proyectos y servicios</h2>
     </div>
 
-    <?php if (empty($projects)): ?>
+    <?php if (empty($projects)) : ?>
       <div class="admin-empty-state">
         <p>No hay proyectos registrados actualmente.</p>
       </div>
-    <?php else: ?>
+    <?php else : ?>
       <div class="admin-items-list">
-        <?php foreach ($projects as $proj): ?>
+        <?php foreach ($projects as $proj) : ?>
           <article class="admin-item-row<?= empty($proj['active']) ? ' inactive' : '' ?>">
             <div class="admin-item-content">
               <img src="<?= e(mediaUrl($proj['image'] ?? null, 'proyecto')) ?>" 
@@ -33,7 +33,7 @@ $editingProject ??= null;
               <div class="admin-item-info">
                 <div class="admin-item-title">
                   <?= e($proj['name']) ?>
-                  <?php if (empty($proj['active'])): ?>
+                  <?php if (empty($proj['active'])) : ?>
                     <span class="admin-badge-draft">Inactivo</span>
                   <?php endif; ?>
                 </div>
@@ -81,16 +81,16 @@ $editingProject ??= null;
     <div class="admin-sidebar-card">
       <div class="admin-sidebar-title">
         <span><?= $editingProject ? 'Editar registro' : 'Nuevo registro' ?></span>
-        <?php if ($editingProject): ?>
+        <?php if ($editingProject) : ?>
           <a href="/admin?tab=proyectos" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
-        <?php else: ?>
+        <?php else : ?>
           <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
         <?php endif; ?>
       </div>
 
       <form method="post" action="/admin/proyectos" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
-        <?php if ($editingProject): ?>
+        <?php if ($editingProject) : ?>
           <input type="hidden" name="id" value="<?= (int) $editingProject['id'] ?>">
         <?php endif; ?>
 

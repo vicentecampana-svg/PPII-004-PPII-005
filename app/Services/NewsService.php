@@ -112,10 +112,18 @@ class NewsService
         }
 
         $fields = ['updated_at' => date('Y-m-d H:i:s')];
-        if (array_key_exists('title', $data))       $fields['title'] = $data['title'];
-        if (array_key_exists('subtitle', $data))    $fields['subtitle'] = $data['subtitle'] ?? null;
-        if (array_key_exists('content', $data))     $fields['content'] = $data['content'];
-        if (array_key_exists('image', $data))       $fields['image'] = $data['image'] ?? null;
+        if (array_key_exists('title', $data)) {
+            $fields['title'] = $data['title'];
+        }
+        if (array_key_exists('subtitle', $data)) {
+            $fields['subtitle'] = $data['subtitle'] ?? null;
+        }
+        if (array_key_exists('content', $data)) {
+            $fields['content'] = $data['content'];
+        }
+        if (array_key_exists('image', $data)) {
+            $fields['image'] = $data['image'] ?? null;
+        }
 
         if (array_key_exists('tag_ids', $data) || array_key_exists('tag_id', $data)) {
             $tagIds = $this->extractTagIds($data);

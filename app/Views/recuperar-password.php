@@ -19,11 +19,11 @@ $email   ??= '';
       Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
     </p>
 
-    <?php if (!empty($errors['general'])): ?>
+    <?php if (!empty($errors['general'])) : ?>
       <p class="form-error"><?= e($errors['general']) ?></p>
     <?php endif; ?>
 
-    <?php if (!empty($success)): ?>
+    <?php if (!empty($success)) : ?>
       <p style="margin-top: 16px; padding: 10px 12px; border-radius: var(--radius);
                 background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);
                 color: #15803d; font-size: 0.8125rem;">
@@ -39,7 +39,7 @@ $email   ??= '';
         type="email" id="email" name="email"
         placeholder="correo@userena.cl" maxlength="255"
         autocomplete="email" value="<?= e($email) ?>" required>
-      <?php if (!empty($errors['email'])): ?>
+      <?php if (!empty($errors['email'])) : ?>
         <p class="field-error"><?= e($errors['email']) ?></p>
       <?php endif; ?>
     </div>

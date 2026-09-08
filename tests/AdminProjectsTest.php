@@ -12,9 +12,7 @@ final class AdminProjectsTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        sessionStart();
         $_SESSION = [];
     }
 

@@ -65,15 +65,15 @@ $roleClass = match ($roleNormalized) {
 
     <!-- Barra de Pestañas (Tabs según Mockup) -->
     <nav class="admin-tabs" aria-label="Navegación del panel de administración">
-      <?php foreach ($visibleTabs as $tabKey => $tabData): ?>
+      <?php foreach ($visibleTabs as $tabKey => $tabData) : ?>
         <a href="/admin?tab=<?= e($tabKey) ?>" class="admin-tab<?= $activeTab === $tabKey ? ' active' : '' ?>">
-          <?= e($tabData['label']) ?>
+            <?= e($tabData['label']) ?>
         </a>
       <?php endforeach; ?>
     </nav>
 
     <!-- Alertas y Mensajes Flash -->
-    <?php if (!empty($flashSuccess)): ?>
+    <?php if (!empty($flashSuccess)) : ?>
       <div class="admin-alert admin-alert-success" role="status">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -83,7 +83,7 @@ $roleClass = match ($roleNormalized) {
       </div>
     <?php endif; ?>
 
-    <?php if (!empty($flashError)): ?>
+    <?php if (!empty($flashError)) : ?>
       <div class="admin-alert admin-alert-error" role="alert">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10"></circle>
@@ -95,33 +95,33 @@ $roleClass = match ($roleNormalized) {
     <?php endif; ?>
 
     <!-- Contenido de la pestaña activa -->
-    <?php if ($activeTab === 'proyectos' && isset($visibleTabs['proyectos'])): ?>
-      <?php require __DIR__ . '/admin/proyectos.php'; ?>
-    <?php elseif ($activeTab === 'staff' && isset($visibleTabs['staff'])): ?>
-      <?php require __DIR__ . '/admin/staff.php'; ?>
-    <?php elseif ($activeTab === 'noticias' && isset($visibleTabs['noticias'])): ?>
-      <?php require __DIR__ . '/admin/noticias.php'; ?>
-    <?php elseif ($activeTab === 'sobre-nosotros' && isset($visibleTabs['sobre-nosotros'])): ?>
-      <?php require __DIR__ . '/admin/sobre-nosotros.php'; ?>
-    <?php elseif ($activeTab === 'footer' && isset($visibleTabs['footer'])): ?>
-      <?php require __DIR__ . '/admin/footer.php'; ?>
-    <?php elseif ($activeTab === 'usuarios' && isset($visibleTabs['usuarios'])): ?>
-      <?php require __DIR__ . '/admin/usuarios.php'; ?>
-    <?php elseif (isset($allTabs[$activeTab])): ?>
+    <?php if ($activeTab === 'proyectos' && isset($visibleTabs['proyectos'])) : ?>
+        <?php require __DIR__ . '/admin/proyectos.php'; ?>
+    <?php elseif ($activeTab === 'staff' && isset($visibleTabs['staff'])) : ?>
+        <?php require __DIR__ . '/admin/staff.php'; ?>
+    <?php elseif ($activeTab === 'noticias' && isset($visibleTabs['noticias'])) : ?>
+        <?php require __DIR__ . '/admin/noticias.php'; ?>
+    <?php elseif ($activeTab === 'sobre-nosotros' && isset($visibleTabs['sobre-nosotros'])) : ?>
+        <?php require __DIR__ . '/admin/sobre-nosotros.php'; ?>
+    <?php elseif ($activeTab === 'footer' && isset($visibleTabs['footer'])) : ?>
+        <?php require __DIR__ . '/admin/footer.php'; ?>
+    <?php elseif ($activeTab === 'usuarios' && isset($visibleTabs['usuarios'])) : ?>
+        <?php require __DIR__ . '/admin/usuarios.php'; ?>
+    <?php elseif (isset($allTabs[$activeTab])) : ?>
       <div class="admin-tab-header">
         <h2 class="admin-tab-content-title"><?= e($allTabs[$activeTab]['title']) ?></h2>
       </div>
 
-      <?php if (!isset($visibleTabs[$activeTab])): ?>
+        <?php if (!isset($visibleTabs[$activeTab])) : ?>
         <div class="admin-alert admin-alert-error">
           <p>No tienes los permisos requeridos para acceder a esta sección.</p>
         </div>
-      <?php else: ?>
+        <?php else : ?>
         <div class="admin-empty-state">
           <p>El contenido y operaciones CRUD de la pestaña <strong><?= e($allTabs[$activeTab]['label']) ?></strong> se implementarán en su issue correspondiente.</p>
         </div>
-      <?php endif; ?>
-    <?php else: ?>
+        <?php endif; ?>
+    <?php else : ?>
       <div class="admin-alert admin-alert-error">
         <p>Pestaña no encontrada.</p>
       </div>

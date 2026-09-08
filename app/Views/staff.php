@@ -13,12 +13,12 @@ $staff ??= [];
 
     <div class="staff-grid">
       <?php foreach ($staff as $member) : ?>
-        <?php
-          $name = $member['name'] ?? $member['nombre'] ?? '';
-          $position = $member['position'] ?? $member['cargo'] ?? '';
-          $photo = $member['photo'] ?? $member['imagen_url'] ?? null;
-          $desc = $member['description'] ?? $member['descripcion'] ?? '';
-        ?>
+            <?php
+            $name = $member['name'] ?? $member['nombre'] ?? '';
+            $position = $member['position'] ?? $member['cargo'] ?? '';
+            $photo = $member['photo'] ?? $member['imagen_url'] ?? null;
+            $desc = $member['description'] ?? $member['descripcion'] ?? '';
+            ?>
         <article class="staff-card-item">
           <h3 class="staff-card-name"><?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?></h3>
           <div class="staff-card-photo-container">
@@ -27,12 +27,12 @@ $staff ??= [];
                  loading="lazy"
                  class="staff-card-photo">
           </div>
-          <?php if (!empty($position)) : ?>
+            <?php if (!empty($position)) : ?>
             <p class="staff-card-role"><?= htmlspecialchars($position, ENT_QUOTES, 'UTF-8') ?></p>
-          <?php endif; ?>
-          <?php if (!empty($desc)) : ?>
+            <?php endif; ?>
+            <?php if (!empty($desc)) : ?>
             <p class="staff-card-desc"><?= htmlspecialchars($desc, ENT_QUOTES, 'UTF-8') ?></p>
-          <?php endif; ?>
+            <?php endif; ?>
         </article>
       <?php endforeach; ?>
     </div>

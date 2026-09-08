@@ -30,24 +30,24 @@ $standardRoles = [
       </p>
     </div>
 
-    <?php if (empty($usersList)): ?>
+    <?php if (empty($usersList)) : ?>
       <div class="admin-empty-state">
         <p>No hay usuarios registrados actualmente.</p>
       </div>
-    <?php else: ?>
+    <?php else : ?>
       <div class="admin-users-list">
-        <?php foreach ($usersList as $u): ?>
-          <?php 
+        <?php foreach ($usersList as $u) : ?>
+            <?php
             $userRole = strtolower((string) ($u['role_name'] ?? ''));
-          ?>
+            ?>
           <article class="admin-user-card">
             <div class="admin-user-header-row">
               <div class="admin-user-email">
                 <strong><?= e($u['email']) ?></strong>
-                <?php if (!empty($u['username']) && $u['username'] !== $u['email']): ?>
+                <?php if (!empty($u['username']) && $u['username'] !== $u['email']) : ?>
                   <span style="font-size: 0.8rem; color: var(--muted-foreground); margin-left: 8px;">(<?= e($u['username']) ?>)</span>
                 <?php endif; ?>
-                <?php if (empty($u['active'])): ?>
+                <?php if (empty($u['active'])) : ?>
                   <span class="admin-badge-draft" style="background-color: #fee2e2; color: #991b1b;">Inactivo</span>
                 <?php endif; ?>
               </div>
@@ -85,13 +85,13 @@ $standardRoles = [
 
             <!-- Botones de Rol según Mockup 6 -->
             <div class="admin-user-roles-row">
-              <?php foreach ($standardRoles as $rKey => $rLabel): ?>
-                <?php 
-                  $isActive = ($rKey === 'admin' && ($userRole === 'admin' || $userRole === 'superadmin'))
+              <?php foreach ($standardRoles as $rKey => $rLabel) : ?>
+                    <?php
+                    $isActive = ($rKey === 'admin' && ($userRole === 'admin' || $userRole === 'superadmin'))
                            || ($rKey === 'editor' && $userRole === 'editor')
                            || ($rKey === 'redactor' && $userRole === 'redactor')
                            || ($rKey === 'invitado' && !in_array($userRole, ['admin', 'superadmin', 'editor', 'redactor'], true));
-                ?>
+                    ?>
                 <form method="post" action="/admin/usuarios/role" style="margin: 0;">
                   <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                   <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
@@ -115,16 +115,16 @@ $standardRoles = [
     <div class="admin-sidebar-card">
       <div class="admin-sidebar-title">
         <span><?= $editingUser ? 'Editar registro' : 'Nuevo registro' ?></span>
-        <?php if ($editingUser): ?>
+        <?php if ($editingUser) : ?>
           <a href="/admin?tab=usuarios" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
-        <?php else: ?>
+        <?php else : ?>
           <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
         <?php endif; ?>
       </div>
 
       <form method="post" action="/admin/usuarios">
         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
-        <?php if ($editingUser): ?>
+        <?php if ($editingUser) : ?>
           <input type="hidden" name="id" value="<?= (int) $editingUser['id'] ?>">
         <?php endif; ?>
 
@@ -171,7 +171,7 @@ $standardRoles = [
         <div class="admin-form-group">
           <label class="admin-form-label" for="user-role">Rol asignado</label>
           <select id="user-role" name="role_id" class="admin-form-select" required>
-            <?php 
+            <?php
               $currentRoleId = (int) ($editingUser['role_id'] ?? 4);
               $rolesMap = !empty($rolesList) ? $rolesList : [
                   ['id' => 1, 'name' => 'superadmin'],
@@ -179,8 +179,8 @@ $standardRoles = [
                   ['id' => 3, 'name' => 'editor'],
                   ['id' => 4, 'name' => 'redactor'],
               ];
-            ?>
-            <?php foreach ($rolesMap as $role): ?>
+                ?>
+            <?php foreach ($rolesMap as $role) : ?>
               <option value="<?= (int) $role['id'] ?>" <?= $currentRoleId === (int) $role['id'] ? 'selected' : '' ?>>
                 <?= e(ucfirst((string) $role['name'])) ?>
               </option>

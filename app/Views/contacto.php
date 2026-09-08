@@ -12,15 +12,15 @@ declare(strict_types=1);
     <div class="contacto-card">
       <h1 class="contacto-card-title">Envío de formulario de contacto</h1>
 
-      <?php if (!empty($flashSuccess)): ?>
+      <?php if (!empty($flashSuccess)) : ?>
         <div class="alert alert-success" role="alert">
-          <?= htmlspecialchars($flashSuccess, ENT_QUOTES, 'UTF-8') ?>
+            <?= htmlspecialchars($flashSuccess, ENT_QUOTES, 'UTF-8') ?>
         </div>
       <?php endif; ?>
 
-      <?php if (!empty($flashError)): ?>
+      <?php if (!empty($flashError)) : ?>
         <div class="alert alert-error" role="alert">
-          <?= htmlspecialchars($flashError, ENT_QUOTES, 'UTF-8') ?>
+            <?= htmlspecialchars($flashError, ENT_QUOTES, 'UTF-8') ?>
         </div>
       <?php endif; ?>
 

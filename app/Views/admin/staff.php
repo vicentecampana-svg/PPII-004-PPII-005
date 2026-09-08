@@ -17,21 +17,21 @@ $editingStaff ??= null;
       <h2 class="admin-tab-content-title">Miembros del staff</h2>
     </div>
 
-    <?php if (empty($staffList)): ?>
+    <?php if (empty($staffList)) : ?>
       <div class="admin-empty-state">
         <p>No hay miembros del staff registrados actualmente.</p>
       </div>
-    <?php else: ?>
+    <?php else : ?>
       <div class="admin-items-list">
-        <?php foreach ($staffList as $member): ?>
+        <?php foreach ($staffList as $member) : ?>
           <article class="admin-item-row">
             <div class="admin-item-content">
-              <?php if (!empty($member['photo'])): ?>
+              <?php if (!empty($member['photo'])) : ?>
                 <img src="<?= e(mediaUrl($member['photo'], 'staff')) ?>" 
                      alt="<?= e($member['name']) ?>" 
                      class="admin-item-thumb"
                      loading="lazy">
-              <?php else: ?>
+              <?php else : ?>
                 <div class="admin-item-thumb admin-avatar-placeholder" aria-label="<?= e($member['name']) ?>">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -85,16 +85,16 @@ $editingStaff ??= null;
     <div class="admin-sidebar-card">
       <div class="admin-sidebar-title">
         <span><?= $editingStaff ? 'Editar registro' : 'Nuevo registro' ?></span>
-        <?php if ($editingStaff): ?>
+        <?php if ($editingStaff) : ?>
           <a href="/admin?tab=staff" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
-        <?php else: ?>
+        <?php else : ?>
           <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
         <?php endif; ?>
       </div>
 
       <form method="post" action="/admin/staff" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
-        <?php if ($editingStaff): ?>
+        <?php if ($editingStaff) : ?>
           <input type="hidden" name="id" value="<?= (int) $editingStaff['id'] ?>">
         <?php endif; ?>
 

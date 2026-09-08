@@ -60,10 +60,18 @@ class FooterService
         }
 
         $fields = [];
-        if (array_key_exists('grupo', $data))    $fields['grupo'] = trim($data['grupo'] ?? 'Sitio');
-        if (array_key_exists('etiqueta', $data)) $fields['etiqueta'] = trim($data['etiqueta']);
-        if (array_key_exists('url', $data))      $fields['url'] = trim($data['url']);
-        if (array_key_exists('orden', $data))    $fields['orden'] = (int) ($data['orden'] ?? 0);
+        if (array_key_exists('grupo', $data)) {
+            $fields['grupo'] = trim($data['grupo'] ?? 'Sitio');
+        }
+        if (array_key_exists('etiqueta', $data)) {
+            $fields['etiqueta'] = trim($data['etiqueta']);
+        }
+        if (array_key_exists('url', $data)) {
+            $fields['url'] = trim($data['url']);
+        }
+        if (array_key_exists('orden', $data)) {
+            $fields['orden'] = (int) ($data['orden'] ?? 0);
+        }
 
         if ($fields) {
             $this->repo->updateLink($id, $fields);

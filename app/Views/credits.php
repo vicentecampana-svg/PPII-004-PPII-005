@@ -13,20 +13,20 @@ $miembros ??= [];
       <h1 class="credits-title">Créditos</h1>
     </div>
 
-    <?php if (!empty($flashSuccess)): ?>
+    <?php if (!empty($flashSuccess)) : ?>
       <div class="alert alert-success" role="alert">
         <?= htmlspecialchars($flashSuccess, ENT_QUOTES, 'UTF-8') ?>
       </div>
     <?php endif; ?>
 
-    <?php if (!empty($flashError)): ?>
+    <?php if (!empty($flashError)) : ?>
       <div class="alert alert-error" role="alert">
         <?= htmlspecialchars($flashError, ENT_QUOTES, 'UTF-8') ?>
       </div>
     <?php endif; ?>
 
     <div class="credits-grid">
-      <?php foreach ($miembros as $miembro): ?>
+      <?php foreach ($miembros as $miembro) : ?>
         <div class="credits-card">
           <p class="credits-role"><?= htmlspecialchars($miembro['role'], ENT_QUOTES, 'UTF-8') ?></p>
           <p class="credits-name"><?= htmlspecialchars($miembro['name'], ENT_QUOTES, 'UTF-8') ?></p>

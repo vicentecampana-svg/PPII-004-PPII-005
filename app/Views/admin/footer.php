@@ -23,13 +23,13 @@ $footerInfo ??= [
       <h2 class="admin-tab-content-title">Enlaces del footer</h2>
     </div>
 
-    <?php if (empty($footerLinks)): ?>
+    <?php if (empty($footerLinks)) : ?>
       <div class="admin-empty-state">
         <p>No hay enlaces configurados en el footer.</p>
       </div>
-    <?php else: ?>
+    <?php else : ?>
       <div class="admin-items-list">
-        <?php foreach ($footerLinks as $link): ?>
+        <?php foreach ($footerLinks as $link) : ?>
           <article class="admin-item-row">
             <div class="admin-item-content">
               <div class="admin-item-info" style="padding-left: 4px;">
@@ -127,16 +127,16 @@ $footerInfo ??= [
     <div class="admin-sidebar-card">
       <div class="admin-sidebar-title">
         <span><?= $editingFooterLink ? 'Editar registro' : 'Nuevo registro' ?></span>
-        <?php if ($editingFooterLink): ?>
+        <?php if ($editingFooterLink) : ?>
           <a href="/admin?tab=footer" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
-        <?php else: ?>
+        <?php else : ?>
           <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
         <?php endif; ?>
       </div>
 
       <form method="post" action="/admin/footer/links">
         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
-        <?php if ($editingFooterLink): ?>
+        <?php if ($editingFooterLink) : ?>
           <input type="hidden" name="id" value="<?= (int) $editingFooterLink['id'] ?>">
         <?php endif; ?>
 

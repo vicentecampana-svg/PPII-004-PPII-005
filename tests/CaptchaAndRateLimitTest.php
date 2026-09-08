@@ -13,6 +13,15 @@ class CaptchaAndRateLimitTest extends TestCase
     protected function setUp(): void
     {
         $_SERVER = [];
+
+        // CaptchaService::validate()/generate() arrancan la sesión por su cuenta
+        // la primera vez que se llaman en el proceso, y eso reemplaza $_SESSION
+        // por lo que haya en el storage, descartando cualquier valor asignado
+        // antes. Arrancamos la sesión acá (con sessionStart(), no session_start()
+        // crudo, para dejar seteados los cookie params seguros que espera
+        // SecurityHardeningTest) antes de tocar $_SESSION, para que el resultado
+        // no dependa del orden de ejecución de los tests.
+        sessionStart();
         $_SESSION = [];
     }
 

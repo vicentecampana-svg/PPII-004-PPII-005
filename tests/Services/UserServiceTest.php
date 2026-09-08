@@ -47,7 +47,7 @@ class UserServiceTest extends TestCase
         $data = [
             'username' => 'testuser',
             'email' => 'test@example.com',
-            'password' => 'secret123',
+            'password' => 'SecurePass123!',
             'role_id' => 1,
         ];
 

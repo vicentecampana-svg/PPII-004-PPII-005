@@ -32,10 +32,10 @@ $query ??= '';
             placeholder="Buscar"
             class="noticias-search-input"
             aria-label="Buscar noticias">
-          <?php if ($selectedTagId): ?>
+          <?php if ($selectedTagId) : ?>
             <input type="hidden" name="tag_id" value="<?= (int) $selectedTagId ?>">
           <?php endif; ?>
-          <?php if ($query !== ''): ?>
+          <?php if ($query !== '') : ?>
             <a href="/noticias<?= $selectedTagId ? '?tag_id=' . (int) $selectedTagId : '' ?>" class="search-clear-btn" aria-label="Limpiar búsqueda">&times;</a>
           <?php endif; ?>
         </div>
@@ -44,21 +44,23 @@ $query ??= '';
     </div>
 
     <!-- Filtros de tags si existen -->
-    <?php if (!empty($tags)): ?>
+    <?php if (!empty($tags)) : ?>
       <div class="noticias-tag-filters">
         <span class="tag-filter-label">Temas:</span>
         <a href="/noticias<?= $query !== '' ? '?q=' . urlencode($query) : '' ?>"
            class="tag-filter-pill <?= $selectedTagId === null ? 'active' : '' ?>">
           Todos
         </a>
-        <?php foreach ($tags as $t): ?>
-          <?php
+        <?php foreach ($tags as $t) : ?>
+            <?php
             $params = [];
-            if ($query !== '') $params['q'] = $query;
+            if ($query !== '') {
+                $params['q'] = $query;
+            }
             $params['tag_id'] = $t['id'];
             $linkUrl = '/noticias?' . http_build_query($params);
             $isActive = $selectedTagId === (int) $t['id'];
-          ?>
+            ?>
           <a href="<?= e($linkUrl) ?>" class="tag-filter-pill <?= $isActive ? 'active' : '' ?>">
             <?= e($t['name']) ?>
           </a>
@@ -74,21 +76,21 @@ $query ??= '';
     </div>
 
     <!-- Listado de Noticias -->
-    <?php if (empty($noticias)): ?>
+    <?php if (empty($noticias)) : ?>
       <div class="noticias-empty-card">
         <p>No se encontraron noticias que coincidan con la búsqueda.</p>
         <a href="/noticias" class="btn btn-destructive" style="margin-top: 16px;">Ver todas las noticias</a>
       </div>
-    <?php else: ?>
+    <?php else : ?>
       <div class="noticias-grid">
-        <?php foreach ($noticias as $n): ?>
-          <?php
+        <?php foreach ($noticias as $n) : ?>
+            <?php
             $newsId = (int) ($n['id'] ?? 1);
             $title = $n['title'] ?? '';
             $author = $n['author'] ?? 'Periodista';
             $image = $n['image'] ?? null;
             $summary = $n['subtitle'] ?: mb_strimwidth(strip_tags($n['content'] ?? ''), 0, 140, '…');
-          ?>
+            ?>
           <article class="noticia-card">
             <a href="/noticias/<?= $newsId ?>" class="noticia-card-img-link" tabindex="-1">
               <img src="<?= htmlspecialchars(mediaUrl($image, 'noticia'), ENT_QUOTES, 'UTF-8') ?>"

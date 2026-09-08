@@ -18,7 +18,7 @@ $token  ??= '';
       Elige una contraseña segura de al menos 12 caracteres.
     </p>
 
-    <?php if (!empty($errors['general'])): ?>
+    <?php if (!empty($errors['general'])) : ?>
       <p class="form-error"><?= e($errors['general']) ?></p>
     <?php endif; ?>
 
@@ -30,7 +30,7 @@ $token  ??= '';
         type="password" id="new_password" name="new_password"
         placeholder="Mínimo 12 caracteres" maxlength="120"
         autocomplete="new-password" required>
-      <?php if (!empty($errors['new_password'])): ?>
+      <?php if (!empty($errors['new_password'])) : ?>
         <p class="field-error"><?= e($errors['new_password']) ?></p>
       <?php endif; ?>
     </div>
@@ -41,7 +41,7 @@ $token  ??= '';
         type="password" id="confirm_password" name="confirm_password"
         placeholder="Repite la nueva contraseña" maxlength="120"
         autocomplete="new-password" required>
-      <?php if (!empty($errors['confirm_password'])): ?>
+      <?php if (!empty($errors['confirm_password'])) : ?>
         <p class="field-error"><?= e($errors['confirm_password']) ?></p>
       <?php endif; ?>
     </div>

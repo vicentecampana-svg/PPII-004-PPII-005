@@ -21,26 +21,26 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
       <h2 class="admin-tab-content-title">Noticias</h2>
     </div>
 
-    <?php if (empty($newsList)): ?>
+    <?php if (empty($newsList)) : ?>
       <div class="admin-empty-state">
         <p>No hay noticias registradas actualmente.</p>
       </div>
-    <?php else: ?>
+    <?php else : ?>
       <div class="admin-items-list">
-        <?php foreach ($newsList as $item): ?>
-          <?php 
+        <?php foreach ($newsList as $item) : ?>
+            <?php
             $statusName = strtolower((string) ($item['status'] ?? 'pendiente'));
             $isPublished = $statusName === 'publicada';
             $excerpt = $item['subtitle'] ?: mb_strimwidth(strip_tags((string) ($item['content'] ?? '')), 0, 110, '…');
-          ?>
+            ?>
           <article class="admin-item-row">
             <div class="admin-item-content">
-              <?php if (!empty($item['image'])): ?>
+              <?php if (!empty($item['image'])) : ?>
                 <img src="<?= e(mediaUrl($item['image'], 'noticia')) ?>" 
                      alt="<?= e($item['title']) ?>" 
                      class="admin-item-thumb"
                      loading="lazy">
-              <?php else: ?>
+              <?php else : ?>
                 <div class="admin-item-thumb admin-avatar-placeholder">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path>
@@ -54,12 +54,12 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
               <div class="admin-item-info">
                 <div class="admin-item-title"><?= e($item['title']) ?></div>
                 <div class="admin-item-desc">
-                  <?php if ($isPublished): ?>
+                  <?php if ($isPublished) : ?>
                     <span class="admin-badge-approved">Aprobada</span>
-                  <?php else: ?>
+                  <?php else : ?>
                     <span class="admin-badge-pending">Pendiente</span>
                   <?php endif; ?>
-                  <?php if ($excerpt !== ''): ?>
+                  <?php if ($excerpt !== '') : ?>
                     <span class="admin-item-excerpt">- <?= e($excerpt) ?></span>
                   <?php endif; ?>
                 </div>
@@ -68,12 +68,12 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
 
             <div class="admin-item-actions">
               <!-- Botón Aprobar / Desaprobar (Estado) -->
-              <?php if ($isEditorOrAdmin): ?>
+              <?php if ($isEditorOrAdmin) : ?>
                 <form method="post" action="/admin/noticias/status" style="margin: 0;">
                   <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                   <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
                   <input type="hidden" name="status" value="<?= $isPublished ? 'pendiente' : 'publicada' ?>">
-                  <?php if (!$isPublished): ?>
+                    <?php if (!$isPublished) : ?>
                     <button type="submit" 
                             class="admin-btn-icon approve" 
                             title="Aprobar y publicar noticia"
@@ -82,7 +82,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
                     </button>
-                  <?php else: ?>
+                    <?php else : ?>
                     <button type="submit" 
                             class="admin-btn-icon unapprove" 
                             title="Cambiar a pendiente (despublicar)"
@@ -92,7 +92,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                       </svg>
                     </button>
-                  <?php endif; ?>
+                    <?php endif; ?>
                 </form>
               <?php endif; ?>
 
@@ -135,16 +135,16 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
     <div class="admin-sidebar-card">
       <div class="admin-sidebar-title">
         <span><?= $editingNews ? 'Editar noticia' : 'Nueva noticia' ?></span>
-        <?php if ($editingNews): ?>
+        <?php if ($editingNews) : ?>
           <a href="/admin?tab=noticias" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
-        <?php else: ?>
+        <?php else : ?>
           <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
         <?php endif; ?>
       </div>
 
       <form method="post" action="/admin/noticias" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
-        <?php if ($editingNews): ?>
+        <?php if ($editingNews) : ?>
           <input type="hidden" name="id" value="<?= (int) $editingNews['id'] ?>">
         <?php endif; ?>
 
@@ -222,7 +222,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
             <span class="admin-toggle-text">Noticia pública</span>
           </label>
 
-          <?php if ($isEditorOrAdmin): ?>
+          <?php if ($isEditorOrAdmin) : ?>
             <label class="admin-toggle-label">
               <input type="checkbox" 
                      name="is_approved" 

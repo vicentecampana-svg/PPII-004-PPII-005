@@ -16,7 +16,7 @@ $flashSuccess ??= null;
   <form class="login-card" method="post" action="/login" novalidate>
     <h1>Login</h1>
 
-    <?php if (!empty($errors['general'])): ?>
+    <?php if (!empty($errors['general'])) : ?>
       <p class="form-error" role="alert" aria-live="assertive"><?= e($errors['general']) ?></p>
     <?php endif; ?>
 
@@ -31,7 +31,7 @@ $flashSuccess ??= null;
         aria-required="true"
         <?= !empty($errors['email']) ? 'aria-invalid="true" aria-describedby="email-error"' : '' ?>
         required>
-      <?php if (!empty($errors['email'])): ?>
+      <?php if (!empty($errors['email'])) : ?>
         <p class="field-error" id="email-error" role="alert"><?= e($errors['email']) ?></p>
       <?php endif; ?>
     </div>
@@ -45,7 +45,7 @@ $flashSuccess ??= null;
         aria-required="true"
         <?= !empty($errors['password']) ? 'aria-invalid="true" aria-describedby="password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['password'])): ?>
+      <?php if (!empty($errors['password'])) : ?>
         <p class="field-error" id="password-error" role="alert"><?= e($errors['password']) ?></p>
       <?php endif; ?>
     </div>
@@ -71,12 +71,12 @@ $flashSuccess ??= null;
         aria-required="true"
         <?= !empty($errors['captcha']) ? 'aria-invalid="true" aria-describedby="captcha-error"' : '' ?>
         required>
-      <?php if (!empty($errors['captcha'])): ?>
+      <?php if (!empty($errors['captcha'])) : ?>
         <p class="field-error" id="captcha-error" role="alert"><?= e($errors['captcha']) ?></p>
       <?php endif; ?>
     </div>
 
-    <?php if (!empty($flashSuccess)): ?>
+    <?php if (!empty($flashSuccess)) : ?>
       <p style="margin-bottom: 16px; padding: 10px 12px; border-radius: var(--radius);
                 background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);
                 color: #15803d; font-size: 0.8125rem;">
