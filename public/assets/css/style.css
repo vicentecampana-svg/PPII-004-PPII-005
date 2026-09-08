@@ -1751,7 +1751,7 @@ a {
 .contacto-hero-section {
   min-height: calc(100vh - 200px);
   padding: 56px 16px 80px;
-  background: #254282;
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1766,9 +1766,9 @@ a {
 .contacto-card {
   width: 100%;
   max-width: 520px;
-  background: #dcdee1;
+  background: #ffffff;
   border-radius: var(--radius);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   padding: 32px 36px;
 }
 
