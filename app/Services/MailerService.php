@@ -31,18 +31,17 @@ namespace App\Services;
  */
 final class MailerService
 {
-    private bool $isDevMode;
+    private string $driver;
     private string $fromEmail;
     private string $fromName;
     private string $logPath;
 
     public function __construct()
     {
-        $driver         = getenv('MAIL_DRIVER') ?: 'log';
-        $this->isDevMode = ($driver !== 'smtp');
-        $this->fromEmail = getenv('SMTP_FROM')      ?: 'no-reply@techhub.uls.cl';
-        $this->fromName  = getenv('SMTP_FROM_NAME') ?: 'TechHub ULS';
-        $this->logPath   = dirname(__DIR__, 2) . '/storage/logs/mail_dev.log';
+        $this->driver     = getenv('MAIL_DRIVER') ?: 'log';
+        $this->fromEmail  = getenv('SMTP_FROM') ?: getenv('RESEND_FROM') ?: 'onboarding@resend.dev';
+        $this->fromName   = getenv('SMTP_FROM_NAME') ?: 'Software Factory Lab ULS';
+        $this->logPath    = dirname(__DIR__, 2) . '/storage/logs/mail_dev.log';
     }
 
     /**
@@ -58,11 +57,35 @@ final class MailerService
         $subject = 'Recuperación de contraseña — TechHub ULS';
         $body    = $this->buildPasswordResetBody($toName, $resetLink);
 
-        if ($this->isDevMode) {
+        if ($this->driver === 'log') {
             return $this->logMail($toEmail, $subject, $body, $resetLink);
         }
 
+        if ($this->driver === 'resend') {
+            return $this->sendResend($toEmail, $toName, $subject, $body);
+        }
+
         return $this->sendSmtp($toEmail, $toName, $subject, $body);
+    }
+
+    // ──────────────────────────────────────────────
+    //  API pública — envío genérico
+    // ──────────────────────────────────────────────
+
+    /**
+     * Envía un correo genérico (contacto, notificaciones, etc.).
+     */
+    public function send(string $toEmail, string $toName, string $subject, string $htmlBody): bool
+    {
+        if ($this->driver === 'log') {
+            return $this->logMail($toEmail, $subject, $htmlBody, '');
+        }
+
+        if ($this->driver === 'resend') {
+            return $this->sendResend($toEmail, $toName, $subject, $htmlBody);
+        }
+
+        return $this->sendSmtp($toEmail, $toName, $subject, $htmlBody);
     }
 
     // ──────────────────────────────────────────────
@@ -88,6 +111,52 @@ final class MailerService
         ]);
 
         return (bool) file_put_contents($this->logPath, $entry, FILE_APPEND | LOCK_EX);
+    }
+
+    // ──────────────────────────────────────────────
+    //  Resend API
+    // ──────────────────────────────────────────────
+
+    /**
+     * Envía correo vía la API de Resend (HTTP, sin SMTP).
+     */
+    private function sendResend(string $toEmail, string $toName, string $subject, string $body): bool
+    {
+        $apiKey = getenv('RESEND_API_KEY');
+        if (!$apiKey) {
+            error_log('[MailerService] RESEND_API_KEY no configurada');
+            return false;
+        }
+
+        $payload = json_encode([
+            'from'    => $this->fromName . ' <' . $this->fromEmail . '>',
+            'to'      => [$toEmail],
+            'subject' => $subject,
+            'html'    => $body,
+        ]);
+
+        $ch = curl_init('https://api.resend.com/emails');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json',
+            ],
+            CURLOPT_POSTFIELDS => $payload,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            return true;
+        }
+
+        error_log('[MailerService] Resend error ' . $httpCode . ': ' . ($response ?: 'sin respuesta'));
+        return false;
     }
 
     // ──────────────────────────────────────────────
