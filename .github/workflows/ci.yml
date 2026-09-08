@@ -10,6 +10,28 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: techhub_ci
+          POSTGRES_USER: techhub_ci
+          POSTGRES_PASSWORD: techhub_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U techhub_ci -d techhub_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      PG_HOST: localhost
+      PG_PORT: 5432
+      PG_DATABASE: techhub_ci
+      PG_USER: techhub_ci
+      PG_PASSWORD: techhub_ci
+
     steps:
     - uses: actions/checkout@v4
 
@@ -18,6 +40,7 @@ jobs:
       with:
         php-version: '8.5'
         tools: composer:v2
+        extensions: pdo, pdo_pgsql
 
     - name: Cache Composer packages
       id: composer-cache
@@ -30,6 +53,13 @@ jobs:
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
+
+    # Los repositorios/servicios usan una conexión PDO real (ver app/helpers.php),
+    # así que varios tests (auditoría, rate limiter) necesitan que las tablas
+    # existan de verdad, no solo un mock. El contenido de las filas no importa
+    # para los tests, solo el esquema.
+    - name: Seed test database
+      run: psql "postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DATABASE}" -f config/schema.sql
 
     - name: PHP Syntax Check
       run: find app/ -name "*.php" -exec php -l {} \;
