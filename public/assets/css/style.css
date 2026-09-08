@@ -423,6 +423,9 @@ a {
 }
 
 .card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
@@ -449,6 +452,9 @@ a {
 }
 
 .card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding: 16px;
 }
 
@@ -464,7 +470,14 @@ a {
 }
 
 .card-body .btn {
-  margin-top: 16px;
+  margin-top: auto;
+  padding-top: 16px;
+  align-self: flex-start;
+}
+
+.card-body .read-more {
+  margin-top: auto;
+  padding-top: 16px;
 }
 
 #noticias .card-body h3 {
@@ -581,15 +594,6 @@ a {
   font-size: 0.75rem;
   color: #f1f5f9;
   font-weight: 500;
-}
-
-.footer-brand {
-  margin-top: 8px;
-}
-
-.footer-logo {
-  height: 44px;
-  width: auto;
 }
 
 .footer-links {
@@ -709,6 +713,24 @@ a {
 
 .footer-credits-link:hover,
 .footer-credits-link:focus-visible {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.footer-legal-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: #ffffff;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.footer-legal-link:hover,
+.footer-legal-link:focus-visible {
   color: #ffffff;
   text-decoration: underline;
 }
@@ -990,6 +1012,120 @@ a {
 .credits-modal-actions .btn-primary:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+/* Legal Notice Modal */
+.legal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.legal-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.legal-modal-card {
+  background: #ffffff;
+  color: var(--foreground);
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 560px;
+  padding: 28px 32px;
+  position: relative;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95);
+  transition: transform 0.25s ease;
+}
+
+.legal-modal-overlay.open .legal-modal-card {
+  transform: scale(1);
+}
+
+.legal-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.legal-modal-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--brand-deep);
+}
+
+.legal-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.legal-modal-close:hover {
+  color: var(--foreground);
+}
+
+.legal-modal-body {
+  overflow-y: auto;
+  padding-right: 4px;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.legal-modal-body h3 {
+  margin-top: 16px;
+  margin-bottom: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.legal-modal-body h3:first-child {
+  margin-top: 0;
+}
+
+.legal-modal-body p {
+  margin-bottom: 10px;
+}
+
+.legal-modal-footnote {
+  margin-top: 16px;
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+
+.legal-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Cuando el aviso se muestra por primera vez, el usuario debe aceptarlo
+   explícitamente: se oculta la X y no se cierra al hacer click afuera
+   (ver JS en app/Views/layout/footer.php). */
+.legal-modal-mandatory .legal-modal-close {
+  display: none;
 }
 
 /* Alerts */

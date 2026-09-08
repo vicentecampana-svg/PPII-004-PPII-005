@@ -23,6 +23,14 @@ declare(strict_types=1);
   </div>
 </section>
 
+<section class="section" id="contacto">
+  <div class="container contact-cta">
+    <h2 class="section-title">¿Tienes un proyecto en mente?</h2>
+    <p>Escríbenos y conversemos sobre cómo el laboratorio puede ayudarte.</p>
+    <a href="/contacto" class="btn btn-destructive">Contáctenos</a>
+  </div>
+</section>
+
 <section class="section section-surface" id="proyectos">
   <div class="container">
     <h2 class="section-title">Proyectos de SFL</h2>
@@ -64,7 +72,7 @@ declare(strict_types=1);
       <?php endforeach; ?>
     </div>
     <div class="section-cta">
-      <a href="/staff" class="btn btn-destructive">Ver todos l@s miembr@s</a>
+      <a href="/staff" class="btn btn-destructive">Ver todos los miembros</a>
     </div>
   </div>
 </section>
@@ -89,13 +97,5 @@ declare(strict_types=1);
         </article>
       <?php endforeach; ?>
     </div>
-  </div>
-</section>
-
-<section class="section" id="contacto">
-  <div class="container contact-cta">
-    <h2 class="section-title">¿Tienes un proyecto en mente?</h2>
-    <p>Escríbenos y conversemos sobre cómo el laboratorio puede ayudarte.</p>
-    <a href="/contacto" class="btn btn-destructive">Contáctenos</a>
   </div>
 </section>

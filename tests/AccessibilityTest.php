@@ -68,8 +68,8 @@ final class AccessibilityTest extends TestCase
         // 1. Footer landmark
         $this->assertStringContainsString('role="contentinfo"', $output);
 
-        // 2. Logo alt text
-        $this->assertStringContainsString('alt="Software Factory Lab Universidad de La Serena"', $output);
+        // El footer ya no repite el logo (issue #66: no correspondía a la
+        // identidad visual) — el logo accesible del sitio vive en el header.
 
         // 3. Social link accessible names
         $this->assertStringContainsString('aria-label="Software Factory Lab en LinkedIn (abre en pestaña nueva)"', $output);

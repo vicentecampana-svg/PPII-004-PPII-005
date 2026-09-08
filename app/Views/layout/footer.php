@@ -31,9 +31,6 @@ if ($grupos === []) {
   <footer class="site-footer" role="contentinfo">
     <div class="container">
       <p class="footer-eyebrow">Software Factory Lab</p>
-      <div class="footer-brand">
-        <img src="/assets/images/logo-sfl.png" alt="Software Factory Lab Universidad de La Serena" width="150" height="52" class="footer-logo">
-      </div>
 
       <div class="footer-links">
         <div class="footer-group">
@@ -79,11 +76,112 @@ if ($grupos === []) {
 
       <div class="footer-bottom">
         <p class="footer-copy"><?= htmlspecialchars($contacto['copyright_text'] ?? '© SFL. Todos los derechos reservados', ENT_QUOTES, 'UTF-8') ?></p>
+        <button type="button" class="footer-legal-link" id="legal-reopen-btn">Aviso legal</button>
         <a href="/credits" class="footer-credits-link">Página creada por equipo Charlie</a>
       </div>
     </div>
   </footer>
 </div>
+
+<div id="legal-modal" class="legal-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title">
+  <div class="legal-modal-card">
+    <div class="legal-modal-header">
+      <h2 id="legal-modal-title" class="legal-modal-title">Aviso legal</h2>
+      <button type="button" class="legal-modal-close" id="legal-close-btn" aria-label="Cerrar aviso legal">&times;</button>
+    </div>
+
+    <div class="legal-modal-body">
+      <h3>Tech Hub ULS</h3>
+      <p>Este sitio tiene como propósito presentar la identidad corporativa del Tech Hub de la Universidad de La Serena y dar a conocer los servicios ofrecidos por sus unidades internas (entre ellas, el Software Factory Lab, ODS, Repositorio, IA Lab e IoT Lab).</p>
+      <p>Todos los contenidos que conforman este sitio web —textos, logotipos, imágenes y fotografías del staff— son propiedad exclusiva del Tech Hub ULS o de terceros autorizados, y su uso no autorizado está prohibido.</p>
+      <p>Al utilizar este sitio, el usuario se compromete a hacer un uso lícito y adecuado de los contenidos, absteniéndose de ingresar datos falsos o de dañar la infraestructura tecnológica del Tech Hub ULS.</p>
+      <p>El Tech Hub ULS no asume responsabilidad sobre el contenido de sitios externos vinculados desde esta plataforma, ni sobre interrupciones del servicio derivadas de labores de mantenimiento.</p>
+
+      <h3>Software Factory Lab (SFL)</h3>
+      <p>El Software Factory Lab es una unidad del Tech Hub ULS dedicada a servicios de ingeniería de software y a la difusión de su portafolio de proyectos estudiantiles.</p>
+      <p>Queda prohibida la ingeniería inversa o la comunicación pública de los activos de software y diseño presentados en este sitio sin el consentimiento previo y por escrito del equipo del laboratorio.</p>
+
+      <h3>Protección de datos personales</h3>
+      <p>El tratamiento de los datos personales recopilados a través de este sitio (por ejemplo, en el formulario de contacto) se rige por la Ley N° 19.628 sobre Protección de la Vida Privada y la Ley N° 21.719, garantizando a los titulares sus derechos ARCO+ (Acceso, Rectificación, Supresión, Oposición, Portabilidad y Bloqueo).</p>
+
+      <p class="legal-modal-footnote">Plataforma desarrollada en 2026 por el equipo Charlie para la Universidad de La Serena.</p>
+    </div>
+
+    <div class="legal-modal-actions">
+      <button type="button" class="btn btn-destructive" id="legal-accept-btn">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var STORAGE_KEY = 'techhub_aviso_legal_aceptado';
+    var modal = document.getElementById('legal-modal');
+    var closeBtn = document.getElementById('legal-close-btn');
+    var acceptBtn = document.getElementById('legal-accept-btn');
+    var reopenBtn = document.getElementById('legal-reopen-btn');
+
+    if (!modal) return;
+
+    var hasAccepted = false;
+    try {
+      hasAccepted = localStorage.getItem(STORAGE_KEY) === '1';
+    } catch (e) {
+      hasAccepted = false;
+    }
+
+    function openModal(requireAcceptance) {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.toggle('legal-modal-mandatory', !!requireAcceptance);
+    }
+
+    function closeModal() {
+      modal.classList.remove('open', 'legal-modal-mandatory');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function accept() {
+      try {
+        localStorage.setItem(STORAGE_KEY, '1');
+      } catch (e) {
+        // localStorage no disponible (modo privado, etc.): no persiste entre visitas,
+        // pero no debe impedir que el usuario cierre el aviso en esta sesión.
+      }
+      closeModal();
+    }
+
+    if (!hasAccepted) {
+      openModal(true);
+    }
+
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', accept);
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
+
+    if (reopenBtn) {
+      reopenBtn.addEventListener('click', function () {
+        openModal(false);
+      });
+    }
+
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal && !modal.classList.contains('legal-modal-mandatory')) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && modal.classList.contains('open') && !modal.classList.contains('legal-modal-mandatory')) {
+        closeModal();
+      }
+    });
+  })();
+</script>
 <script>
   (function () {
     var toggleBtn = document.getElementById('nav-toggle');
