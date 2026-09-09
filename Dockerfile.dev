@@ -25,7 +25,8 @@ RUN sed -ri \
 RUN sed -ri 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
 COPY docker/dev-entrypoint.sh /usr/local/bin/dev-entrypoint.sh
-RUN chmod +x /usr/local/bin/dev-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/dev-entrypoint.sh \
+    && chmod +x /usr/local/bin/dev-entrypoint.sh
 
 WORKDIR /var/www/html
 
