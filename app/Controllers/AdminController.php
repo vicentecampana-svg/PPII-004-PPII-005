@@ -354,6 +354,7 @@ final class AdminController extends Controller
         $subtitle = trim((string) ($_POST['subtitle'] ?? ''));
         $content = trim((string) ($_POST['content'] ?? ''));
         $image = trim((string) ($_POST['existing_image'] ?? ''));
+        $isPublic = isset($_POST['is_public']);
         $isApproved = isset($_POST['is_approved']) ? (bool) $_POST['is_approved'] : false;
 
         if ($title === '' || $content === '') {
@@ -383,6 +384,7 @@ final class AdminController extends Controller
                 'subtitle' => $subtitle !== '' ? $subtitle : null,
                 'content'  => $content,
                 'image'    => $image !== '' ? $image : null,
+                'is_public' => $isPublic,
             ];
 
             if ($id > 0) {

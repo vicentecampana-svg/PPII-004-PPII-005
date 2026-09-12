@@ -91,9 +91,25 @@ function dbUpdate(string $table, array $data, string $where, array $whereParams 
         $setParts[] = "{$col} = :{$placeholder}";
         $params[$placeholder] = $val;
     }
+
+    $whereIndex = 0;
+    $positionalWhereParams = [];
+    $where = preg_replace_callback('/\?/', function () use (&$whereIndex, &$positionalWhereParams, $whereParams): string {
+        $placeholder = 'where_' . $whereIndex;
+        $positionalWhereParams[$placeholder] = array_values($whereParams)[$whereIndex] ?? null;
+        $whereIndex++;
+        return ':' . $placeholder;
+    }, $where);
+
+    if ($whereIndex > 0) {
+        $params = array_merge($params, $positionalWhereParams);
+    } else {
+        $params = array_merge($params, $whereParams);
+    }
+
     $set = implode(', ', $setParts);
     $sql = "UPDATE {$table} SET {$set} WHERE {$where}";
-    return dbQuery($sql, array_merge($params, $whereParams))->rowCount();
+    return dbQuery($sql, $params)->rowCount();
 }
 
 function dbDelete(string $table, string $where, array $params = []): int

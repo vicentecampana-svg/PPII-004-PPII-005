@@ -87,6 +87,7 @@ class NewsService
             'subtitle'   => $data['subtitle'] ?? null,
             'content'    => $data['content'],
             'image'      => $data['image'] ?? null,
+            'is_public'  => $data['is_public'] ?? true,
             'tag_id'     => $tagIds[0] ?? ($data['tag_id'] ?? null),
         ]);
 
@@ -123,6 +124,9 @@ class NewsService
         }
         if (array_key_exists('image', $data)) {
             $fields['image'] = $data['image'] ?? null;
+        }
+        if (array_key_exists('is_public', $data)) {
+            $fields['is_public'] = (bool) $data['is_public'];
         }
 
         if (array_key_exists('tag_ids', $data) || array_key_exists('tag_id', $data)) {

@@ -272,6 +272,7 @@ CREATE TABLE public.news (
     subtitle character varying(255),
     content text NOT NULL,
     image character varying(255),
+    is_public boolean DEFAULT true NOT NULL,
     publication_date timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone

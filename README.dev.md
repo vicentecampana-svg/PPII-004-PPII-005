@@ -99,7 +99,7 @@ puesto.
 Para verificar las tablas:
 
 ```bash
-docker compose -f docker-compose.dev.yml exec postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c "\dt"
+docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\\dt"'
 ```
 ## 6. Abrir el proyecto
 
