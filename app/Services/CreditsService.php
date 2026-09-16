@@ -4,63 +4,23 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Repositories\CreditMemberRepository;
+
 class CreditsService
 {
     /**
-     * Mapeo privado y seguro de los integrantes del equipo Charlie.
+     * Los integrantes del apartado Créditos (equipo Charlie) ahora viven en la
+     * tabla `credit_member`, editables por el Super Admin desde el panel.
      * Las direcciones de correo electrónico NUNCA se exponen en el Frontend / DOM.
-     * Se pueden sobreescribir mediante variables de entorno si se configuran en el servidor.
+     * Aún se pueden sobreescribir por integrante mediante variables de entorno
+     * (EMAIL_VICENTE_CAMPANA, etc.) si se configuran en el servidor.
      */
-    private const TEAM_MEMBERS = [
-        'vicente-campana' => [
-            'key'   => 'vicente-campana',
-            'name'  => 'Vicente Campaña',
-            'role'  => 'Project Manager',
-            'email' => 'vicente.campana@userena.cl',
-        ],
-        'wilmary-guedez' => [
-            'key'   => 'wilmary-guedez',
-            'name'  => 'Wilmary Guedez',
-            'role'  => 'Ingeniera en Requerimientos',
-            'email' => 'wilmary.guedez@userena.cl',
-        ],
-        'esteban-zepeda' => [
-            'key'   => 'esteban-zepeda',
-            'name'  => 'Esteban Zepeda',
-            'role'  => 'Diseño UX/UI',
-            'email' => 'esteban.zepeda@userena.cl',
-        ],
-        'bastian-pizarro' => [
-            'key'   => 'bastian-pizarro',
-            'name'  => 'Bastian Pizarro',
-            'role'  => 'Diseño UX/UI',
-            'email' => 'bastian.pizarro@userena.cl',
-        ],
-        'maximiliano-saavedra' => [
-            'key'   => 'maximiliano-saavedra',
-            'name'  => 'Maximiliano Saavedra',
-            'role'  => 'Desarrollo Backend y Base de datos',
-            'email' => 'maximiliano.saavedra@userena.cl',
-        ],
-        'agustina-lopez' => [
-            'key'   => 'agustina-lopez',
-            'name'  => 'Agustina Lopez',
-            'role'  => 'Desarrollo Frontend',
-            'email' => 'agustina.lopez@userena.cl',
-        ],
-        'basthian-valenzuela' => [
-            'key'   => 'basthian-valenzuela',
-            'name'  => 'Basthian Valenzuela',
-            'role'  => 'Quality Assurance',
-            'email' => 'basthian.valenzuela@userena.cl',
-        ],
-        'pedro-rojas' => [
-            'key'   => 'pedro-rojas',
-            'name'  => 'Pedro Rojas',
-            'role'  => 'Apoyo Desarrollo',
-            'email' => 'pedro.rojasm3@userena.cl',
-        ],
-    ];
+    private CreditMemberRepository $repo;
+
+    public function __construct(?CreditMemberRepository $repo = null)
+    {
+        $this->repo = $repo ?? new CreditMemberRepository();
+    }
 
     /**
      * Retorna la lista pública de integrantes para la vista de créditos.
@@ -72,7 +32,7 @@ class CreditsService
             'key'  => $m['key'],
             'name' => $m['name'],
             'role' => $m['role'],
-        ], array_values(self::TEAM_MEMBERS));
+        ], $this->repo->findAllPublic());
     }
 
     /**
@@ -89,7 +49,8 @@ class CreditsService
         $email     = trim((string)($input['email'] ?? ''));
         $message   = trim((string)($input['message'] ?? ''));
 
-        if ($memberKey === '' || !isset(self::TEAM_MEMBERS[$memberKey])) {
+        $member = $this->repo->findByKey($memberKey);
+        if (!$member) {
             throw new \InvalidArgumentException('El integrante seleccionado no es válido.');
         }
 
@@ -105,24 +66,23 @@ class CreditsService
             throw new \InvalidArgumentException('El mensaje debe tener entre 5 y 5000 caracteres.');
         }
 
-        $recipientData = self::TEAM_MEMBERS[$memberKey];
-        $recipientEmail = $this->resolveRecipientEmail($memberKey, $recipientData['email']);
+        $recipientEmail = $this->resolveRecipientEmail($member['key'], $member['email']);
 
         $dispatched = $this->dispatchEmail(
             $recipientEmail,
-            $recipientData['name'],
-            $recipientData['role'],
+            $member['name'],
+            $member['role'],
             $name,
             $email,
             $message
         );
 
-        $this->persistAuditRecord($recipientData['name'], $name, $email, $message);
+        $this->persistAuditRecord($member['name'], $name, $email, $message);
 
         return [
             'success'   => true,
-            'message'   => 'Tu mensaje ha sido enviado exitosamente a ' . $recipientData['name'] . '.',
-            'recipient' => $recipientData['name'],
+            'message'   => 'Tu mensaje ha sido enviado exitosamente a ' . $member['name'] . '.',
+            'recipient' => $member['name'],
         ];
     }
 

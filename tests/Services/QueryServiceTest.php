@@ -14,14 +14,23 @@ class QueryServiceTest extends TestCase
     private $mailerMock;
     private $footerMock;
     private $service;
+    private string $notifyEnv;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->notifyEnv = (string) getenv('CONTACT_NOTIFY_EMAIL');
+        putenv('CONTACT_NOTIFY_EMAIL=');
         $this->repoMock = $this->createMock(QueryRepository::class);
         $this->mailerMock = $this->createMock(MailerService::class);
         $this->footerMock = $this->createMock(FooterService::class);
         $this->service = new QueryService($this->repoMock, null, $this->mailerMock, $this->footerMock);
+    }
+
+    protected function tearDown(): void
+    {
+        putenv('CONTACT_NOTIFY_EMAIL=' . $this->notifyEnv);
+        parent::tearDown();
     }
 
     public function testGetAllReturnsPaginatedData()

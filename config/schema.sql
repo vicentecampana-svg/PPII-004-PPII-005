@@ -1082,6 +1082,46 @@ CREATE INDEX IF NOT EXISTS idx_prt_expires_at  ON public.password_reset_token (e
 
 
 --
+-- Name: credit_member; Type: TABLE; Schema: public; Owner: -
+-- Issue: Créditos editables — Super Admin (nombre, cargo, correo de contacto)
+-- Nota: el seed de datos base vive en config/migrations/004_credit_member.sql
+--
+
+CREATE TABLE public.credit_member (
+    id integer NOT NULL,
+    "key" character varying(60) NOT NULL,
+    name character varying(150) NOT NULL,
+    role character varying(100) NOT NULL,
+    email character varying(150) NOT NULL,
+    orden integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: credit_member_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.credit_member_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.credit_member_id_seq OWNED BY public.credit_member.id;
+
+ALTER TABLE ONLY public.credit_member
+    ADD CONSTRAINT credit_member_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.credit_member
+    ADD CONSTRAINT credit_member_key_key UNIQUE ("key");
+
+ALTER TABLE ONLY public.credit_member
+    ALTER COLUMN id SET DEFAULT nextval('public.credit_member_id_seq'::regclass);
+
+
+--
 -- Indices de Rendimiento (Performance Indexes)
 --
 
