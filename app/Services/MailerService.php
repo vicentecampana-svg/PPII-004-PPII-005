@@ -29,7 +29,7 @@ namespace App\Services;
  * │  instálalo con Composer y reemplaza el método sendSmtp().            │
  * └──────────────────────────────────────────────────────────────────────┘
  */
-final class MailerService
+class MailerService
 {
     private string $driver;
     private string $fromEmail;
@@ -86,6 +86,22 @@ final class MailerService
         }
 
         return $this->sendSmtp($toEmail, $toName, $subject, $htmlBody);
+    }
+
+    /**
+     * Notifica al encargado sobre una nueva consulta recibida desde el
+     * formulario de contacto.
+     *
+     * @param  string $toEmail Correo del encargado / equipo responsable.
+     * @param  array  $contact Datos de la consulta (name, email, phone, subject, message).
+     * @return bool            true si se procesó sin errores.
+     */
+    public function sendContactNotification(string $toEmail, array $contact): bool
+    {
+        $subject = 'Nueva consulta de contacto — ' . (($contact['subject'] ?? 'Formulario') ?: 'Formulario');
+        $body    = $this->buildContactNotificationBody($contact);
+
+        return $this->send($toEmail, 'Encargado SFL ULS', $subject, $body);
     }
 
     // ──────────────────────────────────────────────
@@ -238,6 +254,60 @@ final class MailerService
               Si el botón no funciona, copia esta URL en tu navegador:<br>
               <a href="{$safeLink}" style="color: #3b82f6;">{$safeLink}</a>
             </p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+            <p style="font-size: 0.75em; color: #94a3b8; margin: 0;">
+              TechHub — Software Factory Lab, Universidad de La Serena
+            </p>
+          </div>
+        </body>
+        </html>
+        HTML;
+    }
+
+    private function buildContactNotificationBody(array $contact): string
+    {
+        $name    = htmlspecialchars((string) ($contact['name'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $email   = htmlspecialchars((string) ($contact['email'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $phone   = htmlspecialchars((string) ($contact['phone'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $subject = htmlspecialchars((string) ($contact['subject'] ?? 'Formulario'), ENT_QUOTES, 'UTF-8');
+        $message = nl2br(htmlspecialchars((string) ($contact['message'] ?? ''), ENT_QUOTES, 'UTF-8'));
+
+        $phoneRow = $phone !== ''
+            ? '<tr><td style="padding:8px 0;color:#475569;width:140px;">Teléfono</td><td style="padding:8px 0;color:#0f172a;font-weight:bold;">' . $phone . '</td></tr>'
+            : '';
+
+        return <<<HTML
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Nueva consulta de contacto</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; background: #f8fafc; padding: 32px;">
+          <div style="max-width: 560px; margin: 0 auto; background: #fff;
+                      border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0;">
+            <h2 style="margin-top: 0; color: #1e293b;">Nueva consulta de contacto</h2>
+            <p style="color: #475569;">Se recibió una nueva consulta a través del formulario de contacto de
+               <strong>TechHub ULS</strong>.</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+              <tr>
+                <td style="padding:8px 0;color:#475569;width:140px;">Nombre</td>
+                <td style="padding:8px 0;color:#0f172a;font-weight:bold;">{$name}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:#475569;width:140px;">Correo</td>
+                <td style="padding:8px 0;color:#0f172a;font-weight:bold;">{$email}</td>
+              </tr>
+              {$phoneRow}
+              <tr>
+                <td style="padding:8px 0;color:#475569;width:140px;">Asunto</td>
+                <td style="padding:8px 0;color:#0f172a;font-weight:bold;">{$subject}</td>
+              </tr>
+            </table>
+            <div style="margin-top: 16px; background: #f1f5f9; border-radius: 6px; padding: 16px;">
+              <p style="margin: 0 0 6px 0; color: #475569;"><strong>Mensaje:</strong></p>
+              <p style="margin: 0; color: #0f172a; line-height: 1.5;">{$message}</p>
+            </div>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
             <p style="font-size: 0.75em; color: #94a3b8; margin: 0;">
               TechHub — Software Factory Lab, Universidad de La Serena
