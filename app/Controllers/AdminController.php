@@ -202,12 +202,12 @@ final class AdminController extends Controller
         if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
             try {
                 $image = $this->mediaService->upload($_FILES['image_file'], 'project_');
-            } catch (\InvalidArgumentException $e) {
-                $_SESSION['_flash_error'] = $e->getMessage();
+            } catch (\InvalidArgumentException) {
+                $_SESSION['_flash_error'] = 'La imagen no es válida: solo se permiten JPG/PNG y máximo 5MB.';
                 header('Location: /admin?tab=proyectos' . ($id > 0 ? '&edit_id=' . $id : ''));
                 exit;
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al subir la imagen: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo subir la imagen. Inténtalo nuevamente.';
                 header('Location: /admin?tab=proyectos' . ($id > 0 ? '&edit_id=' . $id : ''));
                 exit;
             }
@@ -229,8 +229,8 @@ final class AdminController extends Controller
                 $this->projectService->create($data);
                 $_SESSION['_flash_success'] = 'Proyecto creado exitosamente.';
             }
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al guardar el proyecto: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo guardar el proyecto. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=proyectos');
@@ -249,8 +249,8 @@ final class AdminController extends Controller
             try {
                 $this->projectService->delete($id);
                 $_SESSION['_flash_success'] = 'Proyecto eliminado exitosamente.';
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al eliminar el proyecto: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo eliminar el proyecto. Inténtalo nuevamente.';
             }
         }
 
@@ -281,12 +281,12 @@ final class AdminController extends Controller
         if (isset($_FILES['photo_file']) && !empty($_FILES['photo_file']['name'])) {
             try {
                 $photo = $this->mediaService->upload($_FILES['photo_file'], 'staff_');
-            } catch (\InvalidArgumentException $e) {
-                $_SESSION['_flash_error'] = $e->getMessage();
+            } catch (\InvalidArgumentException) {
+                $_SESSION['_flash_error'] = 'La foto no es válida: solo se permiten JPG/PNG y máximo 5MB.';
                 header('Location: /admin?tab=staff' . ($id > 0 ? '&edit_id=' . $id : ''));
                 exit;
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al subir la foto: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo subir la foto. Inténtalo nuevamente.';
                 header('Location: /admin?tab=staff' . ($id > 0 ? '&edit_id=' . $id : ''));
                 exit;
             }
@@ -307,8 +307,8 @@ final class AdminController extends Controller
                 $this->staffService->create($data);
                 $_SESSION['_flash_success'] = 'Miembro del staff creado exitosamente.';
             }
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al guardar el miembro del staff: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo guardar el miembro del staff. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=staff');
@@ -327,8 +327,8 @@ final class AdminController extends Controller
             try {
                 $this->staffService->delete($id);
                 $_SESSION['_flash_success'] = 'Miembro del staff eliminado exitosamente.';
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al eliminar el miembro del staff: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo eliminar el miembro del staff. Inténtalo nuevamente.';
             }
         }
 
@@ -367,12 +367,12 @@ final class AdminController extends Controller
         if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
             try {
                 $image = $this->mediaService->upload($_FILES['image_file'], 'news_');
-            } catch (\InvalidArgumentException $e) {
-                $_SESSION['_flash_error'] = $e->getMessage();
+            } catch (\InvalidArgumentException) {
+                $_SESSION['_flash_error'] = 'La imagen no es válida: solo se permiten JPG/PNG y máximo 5MB.';
                 header('Location: /admin?tab=noticias' . ($id > 0 ? '&edit_id=' . $id : ''));
                 exit;
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al subir la imagen: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo subir la imagen. Inténtalo nuevamente.';
                 header('Location: /admin?tab=noticias' . ($id > 0 ? '&edit_id=' . $id : ''));
                 exit;
             }
@@ -409,8 +409,8 @@ final class AdminController extends Controller
                 }
                 $_SESSION['_flash_success'] = 'Noticia creada exitosamente.';
             }
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al guardar la noticia: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo guardar la noticia. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=noticias');
@@ -442,8 +442,8 @@ final class AdminController extends Controller
 
                 $this->newsService->delete($id);
                 $_SESSION['_flash_success'] = 'Noticia eliminada exitosamente.';
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al eliminar la noticia: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo eliminar la noticia. Inténtalo nuevamente.';
             }
         }
 
@@ -471,8 +471,8 @@ final class AdminController extends Controller
             try {
                 $this->newsService->updateStatus($id, $status);
                 $_SESSION['_flash_success'] = 'Estado de la noticia actualizado a ' . $status . '.';
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al cambiar estado: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo cambiar el estado de la noticia. Inténtalo nuevamente.';
             }
         }
 
@@ -508,8 +508,8 @@ final class AdminController extends Controller
 
             $this->footerService->updateContenido($data);
             $_SESSION['_flash_success'] = 'Contenido de Sobre Nosotros guardado exitosamente.';
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al guardar el contenido: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo guardar el contenido. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=sobre-nosotros');
@@ -550,8 +550,8 @@ final class AdminController extends Controller
                 $this->footerService->createLink($data);
                 $_SESSION['_flash_success'] = 'Enlace del footer creado exitosamente.';
             }
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al guardar el enlace: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo guardar el enlace del footer. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=footer');
@@ -570,8 +570,8 @@ final class AdminController extends Controller
             try {
                 $this->footerService->deleteLink($id);
                 $_SESSION['_flash_success'] = 'Enlace del footer eliminado exitosamente.';
-            } catch (\Throwable $e) {
-                $_SESSION['_flash_error'] = 'Error al eliminar el enlace: ' . $e->getMessage();
+            } catch (\Throwable) {
+                $_SESSION['_flash_error'] = 'No se pudo eliminar el enlace del footer. Inténtalo nuevamente.';
             }
         }
 
@@ -599,8 +599,8 @@ final class AdminController extends Controller
 
             $this->footerService->updateInfo($data);
             $_SESSION['_flash_success'] = 'Redes sociales del footer actualizadas exitosamente.';
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al actualizar redes sociales: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudieron actualizar las redes sociales. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=footer');
@@ -647,8 +647,8 @@ final class AdminController extends Controller
 
             $this->userService->update($userId, ['role_id' => $roleId]);
             $_SESSION['_flash_success'] = 'Rol de usuario actualizado exitosamente.';
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al actualizar el rol del usuario: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo actualizar el rol del usuario. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=usuarios');
@@ -705,11 +705,12 @@ final class AdminController extends Controller
                 $this->userService->create($data);
                 $_SESSION['_flash_success'] = 'Usuario creado exitosamente.';
             }
-        } catch (\InvalidArgumentException $e) {
-            $errors = json_decode($e->getMessage(), true);
-            $_SESSION['_flash_error'] = is_array($errors) ? implode(' ', $errors) : $e->getMessage();
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al guardar el usuario: ' . $e->getMessage();
+        } catch (\App\Exceptions\ValidationException $e) {
+            $_SESSION['_flash_error'] = implode(' ', $e->getErrors());
+        } catch (\InvalidArgumentException) {
+            $_SESSION['_flash_error'] = 'No se pudo guardar el usuario. Verifica los datos ingresados.';
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo guardar el usuario. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=usuarios');
@@ -741,8 +742,8 @@ final class AdminController extends Controller
         try {
             $this->userService->delete($id);
             $_SESSION['_flash_success'] = 'Usuario eliminado exitosamente.';
-        } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al eliminar el usuario: ' . $e->getMessage();
+        } catch (\Throwable) {
+            $_SESSION['_flash_error'] = 'No se pudo eliminar el usuario. Inténtalo nuevamente.';
         }
 
         header('Location: /admin?tab=usuarios');
