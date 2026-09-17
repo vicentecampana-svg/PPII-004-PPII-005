@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ValidationException;
 use App\Repositories\QueryRepository;
 
 class QueryService
@@ -51,7 +52,7 @@ class QueryService
     {
         $errors = $this->validate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $id = $this->repo->create([
@@ -75,9 +76,9 @@ class QueryService
     {
         $validStatuses = ['pendiente', 'en_proceso', 'resuelto', 'archivado'];
         if (!in_array($status, $validStatuses, true)) {
-            throw new \InvalidArgumentException(json_encode([
+            throw new ValidationException([
                 'status' => "Estado inválido. Valores permitidos: " . implode(', ', $validStatuses),
-            ]));
+            ]);
         }
 
         $existing = $this->repo->findById($id);

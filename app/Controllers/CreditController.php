@@ -51,8 +51,10 @@ class CreditController
         try {
             $item = $this->service->create($data);
             respCreated($item);
-        } catch (\InvalidArgumentException $e) {
-            respUnprocessable(json_decode($e->getMessage(), true));
+        } catch (\App\Exceptions\ValidationException $e) {
+            respUnprocessable($e->getErrors());
+        } catch (\InvalidArgumentException) {
+            respUnprocessable(['message' => 'Datos inválidos. Verifica la información enviada.']);
         } catch (\Throwable) {
             respServerError();
         }
@@ -67,8 +69,10 @@ class CreditController
             respSuccess($item);
         } catch (\RuntimeException $e) {
             respNotFound();
-        } catch (\InvalidArgumentException $e) {
-            respUnprocessable(json_decode($e->getMessage(), true));
+        } catch (\App\Exceptions\ValidationException $e) {
+            respUnprocessable($e->getErrors());
+        } catch (\InvalidArgumentException) {
+            respUnprocessable(['message' => 'Datos inválidos. Verifica la información enviada.']);
         } catch (\Throwable) {
             respServerError();
         }

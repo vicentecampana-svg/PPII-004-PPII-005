@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ValidationException;
 use App\Repositories\CreditMemberRepository;
 
 /**
@@ -65,7 +66,7 @@ class CreditMemberService
     {
         $errors = $this->validate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $key = $this->resolveKey($data['name'], $data['key'] ?? '');
@@ -92,7 +93,7 @@ class CreditMemberService
 
         $errors = $this->validate($data, true);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $fields = [];

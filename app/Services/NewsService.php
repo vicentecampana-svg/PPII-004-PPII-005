@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ValidationException;
 use App\Repositories\NewsRepository;
 
 class NewsService
@@ -74,7 +75,7 @@ class NewsService
     {
         $errors = $this->validateCreate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $statusId = $this->repo->getStatusId('pendiente');
@@ -109,7 +110,7 @@ class NewsService
 
         $errors = $this->validateUpdate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $fields = ['updated_at' => date('Y-m-d H:i:s')];
@@ -151,9 +152,9 @@ class NewsService
 
         $validStatuses = ['pendiente', 'publicada', 'archivada'];
         if (!in_array($status, $validStatuses, true)) {
-            throw new \InvalidArgumentException(json_encode([
+            throw new ValidationException([
                 'status' => "Estado inválido. Valores permitidos: " . implode(', ', $validStatuses),
-            ]));
+            ]);
         }
 
         $statusId = $this->repo->getStatusId($status);

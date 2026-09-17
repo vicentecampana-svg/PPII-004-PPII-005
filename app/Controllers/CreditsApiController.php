@@ -28,9 +28,9 @@ final class CreditsApiController
         try {
             $result = $this->creditsService->sendContactMessage($input);
             respSuccess($result);
-        } catch (\InvalidArgumentException $e) {
-            respBadRequest($e->getMessage());
-        } catch (\Throwable $e) {
+        } catch (\InvalidArgumentException) {
+            respBadRequest('No se pudo procesar el mensaje de contacto. Verifica los datos ingresados.');
+        } catch (\Throwable) {
             respServerError('Error al procesar el mensaje de contacto.');
         }
     }
