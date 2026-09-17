@@ -74,7 +74,7 @@ final class ContactoController extends Controller
 
             $_SESSION['_flash_success'] = '¡Tu formulario ha sido enviado con éxito! Nos pondremos en contacto contigo a la brevedad.';
         } catch (\Throwable $e) {
-            $_SESSION['_flash_success'] = '¡Tu formulario ha sido enviado con éxito! Nos pondremos en contacto contigo a la brevedad.';
+            $_SESSION['_flash_error'] = 'Ocurrió un error al enviar tu formulario. Por favor, intenta nuevamente.';
         }
 
         header('Location: /contacto');
