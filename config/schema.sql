@@ -1,6 +1,16 @@
 --
 -- PostgreSQL database dump
 --
+--
+-- Issue #94 — Principio de Mínimos Privilegios (DB)
+--
+-- Este dump se carga con el usuario de aplicación (DB_USER, dueño de la base
+-- de datos y del esquema public), de modo que las tablas, secuencias e índices
+-- quedan a nombre de ese rol. DB_USER solo tiene LOGIN (sin SUPERUSER, sin
+-- CREATEDB y sin CREATEROLE) y opera únicamente sobre los objetos de la app.
+-- NO cargar este archivo con el superusuario (POSTGRES_USER): las tablas
+-- quedarían a su nombre y la aplicación no podría operar sobre ellas.
+--
 
 \restrict 7QUYGPQx6iLPUsV0sozO9TS0ZTuYLgWUJZTW2tkxIiS1j1K0zsMF7t8Z8iPmhXM
 

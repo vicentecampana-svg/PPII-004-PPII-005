@@ -31,8 +31,19 @@ cp .env.example .env
 ```
 
 Edítalo con los valores que quieras (usuario, password, puertos, etc). El
-`docker-compose.dev.yml` se encarga de pasarle esos mismos valores a PHP, así
-que no hay que tocar nada más.
+`docker-compose.dev.yml` se encarga de pasarle a PHP los valores que la
+aplicación necesita (lista explícita en `environment:`: `APP_URL`, `PG_*`,
+`MAIL_*`, `SMTP_*`, `CONTACT_NOTIFY_EMAIL`, etc.), así que no hay que tocar
+nada más. El contenedor `web` **no** recibe `POSTGRES_USER`/`POSTGRES_PASSWORD`
+ni el resto de variables del `.env` (issue #94).
+
+> **Usuarios de la base de datos**: hay dos roles distintos.
+> - `POSTGRES_USER` / `POSTGRES_PASSWORD`: superusuario de bootstrap, **solo**
+>   se usa para inicializar el servidor y tareas administrativas.
+> - `DB_USER` / `DB_PASSWORD`: usuario de la aplicación (principio de mínimos
+>   privilegios). La app se conecta siempre con este rol, que es dueño de la
+>   base de datos y no es superusuario. Se crea automáticamente en el primer
+>   arranque de Postgres (`docker/postgres-init/01-app-user.sh`).
 
 Ejemplo:
 
@@ -45,6 +56,11 @@ POSTGRES_DB=techhub
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_PORT=5433
+
+# Usuario de la aplicación (mínimos privilegios). La app se conecta SIEMPRE
+# con este rol, dueño de la base de datos; nunca usa POSTGRES_USER.
+DB_USER=techhub
+DB_PASSWORD=techhub
 
 MAIL_DRIVER=log
 SMTP_HOST=
@@ -76,6 +92,10 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ---
 ## 5. Cargar el schema en la base de datos
 
+> El schema **debe** cargarse con `DB_USER` (usuario de aplicación, dueño de
+> la base). Si lo cargas con `POSTGRES_USER`, las tablas quedan a nombre del
+> superusuario y la app no puede operar sobre ellas (issue #94).
+
 ### En Windows (PowerShell)
 ```powershell
 docker compose -f docker-compose.dev.yml cp config/schema.sql postgres:/tmp/schema.sql
@@ -83,14 +103,14 @@ docker compose -f docker-compose.dev.yml cp config/schema.sql postgres:/tmp/sche
 y luego:
 
 ```powershell
-docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/schema.sql'
+docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$DB_USER" -d "$POSTGRES_DB" -f /tmp/schema.sql'
 ```
 
 ### En Linux y macOS (Bash/Zsh)
 
 ```bash
 export $(grep -v '^#' .env | xargs)
-cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
+cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB
 ```
 
 Esto lee tu `.env` y usa esos valores, no importa qué usuario/base hayas
@@ -99,8 +119,22 @@ puesto.
 Para verificar las tablas:
 
 ```bash
-docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\\dt"'
+docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$DB_USER" -d "$POSTGRES_DB" -c "\\dt"'
 ```
+
+### 5.1 Si ya tenías Postgres levantado (volumen existente)
+
+El init script `docker/postgres-init/01-app-user.sh` solo corre la **primera
+vez** que se crea el volumen `postgres_dev_data`. Si ya tenías un volumen
+anterior:
+
+```bash
+docker compose -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.dev.yml up --build -d
+```
+
+Luego vuelve a cargar el schema (paso 5).
+
 ## 6. Abrir el proyecto
 
 ```
