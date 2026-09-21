@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'app_name' => 'TECH HUB ULS',
+    'app_name' => 'Software Factory Lab ULS',
     'app_env'  => getenv('APP_ENV') ?: 'development',
 
     'db' => [

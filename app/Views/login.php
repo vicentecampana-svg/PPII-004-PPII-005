@@ -52,13 +52,11 @@ $flashSuccess ??= null;
 
     <div class="field">
       <label for="captcha">Código de seguridad</label>
-      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-        <img src="/captcha" alt="Código de seguridad CAPTCHA" id="captcha-img"
-             style="height: 44px; border-radius: var(--radius); cursor: pointer;"
+      <div class="captcha-box">
+        <img src="/captcha" alt="Código de seguridad CAPTCHA" id="captcha-img" class="captcha-img"
              title="Haz clic para recargar el código"
              onclick="this.src='/captcha?' + Date.now()">
-        <button type="button" class="btn" id="captcha-reload-btn"
-                style="padding: 0 12px; height: 44px; background: #e2e8f0; color: #1e293b; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600;"
+        <button type="button" class="captcha-reload-btn" id="captcha-reload-btn"
                 aria-label="Recargar código de seguridad CAPTCHA"
                 onclick="document.getElementById('captcha-img').src='/captcha?' + Date.now()">
           Recargar
@@ -77,17 +75,15 @@ $flashSuccess ??= null;
     </div>
 
     <?php if (!empty($flashSuccess)) : ?>
-      <p style="margin-bottom: 16px; padding: 10px 12px; border-radius: var(--radius);
-                background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);
-                color: #15803d; font-size: 0.8125rem;">
+      <p class="alert-flash-success">
         <?= e($flashSuccess) ?>
       </p>
     <?php endif; ?>
 
-    <button type="submit" class="btn btn-destructive">Iniciar sesión</button>
+    <button type="submit" class="btn btn-destructive btn-submit-login">Iniciar sesión</button>
 
-    <p style="text-align: center; margin-top: 14px; font-size: 0.875rem;">
-      <a href="/recuperar-password" style="color: var(--primary, #0f172a);">¿Olvidaste tu contraseña?</a>
+    <p class="form-footer-link">
+      <a href="/recuperar-password">¿Olvidaste tu contraseña?</a>
     </p>
   </form>
 </section>

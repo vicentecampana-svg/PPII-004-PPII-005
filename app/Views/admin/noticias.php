@@ -69,7 +69,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
             <div class="admin-item-actions">
               <!-- Botón Aprobar / Desaprobar (Estado) -->
               <?php if ($isEditorOrAdmin) : ?>
-                <form method="post" action="/admin/noticias/status" style="margin: 0;">
+                <form method="post" action="/admin/noticias/status" class="admin-form-inline">
                   <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                   <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
                   <input type="hidden" name="status" value="<?= $isPublished ? 'pendiente' : 'publicada' ?>">
@@ -108,7 +108,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
               </a>
 
               <!-- Botón Eliminar -->
-              <form method="post" action="/admin/noticias/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta noticia?');" style="margin: 0;">
+              <form method="post" action="/admin/noticias/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta noticia?');" class="admin-form-inline">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                 <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
                 <button type="submit" 
@@ -138,7 +138,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
         <?php if ($editingNews) : ?>
           <a href="/admin?tab=noticias" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
         <?php else : ?>
-          <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
+          <span class="admin-plus-icon">+</span>
         <?php endif; ?>
       </div>
 
@@ -213,7 +213,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
         </div>
 
         <!-- Toggles / Checkboxes (Mockup) -->
-        <div class="admin-form-group" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+        <div class="admin-form-group admin-field-col">
           <label class="admin-toggle-label">
             <input type="checkbox" 
                    name="is_public" 
@@ -234,7 +234,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
         </div>
 
         <!-- Botón Submit -->
-        <button type="submit" class="admin-btn-submit" style="margin-top: 16px;">
+        <button type="submit" class="admin-btn-submit admin-mt-16">
           <?= $editingNews ? 'Guardar cambios' : 'Crear noticia' ?>
         </button>
       </form>

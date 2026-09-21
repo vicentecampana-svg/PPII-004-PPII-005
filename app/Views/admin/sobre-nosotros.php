@@ -16,7 +16,7 @@ $misionTexto = $siteContent['mision_texto'] ?? "Formar talento tecnológico medi
 <div class="admin-full-card-wrapper">
   <div class="admin-sidebar-card admin-content-card">
     <div class="admin-tab-header">
-      <h2 class="admin-tab-content-title" style="margin-bottom: 20px; font-size: 1.15rem;">Sobre nosotros, misión y visión</h2>
+      <h2 class="admin-tab-content-title admin-title-md">Sobre nosotros, misión y visión</h2>
     </div>
 
     <form method="post" action="/admin/sobre-nosotros">
@@ -71,8 +71,8 @@ $misionTexto = $siteContent['mision_texto'] ?? "Formar talento tecnológico medi
       </div>
 
       <!-- Botón Guardar cambios -->
-      <div style="margin-top: 20px;">
-        <button type="submit" class="admin-btn-submit" style="width: auto; padding: 10px 24px;">
+      <div class="admin-mt-20">
+        <button type="submit" class="admin-btn-submit admin-btn-auto">
           Guardar cambios
         </button>
       </div>
