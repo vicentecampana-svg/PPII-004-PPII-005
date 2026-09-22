@@ -45,10 +45,10 @@ class MediaController
                 'url'      => $url,
                 'path'     => $filename,
             ]);
-        } catch (\InvalidArgumentException) {
-            respUnprocessable(['file' => 'El archivo no es válido: solo se permiten imágenes JPG/PNG y máximo 5MB.']);
-        } catch (\Throwable) {
-            respServerError('No se pudo procesar el archivo. Inténtalo nuevamente.');
+        } catch (\InvalidArgumentException $e) {
+            respUnprocessable(['file' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            respServerError('Error interno al procesar el archivo: ' . $e->getMessage());
         }
     }
 

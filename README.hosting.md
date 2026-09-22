@@ -56,21 +56,11 @@ APP_DEBUG=false
 APP_URL=https://sfl.userena.cl
 
 # Base de datos PostgreSQL
-# Rol de bootstrap/administración (solo tareas de admin; la app NUNCA
-# se conecta con el superusuario — principio de mínimos privilegios, issue #94)
 POSTGRES_DB=sfl_production
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=ContraseñaAdminDB
+POSTGRES_USER=sfl_user
+POSTGRES_PASSWORD=TuPasswordSuperSeguro123!
 POSTGRES_HOST=127.0.0.1
 POSTGRES_PORT=5432
-
-# Conexión de la aplicación — rol con LOGIN, dueño de la base de datos,
-# sin SUPERUSER/CREATEDB/CREATEROLE (se crea en la sección 4)
-PG_DATABASE=sfl_production
-PG_USER=sfl_user
-PG_PASSWORD=TuPasswordSuperSeguro123!
-PG_HOST=127.0.0.1
-PG_PORT=5432
 
 # Correo (recuperación de contraseña — issue #15)
 # Sin estas variables los correos se loguean en storage/logs/mail_dev.log.
@@ -90,19 +80,13 @@ SMTP_FROM_NAME=TechHub ULS
 
 ## 4. Base de Datos PostgreSQL
 
-> ⚠️ **Principio de mínimos privilegios (issue #94)**: la aplicación se conecta
-> siempre con `sfl_user` (un rol con LOGIN, dueño de la base de datos, sin
-> `SUPERUSER`/`CREATEDB`/`CREATEROLE`). Nunca configures la app para
-> conectarse con el superusuario `postgres`.
-
-1. Crear el rol de aplicación (mínimos privilegios) y la base de datos:
+1. Crear la base de datos y usuario:
 ```bash
-sudo -u postgres psql -c "CREATE USER sfl_user WITH LOGIN PASSWORD 'TuPasswordSuperSeguro123!' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
+sudo -u postgres psql -c "CREATE USER sfl_user WITH PASSWORD 'TuPasswordSuperSeguro123!';"
 sudo -u postgres psql -c "CREATE DATABASE sfl_production OWNER sfl_user;"
 ```
 
-2. Cargar el esquema inicial y datos **con el usuario de aplicación** (así las
-   tablas quedan a nombre de `sfl_user`, no del superusuario):
+2. Cargar el esquema inicial y datos:
 ```bash
 psql -U sfl_user -d sfl_production -h 127.0.0.1 -f config/schema.sql
 ```

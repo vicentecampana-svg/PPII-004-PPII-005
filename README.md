@@ -82,18 +82,15 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ```
 
 ### 4. Cargar el esquema y datos iniciales en PostgreSQL
-> ⚠️ El schema se carga con `DB_USER` (usuario de aplicación, issue #94), no
-> con el superusuario `POSTGRES_USER`, para que las tablas queden a su nombre.
-
 **En Linux / macOS:**
 ```bash
 export $(grep -v '^#' .env | xargs)
-cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB
+cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 
 **En Windows (PowerShell):**
 ```powershell
-Get-Content config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $env:DB_USER -d $env:POSTGRES_DB
+Get-Content config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U postgres -d techhub
 ```
 
 ### 5. Acceder a la aplicación

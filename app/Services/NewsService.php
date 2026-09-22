@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Exceptions\ValidationException;
 use App\Repositories\NewsRepository;
 
 class NewsService
@@ -75,7 +74,7 @@ class NewsService
     {
         $errors = $this->validateCreate($data);
         if ($errors) {
-            throw new ValidationException($errors);
+            throw new \InvalidArgumentException(json_encode($errors));
         }
 
         $statusId = $this->repo->getStatusId('pendiente');
@@ -88,7 +87,6 @@ class NewsService
             'subtitle'   => $data['subtitle'] ?? null,
             'content'    => $data['content'],
             'image'      => $data['image'] ?? null,
-            'is_public'  => $data['is_public'] ?? true,
             'tag_id'     => $tagIds[0] ?? ($data['tag_id'] ?? null),
         ]);
 
@@ -110,7 +108,7 @@ class NewsService
 
         $errors = $this->validateUpdate($data);
         if ($errors) {
-            throw new ValidationException($errors);
+            throw new \InvalidArgumentException(json_encode($errors));
         }
 
         $fields = ['updated_at' => date('Y-m-d H:i:s')];
@@ -125,9 +123,6 @@ class NewsService
         }
         if (array_key_exists('image', $data)) {
             $fields['image'] = $data['image'] ?? null;
-        }
-        if (array_key_exists('is_public', $data)) {
-            $fields['is_public'] = (bool) $data['is_public'];
         }
 
         if (array_key_exists('tag_ids', $data) || array_key_exists('tag_id', $data)) {
@@ -152,9 +147,9 @@ class NewsService
 
         $validStatuses = ['pendiente', 'publicada', 'archivada'];
         if (!in_array($status, $validStatuses, true)) {
-            throw new ValidationException([
+            throw new \InvalidArgumentException(json_encode([
                 'status' => "Estado inválido. Valores permitidos: " . implode(', ', $validStatuses),
-            ]);
+            ]));
         }
 
         $statusId = $this->repo->getStatusId($status);

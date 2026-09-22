@@ -25,12 +25,7 @@ RUN sed -ri \
 RUN sed -ri 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
 COPY docker/dev-entrypoint.sh /usr/local/bin/dev-entrypoint.sh
-RUN sed -i 's/\r$//' /usr/local/bin/dev-entrypoint.sh \
-    && chmod +x /usr/local/bin/dev-entrypoint.sh
-
-# Límites de subida: 5MB real lo valida MediaService en la app; estos valores
-# solo evitan que PHP descarte el request completo con post_max_size por defecto (8M).
-COPY docker/php-uploads.ini /usr/local/etc/php/conf.d/99-uploads.ini
+RUN chmod +x /usr/local/bin/dev-entrypoint.sh
 
 WORKDIR /var/www/html
 

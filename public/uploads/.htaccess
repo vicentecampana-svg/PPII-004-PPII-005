@@ -1,0 +1,12 @@
+# Esta carpeta solo debe contener imágenes subidas por MediaService
+# (jpg/jpeg/png). Se deniega todo lo que NO tenga una de esas extensiones,
+# como segunda capa de defensa independiente de la validación de la
+# aplicación: así, aunque algún día se cuele un archivo con otra extensión
+# (por un bug o un bypass), Apache nunca lo ejecutará ni lo servirá.
+# El listado de directorio también queda deshabilitado.
+
+Options -Indexes -ExecCGI -Includes
+
+<FilesMatch "(?i)^(?!.*\.(jpe?g|png)$).*$">
+    Require all denied
+</FilesMatch>

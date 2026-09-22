@@ -140,10 +140,7 @@ final class HomeController extends Controller
     private function noticias(): array
     {
         try {
-            $newsService = new NewsService();
-            $items = authCheck()
-                ? $newsService->getAll(1, 3)['items']
-                : $newsService->getPublished(1, 3)['items'];
+            $items = (new NewsService())->getPublished(1, 3)['items'];
         } catch (\Throwable) {
             $items = [];
         }
