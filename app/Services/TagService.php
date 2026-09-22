@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ValidationException;
 use App\Repositories\TagRepository;
 
 class TagService
@@ -30,7 +31,7 @@ class TagService
     public function create(array $data): array
     {
         if (empty($data['name']) || trim($data['name']) === '') {
-            throw new \InvalidArgumentException(json_encode(['name' => 'El nombre es obligatorio.']));
+            throw new ValidationException(['name' => 'El nombre es obligatorio.']);
         }
 
         $id = $this->repo->create(['name' => $data['name']]);
