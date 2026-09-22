@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ValidationException;
 use App\Repositories\StaffRepository;
 
 class StaffService
@@ -42,7 +43,7 @@ class StaffService
     {
         $errors = $this->validate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $id = $this->repo->create([
@@ -66,7 +67,7 @@ class StaffService
 
         $errors = $this->validate($data, true);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $fields = [];

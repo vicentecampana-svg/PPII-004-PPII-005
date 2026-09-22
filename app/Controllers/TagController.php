@@ -33,8 +33,10 @@ class TagController
         try {
             $item = $this->service->create($data);
             respCreated($item);
-        } catch (\InvalidArgumentException $e) {
-            respUnprocessable(json_decode($e->getMessage(), true));
+        } catch (\App\Exceptions\ValidationException $e) {
+            respUnprocessable($e->getErrors());
+        } catch (\InvalidArgumentException) {
+            respUnprocessable(['message' => 'Datos inválidos. Verifica la información enviada.']);
         } catch (\Exception $e) {
             respServerError();
         }

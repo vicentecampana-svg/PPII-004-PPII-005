@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ValidationException;
 use App\Repositories\UserRepository;
 
 class UserService
@@ -47,12 +48,12 @@ class UserService
     {
         $errors = $this->validateCreate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $existing = $this->repo->findByEmail($data['email']);
         if ($existing) {
-            throw new \InvalidArgumentException(json_encode(['email' => 'El email ya está registrado.']));
+            throw new ValidationException(['email' => 'El email ya está registrado.']);
         }
 
         $id = $this->repo->create([
@@ -78,7 +79,7 @@ class UserService
 
         $errors = $this->validateUpdate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $fields = [];
@@ -119,7 +120,7 @@ class UserService
         }
 
         if (strlen($newPassword) < 12) {
-            throw new \InvalidArgumentException(json_encode(['password' => 'La contraseña debe tener al menos 12 caracteres.']));
+            throw new ValidationException(['password' => 'La contraseña debe tener al menos 12 caracteres.']);
         }
 
         $this->repo->update($id, [
@@ -140,11 +141,11 @@ class UserService
         }
 
         if (!password_verify($currentPassword, (string) ($user['password'] ?? ''))) {
-            throw new \InvalidArgumentException(json_encode(['current_password' => 'La contraseña actual es incorrecta.']));
+            throw new ValidationException(['current_password' => 'La contraseña actual es incorrecta.']);
         }
 
         if (strlen($newPassword) < 12) {
-            throw new \InvalidArgumentException(json_encode(['password' => 'La contraseña debe tener al menos 12 caracteres.']));
+            throw new ValidationException(['password' => 'La contraseña debe tener al menos 12 caracteres.']);
         }
 
         $this->repo->update($id, [
