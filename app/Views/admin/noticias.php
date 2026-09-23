@@ -207,7 +207,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
                  id="news-image-file" 
                  name="image_file" 
                  class="admin-form-file" 
-                 accept="image/png, image/jpeg, image/webp, image/gif, image/svg+xml"
+                 accept="image/png, image/jpeg"
                  onchange="if(this.files && this.files[0]){ document.getElementById('news-img-preview').src = URL.createObjectURL(this.files[0]); }">
           <input type="hidden" name="existing_image" value="<?= e($editingNews['image'] ?? '') ?>">
         </div>
@@ -218,7 +218,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
             <input type="checkbox" 
                    name="is_public" 
                    value="1" 
-                   <?= $editingNews === null || !empty($editingNews['is_public']) ? 'checked' : '' ?>>
+                   <?= (!isset($editingNews) || ($editingNews['status'] ?? '') === 'publicada') ? 'checked' : '' ?>>
             <span class="admin-toggle-text">Noticia pública</span>
           </label>
 

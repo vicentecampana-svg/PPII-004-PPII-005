@@ -22,10 +22,8 @@ class QueryController
         try {
             $item = $this->service->create($data);
             respCreated($item);
-        } catch (\App\Exceptions\ValidationException $e) {
-            respUnprocessable($e->getErrors());
-        } catch (\InvalidArgumentException) {
-            respUnprocessable(['message' => 'Datos inválidos. Verifica la información enviada.']);
+        } catch (\InvalidArgumentException $e) {
+            respUnprocessable(json_decode($e->getMessage(), true));
         } catch (\Exception $e) {
             respServerError();
         }
@@ -65,10 +63,8 @@ class QueryController
         try {
             $item = $this->service->setStatus($id, $status);
             respSuccess($item);
-        } catch (\App\Exceptions\ValidationException $e) {
-            respUnprocessable($e->getErrors());
-        } catch (\InvalidArgumentException) {
-            respUnprocessable(['message' => 'Datos inválidos. Verifica la información enviada.']);
+        } catch (\InvalidArgumentException $e) {
+            respUnprocessable(json_decode($e->getMessage(), true));
         } catch (\RuntimeException $e) {
             respNotFound();
         } catch (\Exception $e) {

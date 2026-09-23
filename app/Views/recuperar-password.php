@@ -7,10 +7,12 @@ declare(strict_types=1);
  * @var array    $errors
  * @var string|null $success
  * @var string   $email
+ * @var int      $retryAfterSeconds
  */
 $errors  ??= [];
 $success ??= null;
 $email   ??= '';
+$retryAfterSeconds ??= 0;
 ?>
 <section class="login-section">
   <form class="login-card" method="post" action="/recuperar-password" novalidate>
@@ -44,9 +46,40 @@ $email   ??= '';
       <?php endif; ?>
     </div>
 
-    <button type="submit" class="btn btn-destructive" style="width: 100%;">
-      Enviar enlace de recuperación
+    <button type="submit" class="btn btn-destructive" style="width: 100%;"
+            id="recovery-submit-btn" <?= $retryAfterSeconds > 0 ? 'disabled' : '' ?>>
+      <span id="recovery-submit-label"><?= $retryAfterSeconds > 0 ? 'Espera para reenviar' : 'Enviar enlace de recuperación' ?></span>
     </button>
+
+    <p id="recovery-countdown"
+       style="text-align: center; margin-top: 10px; font-size: 0.8125rem; color: #64748b;"
+       <?= $retryAfterSeconds > 0 ? '' : 'hidden' ?>>
+      Podrás solicitar un nuevo enlace en <strong id="recovery-countdown-value"><?= (int) $retryAfterSeconds ?></strong> segundos.
+    </p>
+
+    <?php if ($retryAfterSeconds > 0) : ?>
+    <script>
+      (function () {
+        var remaining = <?= (int) $retryAfterSeconds ?>;
+        var btn = document.getElementById('recovery-submit-btn');
+        var label = document.getElementById('recovery-submit-label');
+        var countdown = document.getElementById('recovery-countdown');
+        var value = document.getElementById('recovery-countdown-value');
+
+        var timer = setInterval(function () {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            label.textContent = 'Enviar enlace de recuperación';
+            countdown.hidden = true;
+            return;
+          }
+          value.textContent = remaining;
+        }, 1000);
+      })();
+    </script>
+    <?php endif; ?>
 
     <p style="text-align: center; margin-top: 16px; font-size: 0.875rem;">
       <a href="/login" style="color: var(--primary, #0f172a);">← Volver al login</a>
