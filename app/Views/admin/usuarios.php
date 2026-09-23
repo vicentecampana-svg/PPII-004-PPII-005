@@ -23,9 +23,9 @@ $standardRoles = [
 <div class="admin-layout-grid">
   <!-- Columna izquierda: Listado de Usuarios y Roles -->
   <div class="admin-main-col">
-    <div class="admin-tab-header" style="margin-bottom: 20px;">
-      <h2 class="admin-tab-content-title" style="margin-bottom: 4px;">Usuarios y roles</h2>
-      <p class="admin-tab-subtitle" style="font-size: 0.875rem; color: var(--muted-foreground); margin: 0;">
+    <div class="admin-tab-header admin-mb-20">
+      <h2 class="admin-tab-content-title admin-mb-4">Usuarios y roles</h2>
+      <p class="admin-tab-subtitle admin-subtitle-muted">
         Activa o desactiva los roles de cada cuenta. Un usuario puede tener más de un rol.
       </p>
     </div>
@@ -45,10 +45,10 @@ $standardRoles = [
               <div class="admin-user-email">
                 <strong><?= e($u['email']) ?></strong>
                 <?php if (!empty($u['username']) && $u['username'] !== $u['email']) : ?>
-                  <span style="font-size: 0.8rem; color: var(--muted-foreground); margin-left: 8px;">(<?= e($u['username']) ?>)</span>
+                  <span class="admin-username-tag">(<?= e($u['username']) ?>)</span>
                 <?php endif; ?>
                 <?php if (empty($u['active'])) : ?>
-                  <span class="admin-badge-draft" style="background-color: #fee2e2; color: #991b1b;">Inactivo</span>
+                  <span class="admin-badge-draft admin-badge-inactive">Inactivo</span>
                 <?php endif; ?>
               </div>
 
@@ -65,7 +65,7 @@ $standardRoles = [
                 </a>
 
                 <!-- Botón Eliminar Usuario -->
-                <form method="post" action="/admin/usuarios/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este usuario?');" style="margin: 0;">
+                <form method="post" action="/admin/usuarios/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este usuario?');" class="admin-form-inline">
                   <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                   <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
                   <button type="submit" 
@@ -92,7 +92,7 @@ $standardRoles = [
                            || ($rKey === 'redactor' && $userRole === 'redactor')
                            || ($rKey === 'invitado' && !in_array($userRole, ['admin', 'superadmin', 'editor', 'redactor'], true));
                     ?>
-                <form method="post" action="/admin/usuarios/role" style="margin: 0;">
+                <form method="post" action="/admin/usuarios/role" class="admin-form-inline">
                   <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                   <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
                   <input type="hidden" name="role_key" value="<?= e($rKey) ?>">
@@ -118,7 +118,7 @@ $standardRoles = [
         <?php if ($editingUser) : ?>
           <a href="/admin?tab=usuarios" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
         <?php else : ?>
-          <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
+          <span class="admin-plus-icon">+</span>
         <?php endif; ?>
       </div>
 
@@ -156,7 +156,7 @@ $standardRoles = [
         <!-- Contraseña -->
         <div class="admin-form-group">
           <label class="admin-form-label" for="user-password">
-            Contraseña <?= $editingUser ? '<span style="font-weight: normal; color: var(--muted-foreground);">(dejar en blanco para conservar)</span>' : '' ?>
+            Contraseña <?= $editingUser ? '<span class="admin-help-text">(dejar en blanco para conservar)</span>' : '' ?>
           </label>
           <input type="password" 
                  id="user-password" 
@@ -189,13 +189,13 @@ $standardRoles = [
         </div>
 
         <!-- Estado Activo -->
-        <div class="admin-form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+        <div class="admin-form-group admin-checkbox-group">
           <input type="checkbox" 
                  id="user-active" 
                  name="active" 
                  value="1" 
                  <?= (!isset($editingUser) || !empty($editingUser['active'])) ? 'checked' : '' ?>>
-          <label class="admin-form-label" for="user-active" style="margin-bottom: 0; cursor: pointer;">
+          <label class="admin-form-label admin-checkbox-label" for="user-active">
             Cuenta activa
           </label>
         </div>

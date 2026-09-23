@@ -82,7 +82,12 @@ class CaptchaService
         }
 
         return <<<SVG
-<svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}" style="background-color: #F8FAFC; border-radius: 6px; border: 1px solid #CBD5E1; user-select: none;">
+<svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}" class="captcha-svg">
+    <defs>
+        <style>
+            .captcha-svg { background-color: #F8FAFC; border-radius: 6px; border: 1px solid #CBD5E1; user-select: none; }
+        </style>
+    </defs>
     {$noise}
     {$charsSvg}
 </svg>

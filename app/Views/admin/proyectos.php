@@ -54,7 +54,7 @@ $editingProject ??= null;
               </a>
 
               <!-- Botón Eliminar -->
-              <form method="post" action="/admin/proyectos/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este proyecto?');" style="margin: 0;">
+              <form method="post" action="/admin/proyectos/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este proyecto?');" class="admin-form-inline">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                 <input type="hidden" name="id" value="<?= (int) $proj['id'] ?>">
                 <button type="submit" 
@@ -84,7 +84,7 @@ $editingProject ??= null;
         <?php if ($editingProject) : ?>
           <a href="/admin?tab=proyectos" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
         <?php else : ?>
-          <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
+          <span class="admin-plus-icon">+</span>
         <?php endif; ?>
       </div>
 
@@ -147,13 +147,13 @@ $editingProject ??= null;
         </div>
 
         <!-- Estado Activo -->
-        <div class="admin-form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+        <div class="admin-form-group admin-checkbox-group">
           <input type="checkbox" 
                  id="project-active" 
                  name="active" 
                  value="1" 
                  <?= (!isset($editingProject) || !empty($editingProject['active'])) ? 'checked' : '' ?>>
-          <label class="admin-form-label" for="project-active" style="margin-bottom: 0; cursor: pointer;">
+          <label class="admin-form-label admin-checkbox-label" for="project-active">
             Visible públicamente
           </label>
         </div>

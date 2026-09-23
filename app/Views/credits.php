@@ -65,8 +65,8 @@ $miembros ??= [];
       <button type="button" class="credits-modal-close" id="modal-close-btn" aria-label="Cerrar ventana modal">&times;</button>
     </div>
 
-    <div id="modal-alert-success" class="alert alert-success" style="display: none;" role="alert"></div>
-    <div id="modal-alert-error" class="alert alert-error" style="display: none;" role="alert"></div>
+    <div id="modal-alert-success" class="alert alert-success is-hidden" role="alert"></div>
+    <div id="modal-alert-error" class="alert alert-error is-hidden" role="alert"></div>
 
     <form id="credits-contact-form" action="/credits" method="POST" class="credits-form">
       <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
@@ -90,7 +90,7 @@ $miembros ??= [];
       <div class="credits-modal-actions">
         <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancelar</button>
         <button type="submit" class="btn btn-primary" id="modal-submit-btn">
-          <span id="submit-spinner" class="spinner" style="display: none;" aria-hidden="true"></span>
+          <span id="submit-spinner" class="spinner is-hidden" aria-hidden="true"></span>
           <span id="submit-text">Enviar mensaje</span>
         </button>
       </div>
@@ -119,8 +119,8 @@ $miembros ??= [];
       memberKeyInput.value = memberKey;
       titleEl.textContent = 'Contactar a ' + memberName;
       subtitleEl.textContent = memberRole;
-      alertSuccess.style.display = 'none';
-      alertError.style.display = 'none';
+      alertSuccess.classList.add('is-hidden');
+      alertError.classList.add('is-hidden');
       form.reset();
       memberKeyInput.value = memberKey;
       modal.classList.add('open');
@@ -133,8 +133,8 @@ $miembros ??= [];
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
-      alertSuccess.style.display = 'none';
-      alertError.style.display = 'none';
+      alertSuccess.classList.add('is-hidden');
+      alertError.classList.add('is-hidden');
       if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
         lastActiveElement.focus();
       }
@@ -168,7 +168,7 @@ $miembros ??= [];
 
       if (e.key === 'Tab') {
         const focusableElements = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-        if (focusableElements.length === 0) return;
+        if (!focusableElements.length) return;
 
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
@@ -191,12 +191,12 @@ $miembros ??= [];
       const email = document.getElementById('contact-email').value.trim();
       const message = document.getElementById('contact-message').value.trim();
 
-      alertSuccess.style.display = 'none';
-      alertError.style.display = 'none';
+      alertSuccess.classList.add('is-hidden');
+      alertError.classList.add('is-hidden');
 
       submitBtn.disabled = true;
       submitText.textContent = 'Enviando...';
-      if (submitSpinner) submitSpinner.style.display = 'inline-block';
+      if (submitSpinner) submitSpinner.classList.remove('is-hidden');
 
       try {
         const response = await fetch('/api/credits/contact', {
@@ -217,7 +217,7 @@ $miembros ??= [];
 
         if (response.ok && data.success) {
           alertSuccess.textContent = data.data?.message || '¡Tu mensaje ha sido enviado exitosamente!';
-          alertSuccess.style.display = 'block';
+          alertSuccess.classList.remove('is-hidden');
           form.reset();
           setTimeout(() => {
             closeModal();
@@ -225,15 +225,15 @@ $miembros ??= [];
         } else {
           const errMsg = data.error?.message || 'No se pudo enviar el mensaje. Verifica los datos.';
           alertError.textContent = errMsg;
-          alertError.style.display = 'block';
+          alertError.classList.remove('is-hidden');
         }
       } catch (err) {
         alertError.textContent = 'Error de conexión con el servidor. Intenta más tarde.';
-        alertError.style.display = 'block';
+        alertError.classList.remove('is-hidden');
       } finally {
         submitBtn.disabled = false;
         submitText.textContent = 'Enviar mensaje';
-        if (submitSpinner) submitSpinner.style.display = 'none';
+        if (submitSpinner) submitSpinner.classList.add('is-hidden');
       }
     });
   })();

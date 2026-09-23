@@ -64,7 +64,6 @@ if ($isLoggedIn) {
         </nav>
 
         <div class="header-actions">
-          <span class="lang-badge" aria-label="Idioma actual: Español">ES</span>
           <?php if ($isLoggedIn) : ?>
             <a href="/logout" class="login-link">Cerrar sesión</a>
           <?php else : ?>

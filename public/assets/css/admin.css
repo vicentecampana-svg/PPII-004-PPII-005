@@ -135,8 +135,8 @@
 }
 
 .admin-tab.active {
-  background-color: var(--destructive, #9e2320); /* Rojo #9e2320 */
-  border-color: var(--destructive, #9e2320);
+  background-color: var(--destructive, #CA2C2C); /* Rojo SFL #CA2C2C */
+  border-color: var(--destructive, #CA2C2C);
   color: #ffffff;
   font-weight: 600;
 }
@@ -337,13 +337,13 @@
 }
 
 .admin-btn-icon.delete {
-  background-color: var(--destructive, #9e2320);
-  border-color: var(--destructive, #9e2320);
+  background-color: var(--destructive, #CA2C2C);
+  border-color: var(--destructive, #CA2C2C);
   color: #ffffff;
 }
 
 .admin-btn-icon.delete:hover {
-  background-color: var(--destructive-dark, #7d1c1a);
+  background-color: var(--destructive-dark, #a82323);
 }
 
 .admin-btn-icon.approve {
@@ -364,7 +364,7 @@
 
 .admin-btn-icon.unapprove:hover {
   background-color: #f1f5f9;
-  color: var(--destructive, #9e2320);
+  color: var(--destructive, #CA2C2C);
 }
 
 .admin-badge-pending {
@@ -503,7 +503,7 @@
 }
 
 .admin-cancel-edit:hover {
-  color: var(--destructive, #9e2320);
+  color: var(--destructive, #CA2C2C);
 }
 
 .admin-badge-draft {
@@ -521,7 +521,7 @@
 
 .admin-btn-submit {
   width: 100%;
-  background-color: var(--destructive, #9e2320);
+  background-color: var(--destructive, #CA2C2C);
   color: #ffffff;
   border: none;
   border-radius: 4px;
@@ -535,7 +535,7 @@
 }
 
 .admin-btn-submit:hover {
-  background-color: var(--destructive-dark, #7d1c1a);
+  background-color: var(--destructive-dark, #a82323);
 }
 
 /* ══════════════════════════════════════════════
@@ -643,12 +643,132 @@
 }
 
 .admin-role-btn.active {
-  background-color: var(--destructive, #9e2320);
-  border-color: var(--destructive, #9e2320);
+  background-color: var(--destructive, #CA2C2C);
+  border-color: var(--destructive, #CA2C2C);
   color: #ffffff;
   font-weight: 600;
 }
 
 .admin-role-btn.active:hover {
-  background-color: var(--destructive-dark, #7d1c1a);
+  background-color: var(--destructive-dark, #a82323);
+}
+
+/* ══════════════════════════════════════════════
+   UTILIDADES ADMIN (COD-15)
+   ══════════════════════════════════════════════ */
+.admin-item-info-pl4 {
+  padding-left: 4px;
+}
+
+.admin-form-inline {
+  margin: 0 !important;
+}
+
+.admin-mt-32 {
+  margin-top: 32px;
+}
+
+.admin-mt-20 {
+  margin-top: 20px;
+}
+
+.admin-mt-16 {
+  margin-top: 16px;
+}
+
+.admin-mt-12 {
+  margin-top: 12px;
+}
+
+.admin-mt-10 {
+  margin-top: 10px;
+}
+
+.admin-mb-20 {
+  margin-bottom: 20px;
+}
+
+.admin-mb-16 {
+  margin-bottom: 16px;
+}
+
+.admin-mb-12 {
+  margin-bottom: 12px;
+}
+
+.admin-mb-4 {
+  margin-bottom: 4px;
+}
+
+.admin-card-p20 {
+  padding: 20px;
+}
+
+.admin-btn-auto {
+  width: auto !important;
+  padding: 8px 20px !important;
+  margin-top: 6px !important;
+}
+
+.admin-plus-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--muted-foreground);
+}
+
+.admin-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.admin-checkbox-label {
+  margin-bottom: 0 !important;
+  cursor: pointer;
+}
+
+.admin-username-tag {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  margin-left: 8px;
+}
+
+.admin-badge-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-help-text {
+  font-weight: normal;
+  color: var(--muted-foreground);
+}
+
+.admin-field-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.admin-subtitle-muted {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.admin-desc-muted {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  margin-bottom: 16px;
+}
+
+.admin-title-sm {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.admin-title-md {
+  margin-bottom: 20px;
+  font-size: 1.15rem;
 }

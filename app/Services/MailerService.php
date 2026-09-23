@@ -214,33 +214,41 @@ final class MailerService
         <head>
           <meta charset="UTF-8">
           <title>Recuperación de contraseña</title>
+          <style>
+            body { font-family: Arial, sans-serif; background: #f8fafc; padding: 32px; margin: 0; }
+            .email-card { max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0; }
+            .email-title { margin-top: 0; color: #1e293b; }
+            .btn-action-wrapper { text-align: center; margin: 28px 0; }
+            .btn-action { display: inline-block; background: #0f172a; color: #ffffff !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+            .email-note { font-size: 0.85em; color: #64748b; }
+            .email-fallback { font-size: 0.8em; color: #94a3b8; }
+            .email-fallback-link { color: #3b82f6; word-break: break-all; }
+            .email-divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+            .email-footer { font-size: 0.75em; color: #94a3b8; margin: 0; }
+          </style>
         </head>
-        <body style="font-family: Arial, sans-serif; background: #f8fafc; padding: 32px;">
-          <div style="max-width: 480px; margin: 0 auto; background: #fff;
-                      border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0;">
-            <h2 style="margin-top: 0; color: #1e293b;">Recuperación de contraseña</h2>
+        <body>
+          <div class="email-card">
+            <h2 class="email-title">Recuperación de contraseña</h2>
             <p>Hola, <strong>{$safeName}</strong>.</p>
             <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en
-               <strong>TechHub ULS</strong>. Haz clic en el botón para continuar:</p>
-            <p style="text-align: center; margin: 28px 0;">
-              <a href="{$safeLink}"
-                 style="display: inline-block; background: #0f172a; color: #fff;
-                        padding: 12px 24px; border-radius: 6px; text-decoration: none;
-                        font-weight: bold;">
+               <strong>Software Factory Lab ULS</strong>. Haz clic en el botón para continuar:</p>
+            <p class="btn-action-wrapper">
+              <a href="{$safeLink}" class="btn-action">
                 Restablecer contraseña
               </a>
             </p>
-            <p style="font-size: 0.85em; color: #64748b;">
+            <p class="email-note">
               Este enlace es válido por <strong>1 hora</strong> y sólo puede usarse
               una vez. Si no solicitaste el cambio, puedes ignorar este correo.
             </p>
-            <p style="font-size: 0.8em; color: #94a3b8;">
+            <p class="email-fallback">
               Si el botón no funciona, copia esta URL en tu navegador:<br>
-              <a href="{$safeLink}" style="color: #3b82f6;">{$safeLink}</a>
+              <a href="{$safeLink}" class="email-fallback-link">{$safeLink}</a>
             </p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-            <p style="font-size: 0.75em; color: #94a3b8; margin: 0;">
-              TechHub — Software Factory Lab, Universidad de La Serena
+            <hr class="email-divider">
+            <p class="email-footer">
+              Software Factory Lab (SFL) — Universidad de La Serena
             </p>
           </div>
         </body>

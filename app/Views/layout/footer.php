@@ -37,7 +37,7 @@ if ($grupos === []) {
           <p class="footer-group-title">Contacto</p>
           <ul>
             <li><?= htmlspecialchars($contacto['address'] ?? 'La Serena, Chile', ENT_QUOTES, 'UTF-8') ?></li>
-            <li><a href="mailto:<?= htmlspecialchars($contacto['email'] ?? 'contacto@sfl.uls.cl', ENT_QUOTES, 'UTF-8') ?>" aria-label="Enviar correo a <?= htmlspecialchars($contacto['email'] ?? 'contacto@sfl.uls.cl', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($contacto['email'] ?? 'contacto@sfl.uls.cl', ENT_QUOTES, 'UTF-8') ?></a></li>
+            <li><a href="/contacto">Formulario de contacto</a></li>
           </ul>
         </div>
 
@@ -91,14 +91,14 @@ if ($grupos === []) {
     </div>
 
     <div class="legal-modal-body">
-      <h3>Tech Hub ULS</h3>
-      <p>Este sitio tiene como propósito presentar la identidad corporativa del Tech Hub de la Universidad de La Serena y dar a conocer los servicios ofrecidos por sus unidades internas (entre ellas, el Software Factory Lab, ODS, Repositorio, IA Lab e IoT Lab).</p>
-      <p>Todos los contenidos que conforman este sitio web —textos, logotipos, imágenes y fotografías del staff— son propiedad exclusiva del Tech Hub ULS o de terceros autorizados, y su uso no autorizado está prohibido.</p>
-      <p>Al utilizar este sitio, el usuario se compromete a hacer un uso lícito y adecuado de los contenidos, absteniéndose de ingresar datos falsos o de dañar la infraestructura tecnológica del Tech Hub ULS.</p>
-      <p>El Tech Hub ULS no asume responsabilidad sobre el contenido de sitios externos vinculados desde esta plataforma, ni sobre interrupciones del servicio derivadas de labores de mantenimiento.</p>
+      <h3>Software Factory Lab (SFL) — Universidad de La Serena</h3>
+      <p>Este sitio tiene como propósito presentar la identidad corporativa y las actividades del Software Factory Lab de la Universidad de La Serena, así como dar a conocer los proyectos estudiantiles y servicios tecnológicos desarrollados por el laboratorio.</p>
+      <p>Todos los contenidos que conforman este sitio web —textos, logotipos, imágenes y fotografías del staff— son propiedad exclusiva del Software Factory Lab ULS o de terceros autorizados, y su uso no autorizado está prohibido.</p>
+      <p>Al utilizar este sitio, el usuario se compromete a hacer un uso lícito y adecuado de los contenidos, absteniéndose de ingresar datos falsos o de dañar la infraestructura tecnológica del laboratorio.</p>
+      <p>El Software Factory Lab ULS no asume responsabilidad sobre el contenido de sitios externos vinculados desde esta plataforma, ni sobre interrupciones del servicio derivadas de labores de mantenimiento.</p>
 
-      <h3>Software Factory Lab (SFL)</h3>
-      <p>El Software Factory Lab es una unidad del Tech Hub ULS dedicada a servicios de ingeniería de software y a la difusión de su portafolio de proyectos estudiantiles.</p>
+      <h3>Propiedad Intelectual</h3>
+      <p>El Software Factory Lab es un laboratorio de la Universidad de La Serena dedicado a la ingeniería de software y a la difusión de su portafolio de proyectos estudiantiles.</p>
       <p>Queda prohibida la ingeniería inversa o la comunicación pública de los activos de software y diseño presentados en este sitio sin el consentimiento previo y por escrito del equipo del laboratorio.</p>
 
       <h3>Protección de datos personales</h3>
