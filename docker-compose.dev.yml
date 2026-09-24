@@ -21,7 +21,7 @@ services:
         condition: service_healthy
 
   postgres:
-    image: postgres:17
+    image: postgres:16-alpine
     container_name: techhub_postgres_dev
     ports:
       - "${POSTGRES_PORT}:5432"

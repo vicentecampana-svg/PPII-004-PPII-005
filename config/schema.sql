@@ -2,15 +2,11 @@
 -- PostgreSQL database dump
 --
 
-\restrict 7QUYGPQx6iLPUsV0sozO9TS0ZTuYLgWUJZTW2tkxIiS1j1K0zsMF7t8Z8iPmhXM
-
--- Dumped from database version 17.10 (Debian 17.10-1.pgdg13+1)
--- Dumped by pg_dump version 17.10 (Debian 17.10-1.pgdg13+1)
+-- PostgreSQL database dump
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -1139,7 +1135,5 @@ CREATE INDEX idx_staff_member_orden ON public.staff_member USING btree (orden AS
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict 7QUYGPQx6iLPUsV0sozO9TS0ZTuYLgWUJZTW2tkxIiS1j1K0zsMF7t8Z8iPmhXM
 
 
