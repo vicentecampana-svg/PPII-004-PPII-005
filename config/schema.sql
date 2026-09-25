@@ -1131,6 +1131,19 @@ ALTER TABLE ONLY public.credit_member
 ALTER TABLE ONLY public.credit_member
     ALTER COLUMN id SET DEFAULT nextval('public.credit_member_id_seq'::regclass);
 
+-- Datos base de créditos (los mismos de config/migrations/004_credit_member.sql),
+-- para que una instalación nueva y el CI tengan la tabla poblada.
+INSERT INTO public.credit_member ("key", name, role, email, orden) VALUES
+    ('vicente-campana',       'Vicente Campaña',          'Project Manager',                          'vicente.campana@userena.cl',    1),
+    ('wilmary-guedez',        'Wilmary Guedez',           'Ingeniera en Requerimientos',              'wilmary.guedez@userena.cl',     2),
+    ('esteban-zepeda',        'Esteban Zepeda',           'Diseño UX/UI',                             'esteban.zepeda@userena.cl',     3),
+    ('bastian-pizarro',       'Bastian Pizarro',          'Diseño UX/UI',                             'bastian.pizarro@userena.cl',    4),
+    ('maximiliano-saavedra',  'Maximiliano Saavedra',     'Desarrollo Backend y Base de datos',       'maximiliano.saavedra@userena.cl', 5),
+    ('agustina-lopez',        'Agustina Lopez',           'Desarrollo Frontend',                      'agustina.lopez@userena.cl',     6),
+    ('basthian-valenzuela',   'Basthian Valenzuela',      'Quality Assurance',                        'basthian.valenzuela@userena.cl', 7),
+    ('pedro-rojas',           'Pedro Rojas',              'Apoyo Desarrollo',                         'pedro.rojasm3@userena.cl',      8)
+ON CONFLICT ("key") DO NOTHING;
+
 
 --
 -- Name: password_reset_request; Type: TABLE; Schema: public; Owner: -
