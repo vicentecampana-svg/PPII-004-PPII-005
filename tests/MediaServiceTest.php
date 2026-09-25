@@ -87,6 +87,30 @@ final class MediaServiceTest extends TestCase
         }
     }
 
+    /** #96: un SVG con script embebido nunca debe aceptarse. */
+    public function testUploadRejectsSvgWithScript(): void
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'svg_');
+        file_put_contents($tmpFile, '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+
+        $fileData = [
+            'name'     => 'malicious.svg',
+            'type'     => 'image/svg+xml',
+            'tmp_name' => $tmpFile,
+            'error'    => UPLOAD_ERR_OK,
+            'size'     => filesize($tmpFile),
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Archivo no válido: solo se permiten imágenes en formato JPG, JPEG, PNG');
+
+        try {
+            $this->mediaService->upload($fileData, 'evil_');
+        } finally {
+            @unlink($tmpFile);
+        }
+    }
+
     public function testUploadRejectsOversizedFile(): void
     {
         $tmpFile = tempnam(sys_get_temp_dir(), 'huge_');

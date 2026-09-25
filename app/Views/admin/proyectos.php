@@ -130,7 +130,7 @@ $editingProject ??= null;
                  id="project-image-file" 
                  name="image_file" 
                  class="admin-form-file" 
-                 accept="image/png, image/jpeg, image/webp, image/gif, image/svg+xml"
+                 accept="image/png, image/jpeg"
                  onchange="if(this.files && this.files[0]){ document.getElementById('project-img-preview').src = URL.createObjectURL(this.files[0]); }">
           <input type="hidden" name="existing_image" value="<?= e($editingProject['image'] ?? '') ?>">
         </div>

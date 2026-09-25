@@ -1133,6 +1133,27 @@ ALTER TABLE ONLY public.credit_member
 
 
 --
+-- Name: password_reset_request; Type: TABLE; Schema: public; Owner: -
+-- Issue: #79 — Bloqueo de spam en recuperación de contraseña
+--
+-- Registra cada solicitud de recuperación (exista o no el correo) para
+-- aplicar un cooldown entre envíos, sin filtrar si una cuenta existe.
+--
+
+CREATE TABLE IF NOT EXISTS public.password_reset_request (
+    id           BIGSERIAL    PRIMARY KEY,
+    email        VARCHAR(255) NOT NULL,
+    ip           VARCHAR(45)  NOT NULL,
+    requested_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_prr_email_requested_at
+    ON public.password_reset_request (LOWER(email), requested_at DESC);
+CREATE INDEX IF NOT EXISTS idx_prr_ip_requested_at
+    ON public.password_reset_request (ip, requested_at DESC);
+
+
+--
 -- Indices de Rendimiento (Performance Indexes)
 --
 
