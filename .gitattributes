@@ -1,4 +1,0 @@
-# Los scripts que se ejecutan dentro de contenedores Linux deben tener LF,
-# aunque core.autocrlf=true en Windows los convierta a CRLF en el checkout.
-*.sh text eol=lf
-Dockerfile* text eol=lf

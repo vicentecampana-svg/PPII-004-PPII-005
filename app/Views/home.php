@@ -13,16 +13,11 @@ declare(strict_types=1);
   <div class="container hero-inner">
     <img src="/assets/images/logo-sfl-color.png" alt="Software Factory Lab Universidad de La Serena" width="260" height="86" class="hero-logo">
 
-    <h1><?= htmlspecialchars((string) ($contenido['sobre_titulo'] ?? ''), ENT_QUOTES, 'UTF-8') ?></h1>
-    <p><?= eParagraphs($contenido['sobre_texto'] ?? null) ?></p>
+    <h1><?= htmlspecialchars($contenido['sobre_titulo'], ENT_QUOTES, 'UTF-8') ?></h1>
+    <p><?= nl2br(htmlspecialchars($contenido['sobre_texto'], ENT_QUOTES, 'UTF-8')) ?></p>
 
-    <?php // Los campos de misión pueden quedar vacíos (NULL) desde el panel: se omite el bloque. ?>
-    <?php if (trim((string) ($contenido['mision_titulo'] ?? '')) !== '') : ?>
-      <h2><?= htmlspecialchars((string) $contenido['mision_titulo'], ENT_QUOTES, 'UTF-8') ?></h2>
-    <?php endif; ?>
-    <?php if (trim((string) ($contenido['mision_texto'] ?? '')) !== '') : ?>
-      <p><?= eParagraphs($contenido['mision_texto']) ?></p>
-    <?php endif; ?>
+    <h2><?= htmlspecialchars($contenido['mision_titulo'], ENT_QUOTES, 'UTF-8') ?></h2>
+    <p><?= nl2br(htmlspecialchars($contenido['mision_texto'], ENT_QUOTES, 'UTF-8')) ?></p>
 
     <a href="/contacto" class="btn btn-destructive">Contáctenos</a>
   </div>
@@ -84,8 +79,9 @@ declare(strict_types=1);
 
 <section class="section section-surface" id="noticias">
   <div class="container">
-    <div class="section-rule">
+    <div class="section-rule section-rule-inline">
       <h2 class="section-title">Noticias</h2>
+      <a href="/noticias" class="btn btn-destructive btn-sm">Ver más</a>
     </div>
     <div class="grid grid-noticias">
       <?php foreach ($noticias as $n) : ?>
@@ -100,9 +96,6 @@ declare(strict_types=1);
           </div>
         </article>
       <?php endforeach; ?>
-    </div>
-    <div class="section-cta">
-      <a href="/noticias" class="btn btn-destructive">Ver más</a>
     </div>
   </div>
 </section>

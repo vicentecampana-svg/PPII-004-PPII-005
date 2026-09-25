@@ -10,7 +10,7 @@ class AuditRepository
     {
         return dbFetchAll(
             "SELECT a.id, a.action, a.entity, a.entity_id, a.details, a.created_at,
-                    CASE WHEN a.user_id IS NULL THEN 'visitante' ELSE u.username END AS user_name
+                    u.username AS user_name
              FROM audit_log a
              LEFT JOIN app_user u ON a.user_id = u.id
              ORDER BY a.created_at DESC
@@ -23,7 +23,7 @@ class AuditRepository
     {
         return dbFetchAll(
             "SELECT a.id, a.action, a.details, a.created_at,
-                    CASE WHEN a.user_id IS NULL THEN 'visitante' ELSE u.username END AS user_name
+                    u.username AS user_name
              FROM audit_log a
              LEFT JOIN app_user u ON a.user_id = u.id
              WHERE a.entity = :entity AND a.entity_id = :entity_id
@@ -32,7 +32,7 @@ class AuditRepository
         );
     }
 
-    public function log(?int $userId, string $action, string $entity, int $entityId, string $details = ''): int
+    public function log(int $userId, string $action, string $entity, int $entityId, string $details = ''): int
     {
         return dbInsert('audit_log', [
             'user_id'    => $userId,

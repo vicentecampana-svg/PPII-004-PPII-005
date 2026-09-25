@@ -33,10 +33,10 @@ if ($isLoggedIn) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="<?= htmlspecialchars(assetUrl('/assets/css/style.css'), ENT_QUOTES, 'UTF-8') ?>">
+  <link rel="stylesheet" href="/assets/css/style.css">
   <?php if (!empty($extraCss)) : ?>
         <?php foreach ((array) $extraCss as $css) : ?>
-      <link rel="stylesheet" href="<?= htmlspecialchars(assetUrl($css), ENT_QUOTES, 'UTF-8') ?>">
+      <link rel="stylesheet" href="<?= htmlspecialchars($css, ENT_QUOTES, 'UTF-8') ?>">
         <?php endforeach; ?>
   <?php endif; ?>
 </head>

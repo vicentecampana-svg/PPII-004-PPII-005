@@ -16,7 +16,7 @@ $misionTexto = $siteContent['mision_texto'] ?? "Formar talento tecnológico medi
 <div class="admin-full-card-wrapper">
   <div class="admin-sidebar-card admin-content-card">
     <div class="admin-tab-header">
-      <h2 class="admin-tab-content-title admin-title-md">Sobre nosotros</h2>
+      <h2 class="admin-tab-content-title admin-title-md">Sobre nosotros, misión y visión</h2>
     </div>
 
     <form method="post" action="/admin/sobre-nosotros">
@@ -24,7 +24,7 @@ $misionTexto = $siteContent['mision_texto'] ?? "Formar talento tecnológico medi
 
       <!-- Título «Sobre nosotros» -->
       <div class="admin-form-group">
-        <label class="admin-form-label" for="sobre-titulo">Título</label>
+        <label class="admin-form-label" for="sobre-titulo">Título «Sobre nosotros»</label>
         <input type="text" 
                id="sobre-titulo" 
                name="sobre_titulo" 
@@ -37,7 +37,7 @@ $misionTexto = $siteContent['mision_texto'] ?? "Formar talento tecnológico medi
 
       <!-- Texto «Sobre nosotros» -->
       <div class="admin-form-group">
-        <label class="admin-form-label" for="sobre-texto">Descripción</label>
+        <label class="admin-form-label" for="sobre-texto">Texto «Sobre nosotros»</label>
         <textarea id="sobre-texto" 
                   name="sobre_texto" 
                   class="admin-form-textarea" 
@@ -46,13 +46,9 @@ $misionTexto = $siteContent['mision_texto'] ?? "Formar talento tecnológico medi
                   required><?= e($sobreTexto) ?></textarea>
       </div>
 
-      <div class="admin-tab-header">
-        <h2 class="admin-tab-content-title admin-title-md">Misión, visión y objetivos</h2>
-      </div>
-
-      <!-- Título «Misión, visión y objetivos» -->
+      <!-- Título «Misión y visión» -->
       <div class="admin-form-group">
-        <label class="admin-form-label" for="mision-titulo">Título</label>
+        <label class="admin-form-label" for="mision-titulo">Título «Misión y visión»</label>
         <input type="text" 
                id="mision-titulo" 
                name="mision_titulo" 
@@ -65,7 +61,7 @@ $misionTexto = $siteContent['mision_texto'] ?? "Formar talento tecnológico medi
 
       <!-- Texto «Misión, visión y objetivos» -->
       <div class="admin-form-group">
-        <label class="admin-form-label" for="mision-texto">Descripción</label>
+        <label class="admin-form-label" for="mision-texto">Texto «Misión, visión y objetivos»</label>
         <textarea id="mision-texto" 
                   name="mision_texto" 
                   class="admin-form-textarea" 
