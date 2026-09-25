@@ -507,7 +507,8 @@ final class AdminController extends Controller
             $this->footerService->updateContenido($data);
             $_SESSION['_flash_success'] = 'Contenido de Sobre Nosotros guardado exitosamente.';
         } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al guardar el contenido: ' . $e->getMessage();
+            error_log('[AdminController::saveSobreNosotros] ' . $e->getMessage());
+            $_SESSION['_flash_error'] = 'No se pudo guardar el contenido. Inténtalo nuevamente o contacta al administrador del sitio.';
         }
 
         header('Location: /admin?tab=sobre-nosotros');
@@ -739,8 +740,15 @@ final class AdminController extends Controller
         try {
             $this->userService->delete($id);
             $_SESSION['_flash_success'] = 'Usuario eliminado exitosamente.';
+        } catch (\PDOException $e) {
+            // PDOException hereda de RuntimeException: debe ir antes para no exponer el SQL.
+            error_log('[AdminController::deleteUser] ' . $e->getMessage());
+            $_SESSION['_flash_error'] = 'No se pudo eliminar el usuario. Inténtalo nuevamente o contacta al administrador del sitio.';
+        } catch (\RuntimeException $e) {
+            $_SESSION['_flash_error'] = $e->getMessage(); // p. ej. "Usuario no encontrado."
         } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Error al eliminar el usuario: ' . $e->getMessage();
+            error_log('[AdminController::deleteUser] ' . $e->getMessage());
+            $_SESSION['_flash_error'] = 'No se pudo eliminar el usuario. Inténtalo nuevamente o contacta al administrador del sitio.';
         }
 
         header('Location: /admin?tab=usuarios');
