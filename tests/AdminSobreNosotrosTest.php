@@ -33,12 +33,42 @@ final class AdminSobreNosotrosTest extends TestCase
         require dirname(__DIR__) . '/app/Views/admin/sobre-nosotros.php';
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('Sobre nosotros, misión y visión', $output);
-        $this->assertStringContainsString('Título «Sobre nosotros»', $output);
-        $this->assertStringContainsString('Texto «Sobre nosotros»', $output);
-        $this->assertStringContainsString('Título «Misión y visión»', $output);
-        $this->assertStringContainsString('Texto «Misión, visión y objetivos»', $output);
+        $this->assertStringContainsString('admin-title-md">Sobre nosotros</h2>', $output);
+        $this->assertStringContainsString('admin-title-md">Misión, visión y objetivos</h2>', $output);
+        $this->assertStringContainsString('for="sobre-titulo">Título</label>', $output);
+        $this->assertStringContainsString('for="sobre-texto">Descripción</label>', $output);
+        $this->assertStringContainsString('for="mision-titulo">Título</label>', $output);
+        $this->assertStringContainsString('for="mision-texto">Descripción</label>', $output);
         $this->assertStringContainsString('action="/admin/sobre-nosotros"', $output);
         $this->assertStringContainsString('Guardar cambios', $output);
+    }
+
+    public function testHomeRendersWhenMisionIsEmpty(): void
+    {
+        $contenido = [
+            'sobre_titulo'  => 'Sobre nosotros',
+            'sobre_texto'   => 'Texto institucional',
+            'mision_titulo' => null,
+            'mision_texto'  => null,
+        ];
+        $proyectos = $staff = $noticias = [];
+
+        ob_start();
+        require dirname(__DIR__) . '/app/Views/home.php';
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<h1>Sobre nosotros</h1>', $output);
+        $this->assertStringNotContainsString('<h2></h2>', $output);
+    }
+
+    public function testParagraphSpacingIsSameForOneOrManyLineBreaks(): void
+    {
+        $expected = "Primer párrafo.\n\nSegundo párrafo.";
+
+        $this->assertSame($expected, eParagraphs("Primer párrafo.\nSegundo párrafo."));
+        $this->assertSame($expected, eParagraphs("Primer párrafo.\r\n\r\nSegundo párrafo."));
+        $this->assertSame($expected, eParagraphs("Primer párrafo.  \n \n\n\tSegundo párrafo.\n"));
+        $this->assertSame('&lt;b&gt;', eParagraphs('<b>'));
+        $this->assertSame('', eParagraphs(null));
     }
 }

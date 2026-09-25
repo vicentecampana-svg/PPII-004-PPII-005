@@ -103,12 +103,13 @@ final class PasswordResetService
 
         $userId = (int) $tokenRow['user_id'];
 
-        // Actualizar contraseña y quitar flag de cambio forzado
+        // Actualizar contraseña y quitar flag de cambio forzado. El flujo corre
+        // sin sesión, así que el autor de la auditoría es el propio usuario.
         $userService = new UserService($this->userRepo);
         $userService->update($userId, [
             'password'             => $newPassword,
             'must_change_password' => false,
-        ]);
+        ], $userId);
 
         // Invalidar el token
         $this->resetRepo->markUsed((int) $tokenRow['id']);
