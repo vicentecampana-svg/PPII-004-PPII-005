@@ -281,7 +281,7 @@ class MailerService
         $message = nl2br(htmlspecialchars((string) ($contact['message'] ?? ''), ENT_QUOTES, 'UTF-8'));
 
         $phoneRow = $phone !== ''
-            ? '<tr><td style="padding:8px 0;color:#475569;width:140px;">Teléfono</td><td style="padding:8px 0;color:#0f172a;font-weight:bold;">' . $phone . '</td></tr>'
+            ? '<tr><td class="email-label">Teléfono</td><td class="email-value">' . $phone . '</td></tr>'
             : '';
 
         return <<<HTML
@@ -290,34 +290,47 @@ class MailerService
         <head>
           <meta charset="UTF-8">
           <title>Nueva consulta de contacto</title>
+          <style>
+            body { font-family: Arial, sans-serif; background: #f8fafc; padding: 32px; margin: 0; }
+            .email-card { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0; }
+            .email-title { margin-top: 0; color: #1e293b; }
+            .email-intro { color: #475569; }
+            .email-table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+            .email-label { padding: 8px 0; color: #475569; width: 140px; }
+            .email-value { padding: 8px 0; color: #0f172a; font-weight: bold; }
+            .email-message { margin-top: 16px; background: #f1f5f9; border-radius: 6px; padding: 16px; }
+            .email-message-label { margin: 0 0 6px 0; color: #475569; }
+            .email-message-text { margin: 0; color: #0f172a; line-height: 1.5; }
+            .email-divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+            .email-footer { font-size: 0.75em; color: #94a3b8; margin: 0; }
+          </style>
         </head>
-        <body style="font-family: Arial, sans-serif; background: #f8fafc; padding: 32px;">
-          <div style="max-width: 560px; margin: 0 auto; background: #fff;
-                      border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0;">
-            <h2 style="margin-top: 0; color: #1e293b;">Nueva consulta de contacto</h2>
-            <p style="color: #475569;">Se recibió una nueva consulta a través del formulario de contacto de
+        <body>
+          <div class="email-card">
+            <h2 class="email-title">Nueva consulta de contacto</h2>
+            <p class="email-intro">Se recibió una nueva consulta a través del formulario de contacto de
                <strong>TechHub ULS</strong>.</p>
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+            <table class="email-table">
               <tr>
-                <td style="padding:8px 0;color:#475569;width:140px;">Nombre</td>
-                <td style="padding:8px 0;color:#0f172a;font-weight:bold;">{$name}</td>
+                <td class="email-label">Nombre</td>
+                <td class="email-value">{$name}</td>
               </tr>
               <tr>
-                <td style="padding:8px 0;color:#475569;width:140px;">Correo</td>
-                <td style="padding:8px 0;color:#0f172a;font-weight:bold;">{$email}</td>
+                <td class="email-label">Correo</td>
+                <td class="email-value">{$email}</td>
               </tr>
               {$phoneRow}
               <tr>
-                <td style="padding:8px 0;color:#475569;width:140px;">Asunto</td>
-                <td style="padding:8px 0;color:#0f172a;font-weight:bold;">{$subject}</td>
+                <td class="email-label">Asunto</td>
+                <td class="email-value">{$subject}</td>
               </tr>
             </table>
-            <div style="margin-top: 16px; background: #f1f5f9; border-radius: 6px; padding: 16px;">
-              <p style="margin: 0 0 6px 0; color: #475569;"><strong>Mensaje:</strong></p>
-              <p style="margin: 0; color: #0f172a; line-height: 1.5;">{$message}</p>
+            <div class="email-message">
+              <p class="email-message-label"><strong>Mensaje:</strong></p>
+              <p class="email-message-text">{$message}</p>
             </div>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-            <p style="font-size: 0.75em; color: #94a3b8; margin: 0;">
+            <hr class="email-divider">
+            <p class="email-footer">
               TechHub — Software Factory Lab, Universidad de La Serena
             </p>
           </div>
