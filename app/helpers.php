@@ -84,12 +84,21 @@ function dbInsert(string $table, array $data): int
 
 function dbUpdate(string $table, array $data, string $where, array $whereParams = []): int
 {
+    // PDO no admite mezclar placeholders "?" y ":nombre" en una misma consulta,
+    // así que el SET usa el mismo estilo que el WHERE recibido ('id = ?' o 'id = :id').
+    $positional = array_is_list($whereParams);
+
     $params = [];
     $setParts = [];
     foreach ($data as $col => $val) {
-        $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
-        $setParts[] = "{$col} = :{$placeholder}";
-        $params[$placeholder] = $val;
+        if ($positional) {
+            $setParts[] = "{$col} = ?";
+            $params[] = $val;
+        } else {
+            $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
+            $setParts[] = "{$col} = :{$placeholder}";
+            $params[$placeholder] = $val;
+        }
     }
     $set = implode(', ', $setParts);
     $sql = "UPDATE {$table} SET {$set} WHERE {$where}";
@@ -296,6 +305,11 @@ function mwCsrf(): void
 
 function mwAuth(): void
 {
+    // Una sesión abierta no sobrevive a que la cuenta se elimine o desactive.
+    if (authCheck() && !(new \App\Repositories\UserRepository())->isActive((int) $_SESSION['user_id'])) {
+        authLogout();
+    }
+
     if (!authCheck()) {
         if (isApiRequest()) {
             respUnauthorized();
@@ -470,7 +484,32 @@ function mediaUrl(?string $path, string $fallbackType = ''): string
     return '/uploads/' . ltrim($path, '/');
 }
 
+/**
+ * URL de un archivo de public/ con su fecha de modificación como versión
+ * (?v=...), para que el navegador descargue la versión nueva tras un cambio
+ * en vez de seguir usando la guardada en caché.
+ */
+function assetUrl(string $path): string
+{
+    $file = dirname(__DIR__) . '/public/' . ltrim($path, '/');
+
+    return is_file($file) ? $path . '?v=' . filemtime($file) : $path;
+}
+
 function e(?string $value): string
 {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Escapa un texto multipárrafo escrito en el panel para mostrarlo con
+ * `white-space: pre-line`. Cualquier cantidad de saltos de línea seguidos
+ * (1, 2 o más, aunque haya espacios entre ellos) se normaliza a una sola
+ * línea en blanco, para que la separación entre párrafos sea siempre la misma.
+ */
+function eParagraphs(?string $value): string
+{
+    $text = preg_replace('/[ \t]*\R\s*/u', "\n\n", trim($value ?? ''));
+
+    return e($text);
 }
