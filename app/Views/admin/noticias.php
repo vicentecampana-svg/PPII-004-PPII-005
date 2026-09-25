@@ -218,7 +218,7 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
             <input type="checkbox" 
                    name="is_public" 
                    value="1" 
-                   <?= (!isset($editingNews) || ($editingNews['status'] ?? '') === 'publicada') ? 'checked' : '' ?>>
+                   <?= $editingNews === null || !empty($editingNews['is_public']) ? 'checked' : '' ?>>
             <span class="admin-toggle-text">Noticia pública</span>
           </label>
 

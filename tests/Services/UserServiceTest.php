@@ -96,9 +96,9 @@ class UserServiceTest extends TestCase
                 'password' => 'SecurePass123!',
                 'role_id'  => 3,
             ]);
-            $this->fail('Se esperaba InvalidArgumentException');
-        } catch (\InvalidArgumentException $e) {
-            $this->assertStringContainsString('cuenta eliminada', json_decode($e->getMessage(), true)['email']);
+            $this->fail('Se esperaba ValidationException');
+        } catch (\App\Exceptions\ValidationException $e) {
+            $this->assertStringContainsString('cuenta eliminada', $e->getErrors()['email']);
         }
     }
 
@@ -115,9 +115,9 @@ class UserServiceTest extends TestCase
                 'password' => 'SecurePass123!',
                 'role_id'  => 3,
             ]);
-            $this->fail('Se esperaba InvalidArgumentException');
-        } catch (\InvalidArgumentException $e) {
-            $this->assertStringContainsString('cuenta eliminada', json_decode($e->getMessage(), true)['username']);
+            $this->fail('Se esperaba ValidationException');
+        } catch (\App\Exceptions\ValidationException $e) {
+            $this->assertStringContainsString('cuenta eliminada', $e->getErrors()['username']);
         }
     }
 }

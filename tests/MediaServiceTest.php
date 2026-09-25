@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Services\MediaService;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class MediaServiceTest extends TestCase
@@ -77,7 +78,7 @@ final class MediaServiceTest extends TestCase
         ];
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Formato de archivo no permitido');
+        $this->expectExceptionMessage('Archivo no válido: solo se permiten imágenes en formato JPG, JPEG, PNG y con un tamaño máximo de 1MB.');
 
         try {
             $this->mediaService->upload($fileData, 'danger_');
@@ -104,13 +105,65 @@ final class MediaServiceTest extends TestCase
         ];
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('excede el tamaño máximo');
+        $this->expectExceptionMessage('Archivo no válido: solo se permiten imágenes en formato JPG, JPEG, PNG y con un tamaño máximo de 1MB.');
 
         try {
             $this->mediaService->upload($fileData, 'big_');
         } finally {
             @unlink($tmpFile);
         }
+    }
+
+    #[DataProvider('disallowedFormatsProvider')]
+    public function testUploadRejectsDisallowedImageFormats(array $fileData): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Archivo no válido: solo se permiten imágenes en formato JPG, JPEG, PNG');
+
+        try {
+            $this->mediaService->upload($fileData, 'img_');
+        } finally {
+            if (isset($fileData['tmp_name'])) {
+                @unlink($fileData['tmp_name']);
+            }
+        }
+    }
+
+    public function testUploadReportsMaxSizeWhenPhpRejectsByIniSize(): void
+    {
+        $fileData = [
+            'name'     => 'foto.jpg',
+            'type'     => 'image/jpeg',
+            'tmp_name' => '',
+            'error'    => UPLOAD_ERR_INI_SIZE,
+            'size'     => 0,
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Archivo no válido: solo se permiten imágenes en formato JPG, JPEG, PNG y con un tamaño máximo de 1MB.');
+
+        $this->mediaService->upload($fileData, 'img_');
+    }
+
+    public static function disallowedFormatsProvider(): array
+    {
+        $makeFile = static function (string $name, string $content): array {
+            $tmpFile = tempnam(sys_get_temp_dir(), 'img_');
+            file_put_contents($tmpFile, $content);
+            return [
+                'name'     => $name,
+                'type'     => 'image/gif',
+                'tmp_name' => $tmpFile,
+                'error'    => UPLOAD_ERR_OK,
+                'size'     => strlen($content),
+            ];
+        };
+
+        return [
+            'gif'  => [$makeFile('animado.gif', base64_decode('R0lGODlhAQABAAAAACwAAAAAAQABAAA='))],
+            'webp' => [$makeFile('foto.webp', 'RIFF' . pack('V', 40) . 'WEBPVP8 ' . str_repeat("\0", 28))],
+            'svg'  => [$makeFile('vector.svg', '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"></svg>')],
+        ];
     }
 
     public function testMediaUrlHelper(): void

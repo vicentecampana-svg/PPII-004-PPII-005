@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ValidationException;
 use App\Repositories\UserRepository;
 
 class UserService
@@ -47,7 +48,7 @@ class UserService
     {
         $errors = $this->validateCreate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         // Los usuarios eliminados conservan su email y username: no se pueden reutilizar.
@@ -56,7 +57,7 @@ class UserService
             $msg = !empty($existing['deleted_at'])
                 ? 'El email pertenece a una cuenta eliminada y no puede volver a registrarse.'
                 : 'El email ya está registrado.';
-            throw new \InvalidArgumentException(json_encode(['email' => $msg]));
+            throw new ValidationException(['email' => $msg]);
         }
 
         $existingUsername = $this->repo->findByUsername($data['username']);
@@ -64,7 +65,7 @@ class UserService
             $msg = !empty($existingUsername['deleted_at'])
                 ? 'El nombre de usuario pertenece a una cuenta eliminada y no puede volver a usarse.'
                 : 'El nombre de usuario ya está registrado.';
-            throw new \InvalidArgumentException(json_encode(['username' => $msg]));
+            throw new ValidationException(['username' => $msg]);
         }
 
         $id = $this->repo->create([
@@ -93,7 +94,7 @@ class UserService
 
         $errors = $this->validateUpdate($data);
         if ($errors) {
-            throw new \InvalidArgumentException(json_encode($errors));
+            throw new ValidationException($errors);
         }
 
         $fields = [];
@@ -134,7 +135,7 @@ class UserService
         }
 
         if (strlen($newPassword) < 12) {
-            throw new \InvalidArgumentException(json_encode(['password' => 'La contraseña debe tener al menos 12 caracteres.']));
+            throw new ValidationException(['password' => 'La contraseña debe tener al menos 12 caracteres.']);
         }
 
         $this->repo->update($id, [
@@ -155,11 +156,11 @@ class UserService
         }
 
         if (!password_verify($currentPassword, (string) ($user['password'] ?? ''))) {
-            throw new \InvalidArgumentException(json_encode(['current_password' => 'La contraseña actual es incorrecta.']));
+            throw new ValidationException(['current_password' => 'La contraseña actual es incorrecta.']);
         }
 
         if (strlen($newPassword) < 12) {
-            throw new \InvalidArgumentException(json_encode(['password' => 'La contraseña debe tener al menos 12 caracteres.']));
+            throw new ValidationException(['password' => 'La contraseña debe tener al menos 12 caracteres.']);
         }
 
         $this->repo->update($id, [
