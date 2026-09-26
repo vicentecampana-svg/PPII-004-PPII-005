@@ -57,10 +57,8 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_PORT=5433
 
-# Usuario de la aplicación (mínimos privilegios). La app se conecta SIEMPRE
-# con este rol, dueño de la base de datos; nunca usa POSTGRES_USER.
-DB_USER=techhub
-DB_PASSWORD=techhub
+DB_USER=techhub_app1
+DB_PASSWORD=Clave2026Local
 
 MAIL_DRIVER=log
 SMTP_HOST=
@@ -69,6 +67,9 @@ SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=no-reply@techhub.uls.cl
 SMTP_FROM_NAME=TechHub ULS
+
+CONTACT_NOTIFY_EMAIL=
+TICKET_PLATFORM_URL=
 ```
 
 ---
