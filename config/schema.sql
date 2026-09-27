@@ -34,7 +34,8 @@ CREATE TABLE public.app_user (
     email character varying(150) NOT NULL,
     password character varying(255) NOT NULL,
     active boolean DEFAULT true NOT NULL,
-    must_change_password boolean DEFAULT false NOT NULL
+    must_change_password boolean DEFAULT false NOT NULL,
+    deleted_at timestamp without time zone -- eliminación lógica: se conserva por auditoría y para no reutilizar el email
 );
 
 
@@ -64,7 +65,7 @@ ALTER SEQUENCE public.app_user_id_seq OWNED BY public.app_user.id;
 
 CREATE TABLE public.audit_log (
     id integer NOT NULL,
-    user_id integer NOT NULL,
+    user_id integer, -- NULL = visitante anónimo (sin sesión)
     action character varying(100) NOT NULL,
     entity character varying(100) NOT NULL,
     entity_id integer NOT NULL,

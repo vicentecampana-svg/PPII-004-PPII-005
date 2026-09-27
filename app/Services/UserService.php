@@ -50,9 +50,21 @@ class UserService
             throw new \InvalidArgumentException(json_encode($errors));
         }
 
+        // Los usuarios eliminados conservan su email y username: no se pueden reutilizar.
         $existing = $this->repo->findByEmail($data['email']);
         if ($existing) {
-            throw new \InvalidArgumentException(json_encode(['email' => 'El email ya está registrado.']));
+            $msg = !empty($existing['deleted_at'])
+                ? 'El email pertenece a una cuenta eliminada y no puede volver a registrarse.'
+                : 'El email ya está registrado.';
+            throw new \InvalidArgumentException(json_encode(['email' => $msg]));
+        }
+
+        $existingUsername = $this->repo->findByUsername($data['username']);
+        if ($existingUsername) {
+            $msg = !empty($existingUsername['deleted_at'])
+                ? 'El nombre de usuario pertenece a una cuenta eliminada y no puede volver a usarse.'
+                : 'El nombre de usuario ya está registrado.';
+            throw new \InvalidArgumentException(json_encode(['username' => $msg]));
         }
 
         $id = $this->repo->create([
@@ -69,7 +81,10 @@ class UserService
         return $this->repo->findById($id);
     }
 
-    public function update(int $id, array $data): array
+    /**
+     * @param int|null $actorId Autor para la auditoría; null = usuario de la sesión.
+     */
+    public function update(int $id, array $data, ?int $actorId = null): array
     {
         $existing = $this->repo->findById($id);
         if (!$existing) {
@@ -106,7 +121,7 @@ class UserService
             $this->repo->update($id, $fields);
         }
 
-        $this->audit->log(null, 'actualizar', 'user', $id, 'Usuario actualizado: ' . ($data['username'] ?? $existing['username']));
+        $this->audit->log($actorId, 'actualizar', 'user', $id, 'Usuario actualizado: ' . ($data['username'] ?? $existing['username']));
 
         return $this->repo->findById($id);
     }
@@ -157,6 +172,7 @@ class UserService
         return $this->repo->findById($id);
     }
 
+    /** Eliminación lógica: ver UserRepository::delete(). */
     public function delete(int $id): void
     {
         $existing = $this->repo->findById($id);

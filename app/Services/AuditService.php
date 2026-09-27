@@ -31,11 +31,15 @@ class AuditService
         ];
     }
 
+    /**
+     * Si no se indica $userId se usa el usuario de la sesión; sin sesión la
+     * acción queda sin autor (NULL), que la API muestra como "visitante".
+     */
     public function log(?int $userId, string $action, string $entity, int $entityId, string $details = ''): int
     {
         if ($userId === null) {
             $user = authUser();
-            $userId = $user ? (int) $user['id'] : 1;
+            $userId = $user ? (int) $user['id'] : null;
         }
 
         return $this->repo->log($userId, $action, $entity, $entityId, $details);

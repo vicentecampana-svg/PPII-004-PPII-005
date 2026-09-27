@@ -367,13 +367,6 @@ a {
   padding-top: 32px;
 }
 
-.section-rule-inline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
 .section-cta {
   margin-top: 32px;
   text-align: center;
@@ -471,8 +464,13 @@ a {
 
 .card-body .btn {
   margin-top: auto;
-  padding-top: 16px;
   align-self: flex-start;
+}
+
+/* Separación sobre el botón: como margen del elemento anterior, no como
+   padding del botón (eso desplazaba el texto hacia abajo dentro del botón). */
+.card-body > :has(+ .btn) {
+  margin-bottom: 16px;
 }
 
 .card-body .read-more {
