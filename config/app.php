@@ -10,7 +10,7 @@ return [
         'host'     => getenv('PG_HOST') ?: 'localhost',
         'port'     => getenv('PG_PORT') ?: '5432',
         'database' => getenv('PG_DATABASE') ?: 'techhub',
-        'username' => getenv('PG_USER') ?: 'postgres',
+        'username' => getenv('PG_USER') ?: 'techhub',
         'password' => getenv('PG_PASSWORD') ?: '',
     ],
 

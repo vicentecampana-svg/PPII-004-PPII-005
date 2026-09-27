@@ -13,7 +13,7 @@ class NewsRepository
         $params['offset'] = $offset;
 
         $sql = "SELECT n.id, n.author_id, n.editor_id, n.status_id, n.title, n.subtitle, n.content,
-                       n.image, n.publication_date, n.created_at, n.updated_at,
+                       n.image, n.is_public, n.publication_date, n.created_at, n.updated_at,
                        ns.name AS status,
                        u.username AS author,
                        STRING_AGG(DISTINCT t.name, ', ') AS tag,
@@ -41,7 +41,7 @@ class NewsRepository
         $params['offset'] = $offset;
 
         $sql = "SELECT n.id, n.author_id, n.editor_id, n.status_id, n.title, n.subtitle, n.content,
-                       n.image, n.publication_date, n.created_at, n.updated_at,
+                       n.image, n.is_public, n.publication_date, n.created_at, n.updated_at,
                        ns.name AS status,
                        u.username AS author,
                        STRING_AGG(DISTINCT t.name, ', ') AS tag,
@@ -65,7 +65,7 @@ class NewsRepository
     public function findById(int $id): ?array
     {
         $sql = "SELECT n.id, n.author_id, n.editor_id, n.status_id, n.title, n.subtitle, n.content,
-                       n.image, n.publication_date, n.created_at, n.updated_at,
+                       n.image, n.is_public, n.publication_date, n.created_at, n.updated_at,
                        ns.name AS status,
                        u.username AS author,
                        STRING_AGG(DISTINCT t.name, ', ') AS tag,
@@ -177,6 +177,10 @@ class NewsRepository
         if ($status !== null) {
             $conditions[] = "ns.name = :status";
             $params['status'] = $status;
+
+            if ($status === 'publicada') {
+                $conditions[] = 'n.is_public = TRUE';
+            }
         }
 
         if ($query !== '') {

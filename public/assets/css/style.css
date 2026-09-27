@@ -1285,6 +1285,14 @@ a {
   margin-bottom: 20px;
 }
 
+/* Cuenta regresiva para reenviar el enlace de recuperación (#79) */
+.recovery-countdown {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
 .btn-full-width {
   width: 100%;
 }

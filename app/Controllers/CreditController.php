@@ -4,37 +4,39 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Services\ProjectService;
+use App\Services\CreditMemberService;
 
-class ProjectController
+/**
+ * API de los integrantes del apartado Créditos.
+ *
+ * GET    /api/credits        → listado (sin correo; con correo si hay sesión de Super Admin)
+ * GET    /api/credits/{id}   → detalle (misma política de correo que el listado)
+ * POST   /api/credits        → crear integrante (Super Admin)
+ * PUT    /api/credits/{id}   → editar nombre/cargo/correo (Super Admin)
+ * DELETE /api/credits/{id}   → eliminar integrante (Super Admin)
+ */
+class CreditController
 {
-    private ProjectService $service;
+    private CreditMemberService $service;
 
-    public function __construct()
+    public function __construct(?CreditMemberService $service = null)
     {
-        $this->service = new ProjectService();
+        $this->service = $service ?? new CreditMemberService();
     }
 
     public function index(): void
     {
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = max(1, min(100, (int) ($_GET['per_page'] ?? 20)));
-        $isAdmin = authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true);
 
-        $data = $this->service->getAll($page, $perPage, $isAdmin);
-        respSuccess($data);
+        respSuccess($this->service->getAll($page, $perPage, $this->isSuperAdmin()));
     }
 
     public function show(int $id): void
     {
-        $item = $this->service->getById($id);
+        $item = $this->service->getById($id, $this->isSuperAdmin());
 
         if (!$item) {
-            respNotFound();
-            return;
-        }
-
-        if (!$item['active'] && !(authCheck() && in_array(authUser()['role_name'] ?? '', ['superadmin', 'admin', 'editor'], true))) {
             respNotFound();
             return;
         }
@@ -53,7 +55,7 @@ class ProjectController
             respUnprocessable($e->getErrors());
         } catch (\InvalidArgumentException) {
             respUnprocessable(['message' => 'Datos inválidos. Verifica la información enviada.']);
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             respServerError();
         }
     }
@@ -71,27 +73,7 @@ class ProjectController
             respUnprocessable($e->getErrors());
         } catch (\InvalidArgumentException) {
             respUnprocessable(['message' => 'Datos inválidos. Verifica la información enviada.']);
-        } catch (\Exception $e) {
-            respServerError();
-        }
-    }
-
-    public function updateStatus(int $id): void
-    {
-        $data = getJsonInput();
-        $active = $data['active'] ?? null;
-
-        if ($active === null) {
-            respBadRequest(['active' => 'El campo active es obligatorio.']);
-            return;
-        }
-
-        try {
-            $item = $this->service->setStatus($id, (bool) $active);
-            respSuccess($item);
-        } catch (\RuntimeException $e) {
-            respNotFound();
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             respServerError();
         }
     }
@@ -103,8 +85,14 @@ class ProjectController
             respNoContent();
         } catch (\RuntimeException $e) {
             respNotFound();
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             respServerError();
         }
+    }
+
+    private function isSuperAdmin(): bool
+    {
+        $user = authUser();
+        return ($user['role_name'] ?? '') === 'superadmin';
     }
 }

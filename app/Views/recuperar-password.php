@@ -7,10 +7,12 @@ declare(strict_types=1);
  * @var array    $errors
  * @var string|null $success
  * @var string   $email
+ * @var int      $retryAfterSeconds
  */
 $errors  ??= [];
 $success ??= null;
 $email   ??= '';
+$retryAfterSeconds ??= 0;
 ?>
 <section class="login-section">
   <form class="login-card" method="post" action="/recuperar-password" novalidate>
@@ -42,9 +44,39 @@ $email   ??= '';
       <?php endif; ?>
     </div>
 
-    <button type="submit" class="btn btn-destructive btn-full-width">
-      Enviar enlace de recuperación
+    <button type="submit" class="btn btn-destructive btn-full-width"
+            id="recovery-submit-btn" <?= $retryAfterSeconds > 0 ? 'disabled' : '' ?>>
+      <span id="recovery-submit-label"><?= $retryAfterSeconds > 0 ? 'Espera para reenviar' : 'Enviar enlace de recuperación' ?></span>
     </button>
+
+    <p id="recovery-countdown" class="recovery-countdown"
+       <?= $retryAfterSeconds > 0 ? '' : 'hidden' ?>>
+      Podrás solicitar un nuevo enlace en <strong id="recovery-countdown-value"><?= (int) $retryAfterSeconds ?></strong> segundos.
+    </p>
+
+    <?php if ($retryAfterSeconds > 0) : ?>
+    <script>
+      (function () {
+        var remaining = <?= (int) $retryAfterSeconds ?>;
+        var btn = document.getElementById('recovery-submit-btn');
+        var label = document.getElementById('recovery-submit-label');
+        var countdown = document.getElementById('recovery-countdown');
+        var value = document.getElementById('recovery-countdown-value');
+
+        var timer = setInterval(function () {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            label.textContent = 'Enviar enlace de recuperación';
+            countdown.hidden = true;
+            return;
+          }
+          value.textContent = remaining;
+        }, 1000);
+      })();
+    </script>
+    <?php endif; ?>
 
     <p class="form-footer-link">
       <a href="/login">← Volver al login</a>

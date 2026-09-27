@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Services\FooterService;
 use App\Services\PasswordResetService;
+use App\Services\RateLimiterService;
 
 /**
  * Controlador para el flujo de recuperación de contraseña (desde fuera del login).
@@ -20,13 +21,16 @@ final class PasswordRecoveryController extends Controller
 {
     private PasswordResetService $resetService;
     private FooterService $footerService;
+    private RateLimiterService $rateLimiter;
 
     public function __construct(
         ?PasswordResetService $resetService = null,
-        ?FooterService $footerService = null
+        ?FooterService $footerService = null,
+        ?RateLimiterService $rateLimiter = null
     ) {
         $this->resetService  = $resetService  ?? new PasswordResetService();
         $this->footerService = $footerService ?? new FooterService();
+        $this->rateLimiter   = $rateLimiter   ?? new RateLimiterService();
     }
 
     // ──────────────────────────────────────────────
@@ -37,18 +41,30 @@ final class PasswordRecoveryController extends Controller
     {
         $footer = $this->footerService->getAll();
 
+        $email = (string) ($_SESSION['_recovery_email'] ?? '');
+        $retryAfterSeconds = $email !== '' ? $this->resetService->secondsUntilNextAllowed($email) : 0;
+
         $this->render('recuperar-password', [
-            'pageTitle'       => 'Recuperar contraseña — TechHub ULS',
-            'metaDescription' => 'Solicita el restablecimiento de tu contraseña de acceso al panel.',
-            'csrfToken'       => csrfToken(),
-            'errors'          => $_SESSION['_recovery_errors'] ?? [],
-            'success'         => $_SESSION['_recovery_success'] ?? null,
-            'email'           => $_SESSION['_recovery_email'] ?? '',
-            'enlacesFooter'   => $footer['links'] ?? [],
-            'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
+            'pageTitle'         => 'Recuperar contraseña — TechHub ULS',
+            'metaDescription'   => 'Solicita el restablecimiento de tu contraseña de acceso al panel.',
+            'csrfToken'         => csrfToken(),
+            'errors'            => $_SESSION['_recovery_errors'] ?? [],
+            'success'           => $_SESSION['_recovery_success'] ?? null,
+            'email'             => $email,
+            'retryAfterSeconds' => $retryAfterSeconds,
+            'enlacesFooter'     => $footer['links'] ?? [],
+            'contacto'          => $footer['info'] ?? [
+                'address' => 'La Serena, Chile',
+                'email'   => 'contacto@sfl.uls.cl',
+            ],
         ]);
 
-        unset($_SESSION['_recovery_errors'], $_SESSION['_recovery_success'], $_SESSION['_recovery_email']);
+        unset($_SESSION['_recovery_errors'], $_SESSION['_recovery_success']);
+        // Mantener el correo en sesión mientras dure el cooldown, para que
+        // un refresh de la página siga mostrando el countdown correcto.
+        if ($retryAfterSeconds <= 0) {
+            unset($_SESSION['_recovery_email']);
+        }
     }
 
     // ──────────────────────────────────────────────
@@ -67,10 +83,12 @@ final class PasswordRecoveryController extends Controller
         }
 
         $baseUrl = $this->resolveBaseUrl();
-        $this->resetService->requestReset($email, $baseUrl);
+        $ip      = $this->rateLimiter->getClientIp();
+        $this->resetService->requestReset($email, $baseUrl, $ip);
 
         // Siempre mostrar el mismo mensaje, independiente de si el correo existe
         $_SESSION['_recovery_success'] = 'Si el correo está registrado, recibirás un enlace de recuperación en breve.';
+        $_SESSION['_recovery_email']   = $email;
         header('Location: /recuperar-password');
         exit;
     }
