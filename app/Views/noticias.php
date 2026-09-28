@@ -79,7 +79,7 @@ $query ??= '';
     <?php if (empty($noticias)) : ?>
       <div class="noticias-empty-card">
         <p>No se encontraron noticias que coincidan con la búsqueda.</p>
-        <a href="/noticias" class="btn btn-destructive" style="margin-top: 16px;">Ver todas las noticias</a>
+        <a href="/noticias" class="btn btn-destructive btn-mt-16">Ver todas las noticias</a>
       </div>
     <?php else : ?>
       <div class="noticias-grid">

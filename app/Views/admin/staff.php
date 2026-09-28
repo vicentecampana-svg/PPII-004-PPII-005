@@ -58,7 +58,7 @@ $editingStaff ??= null;
               </a>
 
               <!-- Botón Eliminar -->
-              <form method="post" action="/admin/staff/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar a este miembro del staff?');" style="margin: 0;">
+              <form method="post" action="/admin/staff/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar a este miembro del staff?');" class="admin-form-inline">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                 <input type="hidden" name="id" value="<?= (int) $member['id'] ?>">
                 <button type="submit" 
@@ -88,7 +88,7 @@ $editingStaff ??= null;
         <?php if ($editingStaff) : ?>
           <a href="/admin?tab=staff" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
         <?php else : ?>
-          <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
+          <span class="admin-plus-icon">+</span>
         <?php endif; ?>
       </div>
 

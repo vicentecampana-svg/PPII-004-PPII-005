@@ -1,6 +1,16 @@
 --
 -- PostgreSQL database dump
 --
+--
+-- Issue #94 — Principio de Mínimos Privilegios (DB)
+--
+-- Este dump se carga con el usuario de aplicación (DB_USER, dueño de la base
+-- de datos y del esquema public), de modo que las tablas, secuencias e índices
+-- quedan a nombre de ese rol. DB_USER solo tiene LOGIN (sin SUPERUSER, sin
+-- CREATEDB y sin CREATEROLE) y opera únicamente sobre los objetos de la app.
+-- NO cargar este archivo con el superusuario (POSTGRES_USER): las tablas
+-- quedarían a su nombre y la aplicación no podría operar sobre ellas.
+--
 
 \restrict 7QUYGPQx6iLPUsV0sozO9TS0ZTuYLgWUJZTW2tkxIiS1j1K0zsMF7t8Z8iPmhXM
 
@@ -34,7 +44,8 @@ CREATE TABLE public.app_user (
     email character varying(150) NOT NULL,
     password character varying(255) NOT NULL,
     active boolean DEFAULT true NOT NULL,
-    must_change_password boolean DEFAULT false NOT NULL
+    must_change_password boolean DEFAULT false NOT NULL,
+    deleted_at timestamp without time zone -- eliminación lógica: se conserva por auditoría y para no reutilizar el email
 );
 
 
@@ -64,7 +75,7 @@ ALTER SEQUENCE public.app_user_id_seq OWNED BY public.app_user.id;
 
 CREATE TABLE public.audit_log (
     id integer NOT NULL,
-    user_id integer NOT NULL,
+    user_id integer, -- NULL = visitante anónimo (sin sesión)
     action character varying(100) NOT NULL,
     entity character varying(100) NOT NULL,
     entity_id integer NOT NULL,
@@ -272,6 +283,7 @@ CREATE TABLE public.news (
     subtitle character varying(255),
     content text NOT NULL,
     image character varying(255),
+    is_public boolean DEFAULT true NOT NULL,
     publication_date timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone
@@ -1078,6 +1090,59 @@ CREATE TABLE IF NOT EXISTS public.password_reset_token (
 CREATE INDEX IF NOT EXISTS idx_prt_token       ON public.password_reset_token (token);
 CREATE INDEX IF NOT EXISTS idx_prt_user_id     ON public.password_reset_token (user_id);
 CREATE INDEX IF NOT EXISTS idx_prt_expires_at  ON public.password_reset_token (expires_at);
+
+
+--
+-- Name: credit_member; Type: TABLE; Schema: public; Owner: -
+-- Issue: Créditos editables — Super Admin (nombre, cargo, correo de contacto)
+-- Nota: el seed de datos base vive en config/migrations/004_credit_member.sql
+--
+
+CREATE TABLE public.credit_member (
+    id integer NOT NULL,
+    "key" character varying(60) NOT NULL,
+    name character varying(150) NOT NULL,
+    role character varying(100) NOT NULL,
+    email character varying(150) NOT NULL,
+    orden integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: credit_member_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.credit_member_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.credit_member_id_seq OWNED BY public.credit_member.id;
+
+ALTER TABLE ONLY public.credit_member
+    ADD CONSTRAINT credit_member_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.credit_member
+    ADD CONSTRAINT credit_member_key_key UNIQUE ("key");
+
+ALTER TABLE ONLY public.credit_member
+    ALTER COLUMN id SET DEFAULT nextval('public.credit_member_id_seq'::regclass);
+
+-- Datos base de créditos (los mismos de config/migrations/004_credit_member.sql),
+-- para que una instalación nueva y el CI tengan la tabla poblada.
+INSERT INTO public.credit_member ("key", name, role, email, orden) VALUES
+    ('vicente-campana',       'Vicente Campaña',          'Project Manager',                          'vicente.campana@userena.cl',    1),
+    ('wilmary-guedez',        'Wilmary Guedez',           'Ingeniera en Requerimientos',              'wilmary.guedez@userena.cl',     2),
+    ('esteban-zepeda',        'Esteban Zepeda',           'Diseño UX/UI',                             'esteban.zepeda@userena.cl',     3),
+    ('bastian-pizarro',       'Bastian Pizarro',          'Diseño UX/UI',                             'bastian.pizarro@userena.cl',    4),
+    ('maximiliano-saavedra',  'Maximiliano Saavedra',     'Desarrollo Backend y Base de datos',       'maximiliano.saavedra@userena.cl', 5),
+    ('agustina-lopez',        'Agustina Lopez',           'Desarrollo Frontend',                      'agustina.lopez@userena.cl',     6),
+    ('basthian-valenzuela',   'Basthian Valenzuela',      'Quality Assurance',                        'basthian.valenzuela@userena.cl', 7),
+    ('pedro-rojas',           'Pedro Rojas',              'Apoyo Desarrollo',                         'pedro.rojasm3@userena.cl',      8)
+ON CONFLICT ("key") DO NOTHING;
 
 
 --

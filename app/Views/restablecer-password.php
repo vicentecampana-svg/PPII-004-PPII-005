@@ -14,7 +14,7 @@ $token  ??= '';
   <form class="login-card" method="post"
         action="/restablecer-password/<?= e(urlencode($token)) ?>" novalidate>
     <h1>Nueva contraseña</h1>
-    <p style="font-size: 0.875rem; color: #64748b; margin-top: 0; margin-bottom: 20px;">
+    <p class="auth-instructions">
       Elige una contraseña segura de al menos 12 caracteres.
     </p>
 
@@ -46,7 +46,7 @@ $token  ??= '';
       <?php endif; ?>
     </div>
 
-    <button type="submit" class="btn btn-destructive" style="width: 100%;">
+    <button type="submit" class="btn btn-destructive btn-full-width">
       Guardar nueva contraseña
     </button>
   </form>

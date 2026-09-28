@@ -29,7 +29,7 @@ namespace App\Services;
  * │  instálalo con Composer y reemplaza el método sendSmtp().            │
  * └──────────────────────────────────────────────────────────────────────┘
  */
-final class MailerService
+class MailerService
 {
     private string $driver;
     private string $fromEmail;
@@ -86,6 +86,22 @@ final class MailerService
         }
 
         return $this->sendSmtp($toEmail, $toName, $subject, $htmlBody);
+    }
+
+    /**
+     * Notifica al encargado sobre una nueva consulta recibida desde el
+     * formulario de contacto.
+     *
+     * @param  string $toEmail Correo del encargado / equipo responsable.
+     * @param  array  $contact Datos de la consulta (name, email, phone, subject, message).
+     * @return bool            true si se procesó sin errores.
+     */
+    public function sendContactNotification(string $toEmail, array $contact): bool
+    {
+        $subject = 'Nueva consulta de contacto — ' . (($contact['subject'] ?? 'Formulario') ?: 'Formulario');
+        $body    = $this->buildContactNotificationBody($contact);
+
+        return $this->send($toEmail, 'Encargado SFL ULS', $subject, $body);
     }
 
     // ──────────────────────────────────────────────
@@ -214,32 +230,107 @@ final class MailerService
         <head>
           <meta charset="UTF-8">
           <title>Recuperación de contraseña</title>
+          <style>
+            body { font-family: Arial, sans-serif; background: #f8fafc; padding: 32px; margin: 0; }
+            .email-card { max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0; }
+            .email-title { margin-top: 0; color: #1e293b; }
+            .btn-action-wrapper { text-align: center; margin: 28px 0; }
+            .btn-action { display: inline-block; background: #0f172a; color: #ffffff !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+            .email-note { font-size: 0.85em; color: #64748b; }
+            .email-fallback { font-size: 0.8em; color: #94a3b8; }
+            .email-fallback-link { color: #3b82f6; word-break: break-all; }
+            .email-divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+            .email-footer { font-size: 0.75em; color: #94a3b8; margin: 0; }
+          </style>
         </head>
-        <body style="font-family: Arial, sans-serif; background: #f8fafc; padding: 32px;">
-          <div style="max-width: 480px; margin: 0 auto; background: #fff;
-                      border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0;">
-            <h2 style="margin-top: 0; color: #1e293b;">Recuperación de contraseña</h2>
+        <body>
+          <div class="email-card">
+            <h2 class="email-title">Recuperación de contraseña</h2>
             <p>Hola, <strong>{$safeName}</strong>.</p>
             <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en
-               <strong>TechHub ULS</strong>. Haz clic en el botón para continuar:</p>
-            <p style="text-align: center; margin: 28px 0;">
-              <a href="{$safeLink}"
-                 style="display: inline-block; background: #0f172a; color: #fff;
-                        padding: 12px 24px; border-radius: 6px; text-decoration: none;
-                        font-weight: bold;">
+               <strong>Software Factory Lab ULS</strong>. Haz clic en el botón para continuar:</p>
+            <p class="btn-action-wrapper">
+              <a href="{$safeLink}" class="btn-action">
                 Restablecer contraseña
               </a>
             </p>
-            <p style="font-size: 0.85em; color: #64748b;">
+            <p class="email-note">
               Este enlace es válido por <strong>1 hora</strong> y sólo puede usarse
               una vez. Si no solicitaste el cambio, puedes ignorar este correo.
             </p>
-            <p style="font-size: 0.8em; color: #94a3b8;">
+            <p class="email-fallback">
               Si el botón no funciona, copia esta URL en tu navegador:<br>
-              <a href="{$safeLink}" style="color: #3b82f6;">{$safeLink}</a>
+              <a href="{$safeLink}" class="email-fallback-link">{$safeLink}</a>
             </p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-            <p style="font-size: 0.75em; color: #94a3b8; margin: 0;">
+            <hr class="email-divider">
+            <p class="email-footer">
+              Software Factory Lab (SFL) — Universidad de La Serena
+            </p>
+          </div>
+        </body>
+        </html>
+        HTML;
+    }
+
+    private function buildContactNotificationBody(array $contact): string
+    {
+        $name    = htmlspecialchars((string) ($contact['name'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $email   = htmlspecialchars((string) ($contact['email'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $phone   = htmlspecialchars((string) ($contact['phone'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $subject = htmlspecialchars((string) ($contact['subject'] ?? 'Formulario'), ENT_QUOTES, 'UTF-8');
+        $message = nl2br(htmlspecialchars((string) ($contact['message'] ?? ''), ENT_QUOTES, 'UTF-8'));
+
+        $phoneRow = $phone !== ''
+            ? '<tr><td class="email-label">Teléfono</td><td class="email-value">' . $phone . '</td></tr>'
+            : '';
+
+        return <<<HTML
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Nueva consulta de contacto</title>
+          <style>
+            body { font-family: Arial, sans-serif; background: #f8fafc; padding: 32px; margin: 0; }
+            .email-card { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0; }
+            .email-title { margin-top: 0; color: #1e293b; }
+            .email-intro { color: #475569; }
+            .email-table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+            .email-label { padding: 8px 0; color: #475569; width: 140px; }
+            .email-value { padding: 8px 0; color: #0f172a; font-weight: bold; }
+            .email-message { margin-top: 16px; background: #f1f5f9; border-radius: 6px; padding: 16px; }
+            .email-message-label { margin: 0 0 6px 0; color: #475569; }
+            .email-message-text { margin: 0; color: #0f172a; line-height: 1.5; }
+            .email-divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+            .email-footer { font-size: 0.75em; color: #94a3b8; margin: 0; }
+          </style>
+        </head>
+        <body>
+          <div class="email-card">
+            <h2 class="email-title">Nueva consulta de contacto</h2>
+            <p class="email-intro">Se recibió una nueva consulta a través del formulario de contacto de
+               <strong>TechHub ULS</strong>.</p>
+            <table class="email-table">
+              <tr>
+                <td class="email-label">Nombre</td>
+                <td class="email-value">{$name}</td>
+              </tr>
+              <tr>
+                <td class="email-label">Correo</td>
+                <td class="email-value">{$email}</td>
+              </tr>
+              {$phoneRow}
+              <tr>
+                <td class="email-label">Asunto</td>
+                <td class="email-value">{$subject}</td>
+              </tr>
+            </table>
+            <div class="email-message">
+              <p class="email-message-label"><strong>Mensaje:</strong></p>
+              <p class="email-message-text">{$message}</p>
+            </div>
+            <hr class="email-divider">
+            <p class="email-footer">
               TechHub — Software Factory Lab, Universidad de La Serena
             </p>
           </div>

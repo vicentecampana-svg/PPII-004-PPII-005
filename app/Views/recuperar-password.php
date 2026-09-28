@@ -17,7 +17,7 @@ $retryAfterSeconds ??= 0;
 <section class="login-section">
   <form class="login-card" method="post" action="/recuperar-password" novalidate>
     <h1>Recuperar contraseña</h1>
-    <p style="font-size: 0.875rem; color: #64748b; margin-top: 0; margin-bottom: 20px;">
+    <p class="auth-instructions">
       Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
     </p>
 
@@ -26,9 +26,7 @@ $retryAfterSeconds ??= 0;
     <?php endif; ?>
 
     <?php if (!empty($success)) : ?>
-      <p style="margin-top: 16px; padding: 10px 12px; border-radius: var(--radius);
-                background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);
-                color: #15803d; font-size: 0.8125rem;">
+      <p class="alert-flash-success">
         <?= e($success) ?>
       </p>
     <?php endif; ?>
@@ -46,13 +44,12 @@ $retryAfterSeconds ??= 0;
       <?php endif; ?>
     </div>
 
-    <button type="submit" class="btn btn-destructive" style="width: 100%;"
+    <button type="submit" class="btn btn-destructive btn-full-width"
             id="recovery-submit-btn" <?= $retryAfterSeconds > 0 ? 'disabled' : '' ?>>
       <span id="recovery-submit-label"><?= $retryAfterSeconds > 0 ? 'Espera para reenviar' : 'Enviar enlace de recuperación' ?></span>
     </button>
 
-    <p id="recovery-countdown"
-       style="text-align: center; margin-top: 10px; font-size: 0.8125rem; color: #64748b;"
+    <p id="recovery-countdown" class="recovery-countdown"
        <?= $retryAfterSeconds > 0 ? '' : 'hidden' ?>>
       Podrás solicitar un nuevo enlace en <strong id="recovery-countdown-value"><?= (int) $retryAfterSeconds ?></strong> segundos.
     </p>
@@ -81,8 +78,8 @@ $retryAfterSeconds ??= 0;
     </script>
     <?php endif; ?>
 
-    <p style="text-align: center; margin-top: 16px; font-size: 0.875rem;">
-      <a href="/login" style="color: var(--primary, #0f172a);">← Volver al login</a>
+    <p class="form-footer-link">
+      <a href="/login">← Volver al login</a>
     </p>
   </form>
 </section>

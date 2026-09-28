@@ -18,7 +18,7 @@ $errors ??= [];
     <?php endif; ?>
 
     <?php if (!empty($success)) : ?>
-      <p role="status" aria-live="polite" style="margin-top: 16px; padding: 10px 12px; border-radius: var(--radius); background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #15803d; font-size: 0.8125rem; font-weight: 600;">
+      <p role="status" aria-live="polite" class="alert-flash-success">
         <?= e($success) ?>
       </p>
     <?php endif; ?>

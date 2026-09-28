@@ -63,7 +63,7 @@ class MediaService
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $message = match ($file['error']) {
-                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'El archivo supera el tamaño máximo permitido por el servidor.',
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => $this->universalErrorMessage(),
                 UPLOAD_ERR_PARTIAL   => 'El archivo fue subido solo parcialmente.',
                 UPLOAD_ERR_NO_FILE   => 'No se seleccionó ningún archivo.',
                 UPLOAD_ERR_NO_TMP_DIR=> 'Falta la carpeta temporal en el servidor.',
@@ -75,16 +75,14 @@ class MediaService
 
         $size = (int) ($file['size'] ?? 0);
         if ($size > $this->maxSize) {
-            $maxMb = round($this->maxSize / (1024 * 1024), 2);
-            throw new \InvalidArgumentException("El archivo excede el tamaño máximo permitido de {$maxMb}MB.");
+            throw new \InvalidArgumentException($this->universalErrorMessage());
         }
 
         $origName = (string) ($file['name'] ?? '');
         $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
         if ($ext === '' || !in_array($ext, $this->allowedExtensions, true)) {
-            $allowedStr = implode(', ', $this->allowedExtensions);
-            throw new \InvalidArgumentException("Formato de archivo no permitido (.{$ext}). Extensiones aceptadas: {$allowedStr}.");
+            throw new \InvalidArgumentException($this->universalErrorMessage());
         }
 
         $tmpPath = (string) ($file['tmp_name'] ?? '');
@@ -95,10 +93,22 @@ class MediaService
                 finfo_close($finfo);
 
                 if ($mime && !in_array($mime, $this->allowedMimes, true)) {
-                    throw new \InvalidArgumentException("Tipo MIME no permitido ({$mime}). Solo se permiten imágenes.");
+                    throw new \InvalidArgumentException($this->universalErrorMessage());
                 }
             }
         }
+    }
+
+    /**
+     * Mensaje universal de rechazo de archivos: indica los formatos permitidos
+     * y el tamaño máximo, sin depender de qué validación falló primero.
+     */
+    private function universalErrorMessage(): string
+    {
+        $formats = implode(', ', array_map('strtoupper', $this->allowedExtensions));
+        $maxMb = round($this->maxSize / (1024 * 1024), 2);
+
+        return "Archivo no válido: solo se permiten imágenes en formato {$formats} y con un tamaño máximo de {$maxMb}MB.";
     }
 
     /**

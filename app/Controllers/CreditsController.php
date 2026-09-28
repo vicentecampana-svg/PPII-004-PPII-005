@@ -61,8 +61,8 @@ final class CreditsController extends Controller
         try {
             $result = $this->creditsService->sendContactMessage($_POST);
             $_SESSION['flash_success'] = $result['message'];
-        } catch (\InvalidArgumentException $e) {
-            $_SESSION['flash_error'] = $e->getMessage();
+        } catch (\InvalidArgumentException) {
+            $_SESSION['flash_error'] = 'No se pudo enviar el mensaje. Verifica los datos ingresados.';
         } catch (\Throwable) {
             $_SESSION['flash_error'] = 'Ocurrió un error al procesar el envío del mensaje.';
         }

@@ -32,7 +32,7 @@ $footerInfo ??= [
         <?php foreach ($footerLinks as $link) : ?>
           <article class="admin-item-row">
             <div class="admin-item-content">
-              <div class="admin-item-info" style="padding-left: 4px;">
+              <div class="admin-item-info admin-item-info-pl4">
                 <div class="admin-item-title"><?= e($link['etiqueta']) ?></div>
                 <div class="admin-item-desc"><?= e($link['url']) ?></div>
               </div>
@@ -51,7 +51,7 @@ $footerInfo ??= [
               </a>
 
               <!-- Botón Eliminar -->
-              <form method="post" action="/admin/footer/links/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este enlace?');" style="margin: 0;">
+              <form method="post" action="/admin/footer/links/delete" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este enlace?');" class="admin-form-inline">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                 <input type="hidden" name="id" value="<?= (int) $link['id'] ?>">
                 <button type="submit" 
@@ -73,12 +73,12 @@ $footerInfo ??= [
     <?php endif; ?>
 
     <!-- Sección de Redes Sociales (Editar enlaces de las existentes) -->
-    <div style="margin-top: 32px;">
+    <div class="admin-mt-32">
       <div class="admin-tab-header">
-        <h2 class="admin-tab-content-title" style="font-size: 1.1rem; margin-bottom: 12px;">Redes sociales</h2>
+        <h2 class="admin-tab-content-title admin-title-sm">Redes sociales</h2>
       </div>
-      <div class="admin-sidebar-card" style="padding: 20px;">
-        <p style="font-size: 0.85rem; color: var(--muted-foreground); margin-bottom: 16px;">
+      <div class="admin-sidebar-card admin-card-p20">
+        <p class="admin-desc-muted">
           Edita las URLs correspondientes a las redes sociales oficiales del footer.
         </p>
         <form method="post" action="/admin/footer/social">
@@ -114,7 +114,7 @@ $footerInfo ??= [
                    placeholder="https://instagram.com/...">
           </div>
 
-          <button type="submit" class="admin-btn-submit" style="width: auto; padding: 8px 20px; margin-top: 6px;">
+          <button type="submit" class="admin-btn-submit admin-btn-auto">
             Guardar redes sociales
           </button>
         </form>
@@ -130,7 +130,7 @@ $footerInfo ??= [
         <?php if ($editingFooterLink) : ?>
           <a href="/admin?tab=footer" class="admin-cancel-edit" title="Cancelar edición">Cancelar</a>
         <?php else : ?>
-          <span style="font-size: 1.2rem; font-weight: bold; color: var(--muted-foreground);">+</span>
+          <span class="admin-plus-icon">+</span>
         <?php endif; ?>
       </div>
 
