@@ -73,6 +73,7 @@ final class AdminControllerTest extends TestCase
         $this->assertStringContainsString('Noticias', $output);
         $this->assertStringContainsString('Sobre nosotros', $output);
         $this->assertStringContainsString('Footer', $output);
+        $this->assertStringContainsString('Créditos', $output);
         $this->assertStringContainsString('Usuarios y roles', $output);
     }
 
@@ -93,6 +94,7 @@ final class AdminControllerTest extends TestCase
         $this->assertStringContainsString('Noticias', $output);
         $this->assertStringNotContainsString('Usuarios y roles', $output);
         $this->assertStringNotContainsString('Footer', $output);
+        $this->assertStringNotContainsString('Créditos', $output);
     }
 
     public function testLogoutClearsSession(): void

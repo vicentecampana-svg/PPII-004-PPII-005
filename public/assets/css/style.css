@@ -32,6 +32,12 @@
   box-sizing: border-box;
 }
 
+textarea {
+  resize: vertical;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }
@@ -963,6 +969,7 @@ a {
 .credits-form input,
 .credits-form textarea {
   width: 100%;
+  max-width: 100%;
   padding: 10px 14px;
   border: 1px solid #cbd5e1;
   border-radius: var(--radius);
@@ -972,6 +979,11 @@ a {
   background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
+}
+
+.credits-form textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .credits-form input:focus,
@@ -1923,6 +1935,11 @@ a {
   outline: none;
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(50, 101, 160, 0.2);
+}
+
+.contacto-form-group textarea {
+  resize: vertical;
+  min-height: 100px;
 }
 
 .btn-submit-contacto {
