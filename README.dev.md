@@ -30,20 +30,9 @@ O en Linux y macOS:
 cp .env.example .env
 ```
 
-Edítalo con los valores que quieras (usuario, password, puertos, etc). El
-`docker-compose.dev.yml` se encarga de pasarle a PHP los valores que la
-aplicación necesita (lista explícita en `environment:`: `APP_URL`, `PG_*`,
-`MAIL_*`, `SMTP_*`, `CONTACT_NOTIFY_EMAIL`, etc.), así que no hay que tocar
-nada más. El contenedor `web` **no** recibe `POSTGRES_USER`/`POSTGRES_PASSWORD`
-ni el resto de variables del `.env` (issue #94).
-
-> **Usuarios de la base de datos**: hay dos roles distintos.
-> - `POSTGRES_USER` / `POSTGRES_PASSWORD`: superusuario de bootstrap, **solo**
->   se usa para inicializar el servidor y tareas administrativas.
-> - `DB_USER` / `DB_PASSWORD`: usuario de la aplicación (principio de mínimos
->   privilegios). La app se conecta siempre con este rol, que es dueño de la
->   base de datos y no es superusuario. Se crea automáticamente en el primer
->   arranque de Postgres (`docker/postgres-init/01-app-user.sh`).
+Edítalo con valores locales. `POSTGRES_USER` y `POSTGRES_PASSWORD` son para la
+administración de PostgreSQL; la aplicación usa el usuario de permisos
+limitados `DB_USER` y `DB_PASSWORD`.
 
 Ejemplo:
 
@@ -57,8 +46,8 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_PORT=5433
 
-DB_USER=techhub_app1
-DB_PASSWORD=Clave2026Local
+DB_USER=techhub_app
+DB_PASSWORD=techhub_app_dev
 
 MAIL_DRIVER=log
 SMTP_HOST=
@@ -67,9 +56,6 @@ SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=no-reply@techhub.uls.cl
 SMTP_FROM_NAME=TechHub ULS
-
-CONTACT_NOTIFY_EMAIL=
-TICKET_PLATFORM_URL=
 ```
 
 ---
@@ -80,6 +66,20 @@ Tienes que tener abierto docker en tu pc.
 
 ```bash
 docker compose -f docker-compose.dev.yml up --build -d
+```
+
+En la primera ejecución, PostgreSQL crea automáticamente `DB_USER` y le da
+propiedad de la base de datos y del esquema. Los scripts `.sh` del proyecto
+deben conservar finales de línea `LF`; `.gitattributes` ya configura esto para
+Git. Si aparece `env: 'bash\\r': No such file or directory`, cambia el final
+de línea del script afectado a `LF` en VS Code y vuelve a iniciar PostgreSQL.
+
+Si el volumen ya existía antes de configurar `DB_USER` y `DB_PASSWORD`, los
+scripts de inicialización no vuelven a ejecutarse automáticamente. Con
+PostgreSQL iniciado, aplica el script del usuario una vez:
+
+```bash
+docker compose -f docker-compose.dev.yml exec postgres bash /docker-entrypoint-initdb.d/01-app-user.sh
 ```
 
 ---
@@ -93,29 +93,12 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ---
 ## 5. Cargar el schema en la base de datos
 
-> El schema **debe** cargarse con `DB_USER` (usuario de aplicación, dueño de
-> la base). Si lo cargas con `POSTGRES_USER`, las tablas quedan a nombre del
-> superusuario y la app no puede operar sobre ellas (issue #94).
+Estos comandos funcionan en Windows (PowerShell), Linux y macOS:
 
-### En Windows (PowerShell)
 ```powershell
 docker compose -f docker-compose.dev.yml cp config/schema.sql postgres:/tmp/schema.sql
+docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$POSTGRES_DB" -f /tmp/schema.sql'
 ```
-y luego:
-
-```powershell
-docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$DB_USER" -d "$POSTGRES_DB" -f /tmp/schema.sql'
-```
-
-### En Linux y macOS (Bash/Zsh)
-
-```bash
-export $(grep -v '^#' .env | xargs)
-cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB
-```
-
-Esto lee tu `.env` y usa esos valores, no importa qué usuario/base hayas
-puesto.
 
 Para verificar las tablas:
 
@@ -123,19 +106,8 @@ Para verificar las tablas:
 docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$DB_USER" -d "$POSTGRES_DB" -c "\\dt"'
 ```
 
-### 5.1 Si ya tenías Postgres levantado (volumen existente)
-
-El init script `docker/postgres-init/01-app-user.sh` solo corre la **primera
-vez** que se crea el volumen `postgres_dev_data`. Si ya tenías un volumen
-anterior:
-
-```bash
-docker compose -f docker-compose.dev.yml down -v
-docker compose -f docker-compose.dev.yml up --build -d
-```
-
-Luego vuelve a cargar el schema (paso 5).
-
+La aplicación y el schema usan `DB_USER`; reserva `POSTGRES_USER` para tareas
+administrativas.
 ## 6. Abrir el proyecto
 
 ```

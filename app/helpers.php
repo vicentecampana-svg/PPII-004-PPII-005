@@ -86,19 +86,12 @@ function dbUpdate(string $table, array $data, string $where, array $whereParams 
 {
     // PDO no admite mezclar placeholders "?" y ":nombre" en una misma consulta,
     // así que el SET usa el mismo estilo que el WHERE recibido ('id = ?' o 'id = :id').
-    $positional = array_is_list($whereParams);
-
     $params = [];
     $setParts = [];
     foreach ($data as $col => $val) {
-        if ($positional) {
-            $setParts[] = "{$col} = ?";
-            $params[] = $val;
-        } else {
-            $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
-            $setParts[] = "{$col} = :{$placeholder}";
-            $params[$placeholder] = $val;
-        }
+        $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
+        $setParts[] = "{$col} = :{$placeholder}";
+        $params[$placeholder] = $val;
     }
 
     $whereIndex = 0;
