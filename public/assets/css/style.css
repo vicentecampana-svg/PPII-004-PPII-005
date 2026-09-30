@@ -152,6 +152,13 @@ a {
   width: auto;
 }
 
+.main-nav {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
 .main-nav ul {
   display: flex;
   align-items: center;
@@ -161,18 +168,33 @@ a {
   padding: 0;
 }
 
-.main-nav a {
+.main-nav li {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.main-nav a,
+.login-link {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.9rem;
   font-weight: 500;
+  line-height: 1.5;
+  color: inherit;
   transition: color 0.15s ease;
 }
 
 .main-nav a:hover,
-.main-nav a.active {
+.main-nav a.active,
+.login-link:hover,
+.login-link.active {
   color: var(--brand);
 }
 
-.main-nav a.active {
+.main-nav a.active,
+.login-link.active {
   font-weight: 600;
 }
 
@@ -186,6 +208,8 @@ a {
 .header-actions {
   display: flex;
   align-items: center;
+  margin: 0;
+  padding: 0;
   gap: 12px;
   flex-shrink: 0;
 }
@@ -196,15 +220,6 @@ a {
   padding: 3px 8px;
   font-size: 0.75rem;
   font-weight: 600;
-}
-
-.login-link {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.login-link:hover {
-  text-decoration: underline;
 }
 
 .nav-toggle {
@@ -548,9 +563,16 @@ a {
   }
 }
 
+.proyecto-tile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .proyecto-tile h2 {
   font-size: 0.875rem;
   font-weight: 600;
+  margin: 0;
 }
 
 .proyecto-tile-img {
@@ -559,12 +581,29 @@ a {
   aspect-ratio: 4 / 3;
   border-radius: var(--radius);
   object-fit: cover;
+  display: block;
 }
 
 .proyecto-tile p {
   margin-top: 12px;
   font-size: 0.875rem;
   color: var(--muted-foreground);
+  flex-grow: 1;
+}
+
+.proyecto-tile-action,
+.proyecto-tile .section-cta {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.proyecto-tile-action .btn,
+.proyecto-tile .section-cta .btn {
+  margin: 0;
 }
 
 /* Contact CTA */

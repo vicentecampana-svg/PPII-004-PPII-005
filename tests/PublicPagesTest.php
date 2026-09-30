@@ -161,5 +161,78 @@ final class PublicPagesTest extends TestCase
         $this->assertStringContainsString('href="/contacto"', $output);
         $this->assertStringNotContainsString('href="#staff"', $output);
         $this->assertStringNotContainsString('href="#contacto"', $output);
+        $this->assertStringContainsString('class="login-link', $output);
+        $this->assertStringContainsString('Iniciar sesión', $output);
+    }
+
+    public function testProyectosViewRendersTilesAndActions(): void
+    {
+        $proyectos = [
+            [
+                'id' => 1,
+                'titulo' => 'Proyecto SFL Alpha',
+                'descripcion' => 'Descripción del proyecto Alpha.',
+                'imagen_url' => 'alpha.jpg',
+            ],
+            [
+                'id' => 2,
+                'titulo' => 'Proyecto SFL Beta',
+                'descripcion' => 'Descripción mucho más larga del proyecto Beta para verificar diseño.',
+                'imagen_url' => 'beta.jpg',
+            ],
+        ];
+
+        ob_start();
+        require dirname(__DIR__) . '/app/Views/proyectos.php';
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Proyectos de SFL', $output);
+        $this->assertStringContainsString('Proyecto SFL Alpha', $output);
+        $this->assertStringContainsString('Proyecto SFL Beta', $output);
+        $this->assertStringContainsString('proyecto-tile', $output);
+        $this->assertStringContainsString('proyecto-tile-action', $output);
+        $this->assertStringContainsString('Ver más', $output);
+        $this->assertStringContainsString('/proyectos/1', $output);
+        $this->assertStringContainsString('/proyectos/2', $output);
+    }
+
+    public function testProyectoDetailViewRendersRelatedProjectsWithUniformActions(): void
+    {
+        $proyecto = [
+            'id' => 1,
+            'titulo' => 'Proyecto Principal',
+            'descripcion' => 'Detalle del proyecto principal.',
+            'imagen_url' => 'main.jpg',
+            'link' => 'https://ejemplo.com',
+        ];
+        $otrosProyectos = [
+            [
+                'id' => 2,
+                'titulo' => 'Proyecto Sugerido 1',
+                'descripcion' => 'Descripción corta sugerida.',
+                'imagen_url' => 'sug1.jpg',
+            ],
+            [
+                'id' => 3,
+                'titulo' => 'Proyecto Sugerido 2',
+                'descripcion' => 'Descripción con múltiples líneas para verificar alineación de botón.',
+                'imagen_url' => 'sug2.jpg',
+            ],
+        ];
+
+        ob_start();
+        require dirname(__DIR__) . '/app/Views/proyecto.php';
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Proyecto Principal', $output);
+        $this->assertStringContainsString('Ver proyecto', $output);
+        $this->assertStringContainsString('Otros proyectos', $output);
+        $this->assertStringContainsString('Proyecto Sugerido 1', $output);
+        $this->assertStringContainsString('Proyecto Sugerido 2', $output);
+        $this->assertStringContainsString('proyecto-tile', $output);
+        $this->assertStringContainsString('proyecto-tile-action', $output);
+        $this->assertStringContainsString('Ver más', $output);
+        $this->assertStringContainsString('/proyectos/2', $output);
+        $this->assertStringContainsString('/proyectos/3', $output);
     }
 }

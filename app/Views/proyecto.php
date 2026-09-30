@@ -57,7 +57,7 @@ $otrosProyectos ??= [];
                      loading="lazy" class="proyecto-tile-img">
               </a>
               <p><?= htmlspecialchars($p['descripcion'], ENT_QUOTES, 'UTF-8') ?></p>
-              <div class="section-cta">
+              <div class="proyecto-tile-action">
                 <a href="/proyectos/<?= (int) $p['id'] ?>" class="btn btn-destructive btn-sm">Ver más</a>
               </div>
             </article>
