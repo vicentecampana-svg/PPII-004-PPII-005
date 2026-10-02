@@ -24,6 +24,7 @@ $allTabs = [
     'noticias'       => ['label' => 'Noticias',         'title' => 'Noticias',              'roles' => ['superadmin', 'admin', 'redactor', 'editor']],
     'sobre-nosotros' => ['label' => 'Sobre nosotros',   'title' => 'Sobre nosotros',        'roles' => ['superadmin', 'admin']],
     'footer'         => ['label' => 'Footer',           'title' => 'Footer',                'roles' => ['superadmin']],
+    'creditos'       => ['label' => 'Créditos',         'title' => 'Créditos',              'roles' => ['superadmin']],
     'usuarios'       => ['label' => 'Usuarios y roles', 'title' => 'Usuarios y roles',      'roles' => ['superadmin']],
 ];
 
@@ -105,6 +106,8 @@ $roleClass = match ($roleNormalized) {
         <?php require __DIR__ . '/admin/sobre-nosotros.php'; ?>
     <?php elseif ($activeTab === 'footer' && isset($visibleTabs['footer'])) : ?>
         <?php require __DIR__ . '/admin/footer.php'; ?>
+    <?php elseif ($activeTab === 'creditos' && isset($visibleTabs['creditos'])) : ?>
+        <?php require __DIR__ . '/admin/creditos.php'; ?>
     <?php elseif ($activeTab === 'usuarios' && isset($visibleTabs['usuarios'])) : ?>
         <?php require __DIR__ . '/admin/usuarios.php'; ?>
     <?php elseif (isset($allTabs[$activeTab])) : ?>

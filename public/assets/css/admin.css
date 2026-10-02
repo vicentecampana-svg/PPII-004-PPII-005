@@ -4,6 +4,12 @@
  * Sin dependencias externas (sin React ni Tailwind).
  */
 
+textarea {
+  resize: vertical;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .admin-section {
   padding: 32px 0 64px 0;
   min-height: calc(100vh - 200px);
@@ -311,6 +317,14 @@
   text-overflow: ellipsis;
 }
 
+.admin-item-email {
+  font-size: 0.8rem;
+  color: var(--brand);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-item-actions {
   display: flex;
   align-items: center;
@@ -453,6 +467,8 @@
 .admin-form-textarea,
 .admin-form-select {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 8px 12px;
   border: 1px solid #ced4da;
   border-radius: 4px;
@@ -460,6 +476,11 @@
   font-family: var(--font-sans);
   font-size: 0.9rem;
   color: var(--foreground);
+}
+
+.admin-form-textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .admin-form-input:focus,

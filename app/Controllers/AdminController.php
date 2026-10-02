@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\CreditMemberService;
 use App\Services\FooterService;
 use App\Services\MediaService;
 use App\Services\NewsService;
@@ -26,6 +27,7 @@ final class AdminController extends Controller
     private QueryService $queryService;
     private UserService $userService;
     private MediaService $mediaService;
+    private CreditMemberService $creditMemberService;
 
     public function __construct(
         ?FooterService $footerService = null,
@@ -35,7 +37,8 @@ final class AdminController extends Controller
         ?NewsService $newsService = null,
         ?QueryService $queryService = null,
         ?UserService $userService = null,
-        ?MediaService $mediaService = null
+        ?MediaService $mediaService = null,
+        ?CreditMemberService $creditMemberService = null
     ) {
         $this->footerService = $footerService ?? new FooterService();
         $this->projectService = $projectService ?? new ProjectService();
@@ -45,6 +48,7 @@ final class AdminController extends Controller
         $this->queryService = $queryService ?? new QueryService();
         $this->userService = $userService ?? new UserService();
         $this->mediaService = $mediaService ?? new MediaService();
+        $this->creditMemberService = $creditMemberService ?? new CreditMemberService();
     }
 
     public function index(): void
@@ -148,6 +152,22 @@ final class AdminController extends Controller
             }
         }
 
+        $creditsList = [];
+        $editingCredit = null;
+        if ($tab === 'creditos' && $roleNormalized === 'superadmin') {
+            try {
+                $creditsData = $this->creditMemberService->getAll(1, 100, true);
+                $creditsList = $creditsData['items'] ?? [];
+
+                $editId = (int) ($_GET['edit_id'] ?? 0);
+                if ($editId > 0) {
+                    $editingCredit = $this->creditMemberService->getById($editId, true);
+                }
+            } catch (\Throwable) {
+                // Degradar graciosamente
+            }
+        }
+
         $flashSuccess = $_SESSION['_flash_success'] ?? null;
         $flashError   = $_SESSION['_flash_error'] ?? null;
         unset($_SESSION['_flash_success'], $_SESSION['_flash_error']);
@@ -164,6 +184,8 @@ final class AdminController extends Controller
             'editingStaff'       => $editingStaff,
             'newsList'           => $newsList,
             'editingNews'        => $editingNews,
+            'creditsList'        => $creditsList,
+            'editingCredit'      => $editingCredit,
             'siteContent'        => $footer['contenido'] ?? null,
             'footerLinks'        => $footer['links'] ?? [],
             'editingFooterLink'  => $editingFooterLink,
@@ -756,6 +778,79 @@ final class AdminController extends Controller
         }
 
         header('Location: /admin?tab=usuarios');
+        exit;
+    }
+
+    /**
+     * Crear o actualizar un integrante de créditos.
+     */
+    public function saveCreditMember(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $role = trim((string) ($_POST['role'] ?? ''));
+        $email = trim((string) ($_POST['email'] ?? ''));
+        $orden = isset($_POST['orden']) && is_numeric($_POST['orden']) ? (int) $_POST['orden'] : null;
+
+        $data = [
+            'name'  => $name,
+            'role'  => $role,
+            'email' => $email,
+        ];
+        if ($orden !== null) {
+            $data['orden'] = max(0, $orden);
+        }
+
+        try {
+            if ($id > 0) {
+                $this->creditMemberService->update($id, $data);
+                $_SESSION['_flash_success'] = 'Integrante de créditos actualizado exitosamente.';
+            } else {
+                $this->creditMemberService->create($data);
+                $_SESSION['_flash_success'] = 'Integrante de créditos creado exitosamente.';
+            }
+        } catch (\App\Exceptions\ValidationException $e) {
+            $_SESSION['_flash_error'] = implode(' ', $e->getErrors());
+            header('Location: /admin?tab=creditos' . ($id > 0 ? '&edit_id=' . $id : ''));
+            exit;
+        } catch (\Throwable $e) {
+            error_log('[AdminController::saveCreditMember] ' . $e->getMessage());
+            $_SESSION['_flash_error'] = 'No se pudo guardar el integrante de créditos. Inténtalo nuevamente.';
+            header('Location: /admin?tab=creditos' . ($id > 0 ? '&edit_id=' . $id : ''));
+            exit;
+        }
+
+        header('Location: /admin?tab=creditos');
+        exit;
+    }
+
+    /**
+     * Eliminar un integrante de créditos.
+     */
+    public function deleteCreditMember(): void
+    {
+        $this->checkSuperAdminPermissions();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $_SESSION['_flash_error'] = 'ID de integrante inválido.';
+            header('Location: /admin?tab=creditos');
+            exit;
+        }
+
+        try {
+            $this->creditMemberService->delete($id);
+            $_SESSION['_flash_success'] = 'Integrante de créditos eliminado exitosamente.';
+        } catch (\RuntimeException) {
+            $_SESSION['_flash_error'] = 'El integrante no existe o ya fue eliminado.';
+        } catch (\Throwable $e) {
+            error_log('[AdminController::deleteCreditMember] ' . $e->getMessage());
+            $_SESSION['_flash_error'] = 'No se pudo eliminar el integrante. Inténtalo nuevamente.';
+        }
+
+        header('Location: /admin?tab=creditos');
         exit;
     }
 
