@@ -16,10 +16,12 @@ class CreditsService
      * (EMAIL_VICENTE_CAMPANA, etc.) si se configuran en el servidor.
      */
     private CreditMemberRepository $repo;
+    private MailerService $mailer;
 
-    public function __construct(?CreditMemberRepository $repo = null)
+    public function __construct(?CreditMemberRepository $repo = null, ?MailerService $mailer = null)
     {
-        $this->repo = $repo ?? new CreditMemberRepository();
+        $this->repo   = $repo   ?? new CreditMemberRepository();
+        $this->mailer = $mailer ?? new MailerService();
     }
 
     /**
@@ -101,7 +103,7 @@ class CreditsService
     }
 
     /**
-     * Despacha el correo mediante mail() de PHP.
+     * Despacha el correo mediante MailerService con fallback a mail() nativo.
      */
     private function dispatchEmail(
         string $to,
@@ -111,9 +113,9 @@ class CreditsService
         string $senderEmail,
         string $message
     ): bool {
-        $subject = "=?UTF-8?B?" . base64_encode("[SFL Lab - Créditos] Mensaje para {$recipientName}") . "?=";
+        $subject = "[SFL Lab - Créditos] Mensaje para {$recipientName}";
 
-        $body = "Has recibido un nuevo mensaje desde la sección de Créditos del sitio web SFL ULS Lab.\n\n"
+        $textBody = "Has recibido un nuevo mensaje desde la sección de Créditos del sitio web SFL ULS Lab.\n\n"
             . "------------------------------------------------------------\n"
             . "Destinatario: {$recipientName} ({$recipientRole})\n"
             . "Remitente:    {$senderName}\n"
@@ -125,8 +127,19 @@ class CreditsService
             . "------------------------------------------------------------\n"
             . "Software Factory Lab — Universidad de La Serena\n";
 
+        try {
+            $htmlBody = nl2br(htmlspecialchars($textBody, ENT_QUOTES, 'UTF-8'));
+            $sent = $this->mailer->send($to, $recipientName, $subject, $htmlBody);
+            if ($sent) {
+                return true;
+            }
+        } catch (\Throwable) {
+            // Degradar graciosamente a mail() nativo si falla
+        }
+
         $cleanSenderEmail = str_replace(["\r", "\n"], '', $senderEmail);
         $cleanSenderName = str_replace(["\r", "\n"], '', $senderName);
+        $encodedSubject = "=?UTF-8?B?" . base64_encode($subject) . "?=";
 
         $headers = [
             'From: SFL ULS Lab <contacto@sfl.uls.cl>',
@@ -136,9 +149,7 @@ class CreditsService
             'Content-Type: text/plain; charset=UTF-8',
         ];
 
-        // En entornos sin servidor SMTP configurado (e.g. CLI/testing local), mail() retorna false pero no debe detener el flujo.
-        $sent = @mail($to, $subject, $body, implode("\r\n", $headers));
-        return $sent;
+        return (bool) @mail($to, $encodedSubject, $textBody, implode("\r\n", $headers));
     }
 
     /**
