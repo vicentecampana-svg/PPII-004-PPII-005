@@ -74,7 +74,7 @@ class UserService
             'password'             => password_hash($data['password'], PASSWORD_DEFAULT),
             'role_id'              => (int) $data['role_id'],
             'active'               => $data['active'] ?? true,
-            'must_change_password' => $data['must_change_password'] ?? false,
+            'must_change_password' => $data['must_change_password'] ?? true,
         ]);
 
         $this->audit->log(null, 'crear', 'user', $id, 'Usuario creado: ' . $data['username']);
@@ -116,6 +116,12 @@ class UserService
 
         if (isset($data['password']) && $data['password'] !== '') {
             $fields['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            // RF-AUT-003: quien define una contraseña inicial o la restablece
+            // (panel o API) obliga al usuario a cambiarla en el próximo acceso.
+            // El cambio propio (PasswordController) envía el flag explícito en false.
+            if (!array_key_exists('must_change_password', $data)) {
+                $fields['must_change_password'] = true;
+            }
         }
 
         if ($fields) {
@@ -134,13 +140,16 @@ class UserService
             throw new \RuntimeException('Usuario no encontrado.');
         }
 
-        if (strlen($newPassword) < 12) {
-            throw new ValidationException(['password' => 'La contraseña debe tener al menos 12 caracteres.']);
+        $policyErrors = PasswordPolicy::errors($newPassword);
+        if ($policyErrors) {
+            throw new ValidationException(['password' => implode(' ', $policyErrors)]);
         }
 
+        // RF-AUT-003: una contraseña restablecida por el Super Usuario obliga
+        // a cambiarla en el próximo inicio de sesión.
         $this->repo->update($id, [
             'password'             => password_hash($newPassword, PASSWORD_DEFAULT),
-            'must_change_password' => false,
+            'must_change_password' => true,
         ]);
 
         $this->audit->log(null, 'actualizar', 'user', $id, 'Contraseña restablecida para: ' . $existing['username']);
@@ -159,8 +168,9 @@ class UserService
             throw new ValidationException(['current_password' => 'La contraseña actual es incorrecta.']);
         }
 
-        if (strlen($newPassword) < 12) {
-            throw new ValidationException(['password' => 'La contraseña debe tener al menos 12 caracteres.']);
+        $policyErrors = PasswordPolicy::errors($newPassword);
+        if ($policyErrors) {
+            throw new ValidationException(['password' => implode(' ', $policyErrors)]);
         }
 
         $this->repo->update($id, [
@@ -200,8 +210,13 @@ class UserService
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'El email es obligatorio y debe ser válido.';
         }
-        if (empty($data['password']) || strlen($data['password']) < 12) {
-            $errors['password'] = 'La contraseña debe tener al menos 12 caracteres.';
+        if (empty($data['password'])) {
+            $errors['password'] = 'La contraseña es obligatoria.';
+        } else {
+            $policyErrors = PasswordPolicy::errors((string) $data['password']);
+            if ($policyErrors) {
+                $errors['password'] = implode(' ', $policyErrors);
+            }
         }
         if (empty($data['role_id'])) {
             $errors['role_id'] = 'El rol es obligatorio.';
@@ -218,8 +233,11 @@ class UserService
         if (array_key_exists('email', $data) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'El email debe ser válido.';
         }
-        if (array_key_exists('password', $data) && $data['password'] !== '' && strlen($data['password']) < 12) {
-            $errors['password'] = 'La contraseña debe tener al menos 12 caracteres.';
+        if (array_key_exists('password', $data) && $data['password'] !== '') {
+            $policyErrors = PasswordPolicy::errors((string) $data['password']);
+            if ($policyErrors) {
+                $errors['password'] = implode(' ', $policyErrors);
+            }
         }
         if (array_key_exists('role_id', $data) && empty($data['role_id'])) {
             $errors['role_id'] = 'El rol es obligatorio.';

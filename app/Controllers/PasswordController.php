@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Repositories\UserRepository;
 use App\Services\AuditService;
 use App\Services\FooterService;
+use App\Services\PasswordPolicy;
 use App\Services\UserService;
 
 /**
@@ -66,8 +67,9 @@ final class PasswordController extends Controller
             $errors['current_password'] = 'La contraseña actual es incorrecta.';
         }
 
-        if (strlen($newPassword) < 6) {
-            $errors['new_password'] = 'La nueva contraseña debe tener al menos 6 caracteres.';
+        $policyErrors = PasswordPolicy::errors($newPassword);
+        if ($policyErrors) {
+            $errors['new_password'] = implode(' ', $policyErrors);
         }
 
         if ($newPassword !== $confirmPassword) {
