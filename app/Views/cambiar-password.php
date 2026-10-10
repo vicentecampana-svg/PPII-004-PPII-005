@@ -12,6 +12,9 @@ $errors ??= [];
 <section class="login-section">
   <form class="login-card" method="post" action="/cambiar-password" novalidate>
     <h1>Cambiar Contraseña</h1>
+    <p class="auth-instructions">
+      <?= e(\App\Services\PasswordPolicy::hint()) ?>
+    </p>
 
     <?php if (!empty($errors['general'])) : ?>
       <p class="form-error" role="alert" aria-live="assertive"><?= e($errors['general']) ?></p>
@@ -43,7 +46,7 @@ $errors ??= [];
       <label for="new_password">Nueva contraseña</label>
       <input
         type="password" id="new_password" name="new_password"
-        placeholder="Mínimo 6 caracteres" maxlength="120"
+        placeholder="Mínimo 12 caracteres" maxlength="120" minlength="12"
         autocomplete="new-password"
         aria-required="true"
         <?= !empty($errors['new_password']) ? 'aria-invalid="true" aria-describedby="new-password-error"' : '' ?>

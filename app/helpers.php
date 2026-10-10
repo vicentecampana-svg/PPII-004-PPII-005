@@ -189,8 +189,41 @@ function sessionStart(): void
         session_start();
     }
 
+    enforceSessionIdleTimeout();
+
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+}
+
+/**
+ * IU-002 / RNF-SEC-004: las sesiones autenticadas del panel expiran a los
+ * 15 minutos de inactividad y deben autenticarse nuevamente.
+ *
+ * Si `_last_activity` no existe (sesión creada antes de este rasgo o test
+ * que autentica la sesión a mano), se inicializa para otorgar gracia en vez
+ * de expirar; la expiración real solo ocurre con un timestamp vencido.
+ */
+function enforceSessionIdleTimeout(): void
+{
+    if (!isset($_SESSION['user_id'])) {
+        return;
+    }
+
+    $timeout = (int) config('session.idle_timeout_seconds', 900);
+    $last    = $_SESSION['_last_activity'] ?? null;
+
+    if ($last === null) {
+        $_SESSION['_last_activity'] = time();
+        return;
+    }
+
+    if (time() - (int) $last > $timeout) {
+        $_SESSION = [];
+        session_regenerate_id(true);
+        $_SESSION['_session_expired'] = true;
+    } else {
+        $_SESSION['_last_activity'] = time();
     }
 }
 
@@ -224,6 +257,7 @@ function authLogin(int $userId, string $username, int $roleId, string $roleName,
     $_SESSION['role_id'] = $roleId;
     $_SESSION['role_name'] = $roleName;
     $_SESSION['must_change_password'] = $mustChangePassword;
+    $_SESSION['_last_activity'] = time();
 }
 
 function authLogout(): void
