@@ -4,6 +4,7 @@ namespace Tests\Services;
 
 use PHPUnit\Framework\TestCase;
 use App\Services\CreditsService;
+use App\Services\MailerService;
 
 class CreditsServiceTest extends TestCase
 {
@@ -91,6 +92,32 @@ class CreditsServiceTest extends TestCase
             'name'       => 'María González',
             'email'      => 'maria@example.com',
             'message'    => 'Hola Vicente, me gustaría contactar por el proyecto.',
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('Vicente Campaña', $result['recipient']);
+        $this->assertStringContainsString('enviado exitosamente', $result['message']);
+    }
+
+    public function testSendContactMessageUsesMailerService(): void
+    {
+        $mailerMock = $this->createMock(MailerService::class);
+        $mailerMock->expects($this->once())
+            ->method('send')
+            ->with(
+                $this->isType('string'),
+                $this->equalTo('Vicente Campaña'),
+                $this->stringContains('[SFL Lab - Créditos]'),
+                $this->stringContains('Mensaje de prueba')
+            )
+            ->willReturn(true);
+
+        $service = new CreditsService(null, $mailerMock);
+        $result = $service->sendContactMessage([
+            'member_key' => 'vicente-campana',
+            'name'       => 'María González',
+            'email'      => 'maria@example.com',
+            'message'    => 'Mensaje de prueba para Vicente',
         ]);
 
         $this->assertTrue($result['success']);

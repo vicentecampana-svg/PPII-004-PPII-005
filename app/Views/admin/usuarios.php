@@ -157,6 +157,7 @@ $standardRoles = [
         <div class="admin-form-group">
           <label class="admin-form-label" for="user-password">
             Contraseña <?= $editingUser ? '<span class="admin-help-text">(dejar en blanco para conservar)</span>' : '' ?>
+            <span class="admin-help-text"><?= e(\App\Services\PasswordPolicy::hint()) ?></span>
           </label>
           <input type="password" 
                  id="user-password" 

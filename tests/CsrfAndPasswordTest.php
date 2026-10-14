@@ -118,6 +118,49 @@ class CsrfAndPasswordTest extends TestCase
         $this->assertSame(42, $user['id']);
     }
 
+    public function testPasswordComplexityEnforcedInCreate(): void
+    {
+        $repo = $this->createMock(UserRepository::class);
+        $repo->method('findByEmail')->willReturn(null);
+        $repo->expects($this->never())->method('create');
+
+        $audit = $this->createMock(AuditService::class);
+        $service = new UserService($repo, $audit);
+
+        try {
+            $service->create([
+                'username' => 'testuser',
+                'email'    => 'test@example.com',
+                'password' => 'abcdefghijkl1', // >= 12 pero sin mayúscula ni especial
+                'role_id'  => 2,
+            ]);
+            $this->fail('Se esperaba ValidationException por incumplir la política.');
+        } catch (\App\Exceptions\ValidationException $e) {
+            $this->assertStringContainsString('mayúscula', $e->getErrors()['password']);
+            $this->assertStringContainsString('especial', $e->getErrors()['password']);
+        }
+    }
+
+    public function testPasswordComplexityEnforcedInReset(): void
+    {
+        $repo = $this->createMock(UserRepository::class);
+        $repo->method('findById')->willReturn([
+            'id'       => 1,
+            'username' => 'testuser',
+            'email'    => 'test@example.com',
+            'password' => password_hash('ValidPassword123!', PASSWORD_DEFAULT),
+            'role_id'  => 2,
+            'active'   => true,
+        ]);
+        $repo->expects($this->never())->method('update');
+
+        $audit = $this->createMock(AuditService::class);
+        $service = new UserService($repo, $audit);
+
+        $this->expectException(\App\Exceptions\ValidationException::class);
+        $service->resetPassword(1, 'abcdefghijkl1'); // >= 12 pero sin mayúscula ni especial
+    }
+
     public function testCsrfValidationFailsWhenTokenMismatch(): void
     {
         $_SESSION['csrf_token'] = 'valid_session_token_1234567890abcdef';

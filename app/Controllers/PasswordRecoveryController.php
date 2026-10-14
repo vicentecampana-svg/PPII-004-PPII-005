@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\FooterService;
+use App\Services\PasswordPolicy;
 use App\Services\PasswordResetService;
 use App\Services\RateLimiterService;
 
@@ -133,8 +134,9 @@ final class PasswordRecoveryController extends Controller
 
         $errors = [];
 
-        if (strlen($newPassword) < 12) {
-            $errors['new_password'] = 'La contraseña debe tener al menos 12 caracteres.';
+        $policyErrors = PasswordPolicy::errors($newPassword);
+        if ($policyErrors) {
+            $errors['new_password'] = implode(' ', $policyErrors);
         }
 
         if ($newPassword !== $confirmPassword) {

@@ -20,6 +20,11 @@ return [
 
     'base_url' => '/',
 
+    // IU-002 / RNF-SEC-004: expiración de sesión del panel por inactividad.
+    'session' => [
+        'idle_timeout_seconds' => 900, // 15 minutos
+    ],
+
     'cors' => [
         'allowed_origins' => array_filter(
             array_map('trim', explode(',', getenv('CORS_ALLOWED_ORIGINS') ?: 'http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000,http://localhost:5173'))

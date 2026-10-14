@@ -7,14 +7,22 @@ declare(strict_types=1);
  * @var array $errors
  * @var string $email
  * @var string|null $flashSuccess  Mensaje de éxito de otras acciones (ej: contraseña restablecida).
+ * @var bool $sessionExpired       true si la sesión expiró por inactividad (15 min).
  */
-$errors       ??= [];
-$email        ??= '';
-$flashSuccess ??= null;
+$errors         ??= [];
+$email          ??= '';
+$flashSuccess   ??= null;
+$sessionExpired ??= false;
 ?>
 <section class="login-section">
   <form class="login-card" method="post" action="/login" novalidate>
     <h1>Login</h1>
+
+    <?php if ($sessionExpired) : ?>
+      <p class="alert alert-error" role="alert" aria-live="assertive">
+        Tu sesión expiró por inactividad. Inicia sesión nuevamente.
+      </p>
+    <?php endif; ?>
 
     <?php if (!empty($errors['general'])) : ?>
       <p class="form-error" role="alert" aria-live="assertive"><?= e($errors['general']) ?></p>

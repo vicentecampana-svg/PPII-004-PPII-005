@@ -21,6 +21,13 @@ sessionStart();
 
 function handle(array $route): void
 {
+    // RF-AUT-003: el cambio de contraseña obligatorio se impone en todo el
+    // panel (/admin*), tanto en GET como en las acciones POST.
+    $path = rtrim(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '', '/') ?: '/';
+    if (str_starts_with($path, '/admin')) {
+        mwForcePasswordChange();
+    }
+
     foreach ($route['middleware'] as $mw) {
         if (str_starts_with($mw, 'role:')) {
             $roles = explode(',', substr($mw, 5));
