@@ -8,6 +8,7 @@ use App\Services\CreditMemberService;
 use App\Services\FooterService;
 use App\Services\MediaService;
 use App\Services\NewsService;
+use App\Services\PasswordPolicy;
 use App\Services\ProjectService;
 use App\Services\QueryService;
 use App\Services\ServiceService;
@@ -698,10 +699,13 @@ final class AdminController extends Controller
             exit;
         }
 
-        if ($id <= 0 && strlen($password) < 12) {
-            $_SESSION['_flash_error'] = 'La contraseña debe tener al menos 12 caracteres.';
-            header('Location: /admin?tab=usuarios');
-            exit;
+        if ($id <= 0) {
+            $policyErrors = PasswordPolicy::errors($password);
+            if ($policyErrors) {
+                $_SESSION['_flash_error'] = implode(' ', $policyErrors);
+                header('Location: /admin?tab=usuarios');
+                exit;
+            }
         }
 
         $data = [
@@ -712,8 +716,9 @@ final class AdminController extends Controller
         ];
 
         if ($password !== '') {
-            if (strlen($password) < 12) {
-                $_SESSION['_flash_error'] = 'La contraseña debe tener al menos 12 caracteres.';
+            $policyErrors = PasswordPolicy::errors($password);
+            if ($policyErrors) {
+                $_SESSION['_flash_error'] = implode(' ', $policyErrors);
                 header('Location: /admin?tab=usuarios' . ($id > 0 ? '&edit_id=' . $id : ''));
                 exit;
             }

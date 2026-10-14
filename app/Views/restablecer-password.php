@@ -15,7 +15,7 @@ $token  ??= '';
         action="/restablecer-password/<?= e(urlencode($token)) ?>" novalidate>
     <h1>Nueva contraseña</h1>
     <p class="auth-instructions">
-      Elige una contraseña segura de al menos 12 caracteres.
+      Elige una contraseña segura. <?= e(\App\Services\PasswordPolicy::hint()) ?>
     </p>
 
     <?php if (!empty($errors['general'])) : ?>
@@ -28,7 +28,7 @@ $token  ??= '';
       <label for="new_password">Nueva contraseña</label>
       <input
         type="password" id="new_password" name="new_password"
-        placeholder="Mínimo 12 caracteres" maxlength="120"
+        placeholder="Mínimo 12 caracteres" maxlength="120" minlength="12"
         autocomplete="new-password" required>
       <?php if (!empty($errors['new_password'])) : ?>
         <p class="field-error"><?= e($errors['new_password']) ?></p>
