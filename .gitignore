@@ -5,6 +5,7 @@
 
 # Composer dependencies
 /vendor/
+composer.phar
 
 # Mockup & Design Reference (local only)
 lovable-project/
