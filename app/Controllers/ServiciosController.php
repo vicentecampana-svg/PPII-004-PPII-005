@@ -25,18 +25,20 @@ final class ServiciosController extends Controller
     {
         try {
             $footer = $this->footerService->getAll();
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            error_log('[ServiciosController::index] FooterService: ' . $e->getMessage());
             $footer = ['links' => [], 'info' => null];
         }
 
         try {
             $data = $this->serviceService->getAll(1, 100, false);
             $servicios = $data['items'] ?? [];
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            error_log('[ServiciosController::index] ServiceService: ' . $e->getMessage());
             $servicios = [];
         }
 
-        if (empty($servicios)) {
+        if (empty($servicios) && config('app_env') === 'development') {
             $servicios = [
                 [
                     'id' => 1,
