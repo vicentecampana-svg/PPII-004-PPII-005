@@ -92,7 +92,8 @@ final class PasswordResetService
         // Guardar sólo el hash para que si la BD es comprometida el token no sirva
         $hashedToken = hash('sha256', $plainToken);
 
-        $expiresAt = date('Y-m-d H:i:s', time() + self::TOKEN_TTL_HOURS * 3600);
+        // BUG-03: expiración explícita en UTC con offset ISO 8601 (+00:00)
+        $expiresAt = gmdate('Y-m-d H:i:sP', time() + self::TOKEN_TTL_HOURS * 3600);
 
         $this->resetRepo->create((int) $user['id'], $hashedToken, $expiresAt);
 

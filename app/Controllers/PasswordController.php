@@ -18,12 +18,27 @@ final class PasswordController extends Controller
     private UserService $userService;
     private UserRepository $userRepo;
     private AuditService $audit;
+    /** @var callable */
+    private $redirectHandler;
 
-    public function __construct()
+    public function __construct(
+        ?UserService $userService = null,
+        ?UserRepository $userRepo = null,
+        ?AuditService $audit = null,
+        ?callable $redirectHandler = null
+    ) {
+        $this->userService = $userService ?? new UserService();
+        $this->userRepo = $userRepo ?? new UserRepository();
+        $this->audit = $audit ?? new AuditService();
+        $this->redirectHandler = $redirectHandler ?? static function (string $url): void {
+            header('Location: ' . $url);
+            exit;
+        };
+    }
+
+    protected function redirect(string $url): void
     {
-        $this->userService = new UserService();
-        $this->userRepo = new UserRepository();
-        $this->audit = new AuditService();
+        ($this->redirectHandler)($url);
     }
 
     public function show(): void
@@ -47,12 +62,12 @@ final class PasswordController extends Controller
     public function submit(): void
     {
         $userId = (int) (authUser()['id'] ?? 0);
-        $user = $this->userRepo->findById($userId);
+        $user = $this->userRepo->findWithPasswordById($userId);
 
         if (!$user) {
             authLogout();
-            header('Location: /login');
-            exit;
+            $this->redirect('/login');
+            return;
         }
 
         $currentPassword = (string) ($_POST['current_password'] ?? '');
@@ -78,8 +93,8 @@ final class PasswordController extends Controller
 
         if ($errors) {
             $_SESSION['_password_errors'] = $errors;
-            header('Location: /cambiar-password');
-            exit;
+            $this->redirect('/cambiar-password');
+            return;
         }
 
         $this->userService->update($userId, [
@@ -91,7 +106,6 @@ final class PasswordController extends Controller
         $this->audit->log($userId, 'cambiar_password', 'user', $userId, 'Contraseña cambiada por el usuario');
 
         $_SESSION['_password_success'] = 'Contraseña actualizada correctamente.';
-        header('Location: /admin');
-        exit;
+        $this->redirect('/admin');
     }
 }
