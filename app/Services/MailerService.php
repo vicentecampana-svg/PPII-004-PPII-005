@@ -5,23 +5,29 @@ declare(strict_types=1);
 namespace App\Services;
 
 /**
- * Servicio de envío de correo con soporte para modo desarrollo y producción.
+ * Servicio de envío de correo con soporte para modo desarrollo.
  *
- * En APP_ENV=development (o con MAIL_DRIVER=log) los correos se escriben
- * en storage/logs/mail_dev.log para visualizarlos sin servidor SMTP.
- *
- * Para activar el envío real en producción, configurar en .env:
- *   MAIL_DRIVER=smtp              # Activa el envío vía socket SMTP nativo
- *   SMTP_HOST=smtp.uls.cl         # Servidor SMTP (ej. universitario o proveedor)
- *   SMTP_PORT=587                 # 587 (STARTTLS) o 465 (SSL)
- *   SMTP_USER=no-reply@uls.cl     # Usuario para AUTH LOGIN
- *   SMTP_PASS=<contraseña>        # Contraseña SMTP
- *   SMTP_FROM=no-reply@sfl.uls.cl # Dirección remitente visible
- *   SMTP_FROM_NAME=SFL ULS        # Nombre del remitente
- *
- * El envío SMTP implementa el protocolo RFC 5321 mediante sockets nativos
- * con soporte para autenticación (AUTH LOGIN) y cifrado TLS/SSL
- * sin dependencias externas.
+ * ┌──────────────────────────────────────────────────────────────────────┐
+ * │  ⚠  SMTP NO CONFIGURADO — pendiente confirmar servidor universitario │
+ * │                                                                      │
+ * │  En APP_ENV=development (o sin SMTP_HOST definido) los correos NO    │
+ * │  se envían: se escriben en storage/logs/mail_dev.log para poder      │
+ * │  ver el contenido y el enlace de recuperación sin necesitar SMTP.    │
+ * │                                                                      │
+ * │  Para activar el envío real en producción, añade al .env:            │
+ * │                                                                      │
+ * │    SMTP_HOST=smtp.uls.cl          # host del servidor universitario  │
+ * │    SMTP_PORT=587                  # 587 (STARTTLS) o 465 (SSL)       │
+ * │    SMTP_USER=no-reply@uls.cl      # cuenta de envío                  │
+ * │    SMTP_PASS=<contraseña>         # contraseña SMTP                  │
+ * │    SMTP_FROM=no-reply@uls.cl      # dirección From del correo        │
+ * │    SMTP_FROM_NAME=TechHub ULS     # nombre visible del remitente     │
+ * │    MAIL_DRIVER=smtp               # activar driver real              │
+ * │                                                                      │
+ * │  El proyecto usa la extensión nativa `mail()` (o SMTP vía stream)    │
+ * │  para no añadir dependencias. Si se prefiere PHPMailer/Symfony Mailer│
+ * │  instálalo con Composer y reemplaza el método sendSmtp().            │
+ * └──────────────────────────────────────────────────────────────────────┘
  */
 class MailerService
 {
@@ -30,15 +36,12 @@ class MailerService
     private string $fromName;
     private string $logPath;
 
-    public function __construct(
-        ?string $driver = null,
-        ?string $fromEmail = null,
-        ?string $fromName = null
-    ) {
-        $this->driver    = $driver ?? (getenv('MAIL_DRIVER') ?: 'log');
-        $this->fromEmail = $fromEmail ?? (getenv('SMTP_FROM') ?: getenv('RESEND_FROM') ?: 'no-reply@sfl.uls.cl');
-        $this->fromName  = $fromName ?? (getenv('SMTP_FROM_NAME') ?: 'SFL ULS');
-        $this->logPath   = dirname(__DIR__, 2) . '/storage/logs/mail_dev.log';
+    public function __construct()
+    {
+        $this->driver     = getenv('MAIL_DRIVER') ?: 'log';
+        $this->fromEmail  = getenv('SMTP_FROM') ?: getenv('RESEND_FROM') ?: 'onboarding@resend.dev';
+        $this->fromName   = getenv('SMTP_FROM_NAME') ?: 'Software Factory Lab ULS';
+        $this->logPath    = dirname(__DIR__, 2) . '/storage/logs/mail_dev.log';
     }
 
     /**
@@ -51,7 +54,7 @@ class MailerService
      */
     public function sendPasswordReset(string $toEmail, string $toName, string $resetLink): bool
     {
-        $subject = 'Recuperación de contraseña — SFL ULS';
+        $subject = 'Recuperación de contraseña — TechHub ULS';
         $body    = $this->buildPasswordResetBody($toName, $resetLink);
 
         if ($this->driver === 'log') {
@@ -173,254 +176,43 @@ class MailerService
     }
 
     // ──────────────────────────────────────────────
-    //  Modo producción: envío real vía SMTP autenticado por socket (BUG-02)
+    //  Modo producción: envío real vía SMTP nativo
     // ──────────────────────────────────────────────
 
     /**
-     * Envía correo mediante conexión directa por socket SMTP (RFC 5321).
-     * Soporta STARTTLS (puerto 587), SSL directo (puerto 465) y autenticación AUTH LOGIN.
+     * Envía el correo usando la función mail() con cabeceras SMTP.
      *
-     * @param  string $toEmail Destinatario.
-     * @param  string $toName  Nombre visible del destinatario.
-     * @param  string $subject Asunto.
-     * @param  string $body    Cuerpo en HTML.
-     * @return bool            true si el servidor aceptó el correo (código 250).
+     * Si el equipo decide adoptar PHPMailer o Symfony Mailer, reemplazar
+     * este método; el resto del servicio no cambia.
      */
-    protected function sendSmtp(string $toEmail, string $toName, string $subject, string $body): bool
+    private function sendSmtp(string $toEmail, string $toName, string $subject, string $body): bool
     {
-        $host     = (string) (getenv('SMTP_HOST') ?: '');
-        $port     = (int) (getenv('SMTP_PORT') ?: 587);
-        $user     = (string) (getenv('SMTP_USER') ?: '');
-        $pass     = (string) (getenv('SMTP_PASS') ?: '');
-        $timeout  = (int) (getenv('SMTP_TIMEOUT') ?: 15);
-        $security = strtolower((string) (getenv('SMTP_ENCRYPTION') ?: ''));
+        $fromHeader = sprintf('=?UTF-8?B?%s?= <%s>', base64_encode($this->fromName), $this->fromEmail);
+        $toHeader   = sprintf('=?UTF-8?B?%s?= <%s>', base64_encode($toName), $toEmail);
 
-        if ($host === '') {
-            error_log('[MailerService] SMTP_HOST no configurado.');
-            return false;
-        }
-
-        $useDirectSsl = ($port === 465 || $security === 'ssl');
-        $useStartTls  = (!$useDirectSsl && ($port === 587 || $security === 'tls' || $security === 'starttls'));
-        $remote       = ($useDirectSsl ? 'ssl://' : 'tcp://') . $host . ':' . $port;
-
-        $errno  = 0;
-        $errstr = '';
-        $socket = $this->openSmtpSocket($remote, $timeout, $errno, $errstr);
-
-        if (!$socket) {
-            error_log(sprintf('[MailerService] Error al conectar a %s:%d — (%d) %s', $host, $port, $errno, $errstr));
-            return false;
-        }
-
-        stream_set_timeout($socket, $timeout);
-
-        try {
-            // 1. Saludo inicial del servidor (220)
-            $response = $this->readSmtpResponse($socket);
-            if ($this->getResponseCode($response) !== 220) {
-                error_log('[MailerService] Banner SMTP inesperado: ' . trim($response));
-                return false;
-            }
-
-            $clientHost = gethostname() ?: 'localhost';
-
-            // 2. EHLO / HELO inicial
-            $response = $this->sendSmtpCommand($socket, 'EHLO ' . $clientHost);
-            if ($this->getResponseCode($response) !== 250) {
-                $response = $this->sendSmtpCommand($socket, 'HELO ' . $clientHost);
-                if ($this->getResponseCode($response) !== 250) {
-                    error_log('[MailerService] Falló HELO/EHLO: ' . trim($response));
-                    return false;
-                }
-            }
-
-            // 3. STARTTLS si corresponde (puerto 587 o tls configurado)
-            if ($useStartTls) {
-                $response = $this->sendSmtpCommand($socket, 'STARTTLS');
-                if ($this->getResponseCode($response) !== 220) {
-                    error_log('[MailerService] El servidor rechazó STARTTLS: ' . trim($response));
-                    return false;
-                }
-
-                $cryptoOk = $this->enableCrypto($socket, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-                if (!$cryptoOk) {
-                    error_log('[MailerService] Error al negociar TLS con el servidor SMTP.');
-                    return false;
-                }
-
-                // RFC 3207: tras STARTTLS se debe repetir EHLO
-                $response = $this->sendSmtpCommand($socket, 'EHLO ' . $clientHost);
-                if ($this->getResponseCode($response) !== 250) {
-                    error_log('[MailerService] Falló EHLO post-STARTTLS: ' . trim($response));
-                    return false;
-                }
-            }
-
-            // 4. Autenticación AUTH LOGIN si hay credenciales
-            if ($user !== '') {
-                $response = $this->sendSmtpCommand($socket, 'AUTH LOGIN');
-                if ($this->getResponseCode($response) !== 334) {
-                    error_log('[MailerService] Falló inicio de AUTH LOGIN: ' . trim($response));
-                    return false;
-                }
-
-                $response = $this->sendSmtpCommand($socket, base64_encode($user));
-                if ($this->getResponseCode($response) !== 334) {
-                    error_log('[MailerService] Usuario SMTP rechazado: ' . trim($response));
-                    return false;
-                }
-
-                $response = $this->sendSmtpCommand($socket, base64_encode($pass));
-                if ($this->getResponseCode($response) !== 235) {
-                    error_log('[MailerService] Contraseña SMTP rechazada: ' . trim($response));
-                    return false;
-                }
-            }
-
-            // 5. Envelope: MAIL FROM y RCPT TO
-            $response = $this->sendSmtpCommand($socket, 'MAIL FROM:<' . $this->fromEmail . '>');
-            if ($this->getResponseCode($response) !== 250) {
-                error_log('[MailerService] MAIL FROM rechazado: ' . trim($response));
-                return false;
-            }
-
-            $response = $this->sendSmtpCommand($socket, 'RCPT TO:<' . $toEmail . '>');
-            $rcptCode = $this->getResponseCode($response);
-            if ($rcptCode !== 250 && $rcptCode !== 251) {
-                error_log('[MailerService] RCPT TO rechazado: ' . trim($response));
-                return false;
-            }
-
-            // 6. DATA
-            $response = $this->sendSmtpCommand($socket, 'DATA');
-            if ($this->getResponseCode($response) !== 354) {
-                error_log('[MailerService] DATA rechazado: ' . trim($response));
-                return false;
-            }
-
-            // 7. Enviar cabeceras MIME y cuerpo (RFC 5322)
-            $fromEncoded = sprintf('=?UTF-8?B?%s?= <%s>', base64_encode($this->fromName), $this->fromEmail);
-            $toEncoded   = sprintf('=?UTF-8?B?%s?= <%s>', base64_encode($toName), $toEmail);
-            $subjectB64  = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-            $messageId   = sprintf('<%s@%s>', bin2hex(random_bytes(16)), $host ?: 'sfl.uls.cl');
-
-            $headers = implode("\r\n", [
-                'Date: ' . date(DATE_RFC2822),
-                'From: ' . $fromEncoded,
-                'To: ' . $toEncoded,
-                'Subject: ' . $subjectB64,
-                'Reply-To: ' . $this->fromEmail,
-                'Message-ID: ' . $messageId,
-                'MIME-Version: 1.0',
-                'Content-Type: text/html; charset=UTF-8',
-                'Content-Transfer-Encoding: base64',
-                'X-Mailer: SFL-ULS-Mailer/PHP-' . PHP_VERSION,
-            ]);
-
-            $payload = $headers . "\r\n\r\n" . rtrim(chunk_split(base64_encode($body), 76, "\r\n"), "\r\n") . "\r\n.";
-            $response = $this->sendSmtpCommand($socket, $payload);
-            if ($this->getResponseCode($response) !== 250) {
-                error_log('[MailerService] Envío de mensaje rechazado: ' . trim($response));
-                return false;
-            }
-
-            // 8. Cierre de sesión SMTP
-            $this->sendSmtpCommand($socket, 'QUIT');
-            return true;
-        } finally {
-            if (is_resource($socket)) {
-                fclose($socket);
-            }
-        }
-    }
-
-    /**
-     * Abre la conexión socket hacia el servidor SMTP.
-     *
-     * @param  string $remote
-     * @param  int    $timeout
-     * @param  int    &$errno
-     * @param  string &$errstr
-     * @return resource|false
-     */
-    protected function openSmtpSocket(string $remote, int $timeout, int &$errno, string &$errstr)
-    {
-        $context = stream_context_create([
-            'ssl' => [
-                'verify_peer'       => true,
-                'verify_peer_name'  => true,
-                'allow_self_signed' => false,
-            ],
+        $headers = implode("\r\n", [
+            'MIME-Version: 1.0',
+            'Content-Type: text/html; charset=UTF-8',
+            'Content-Transfer-Encoding: base64',
+            'From: '    . $fromHeader,
+            'Reply-To: ' . $this->fromEmail,
+            'X-Mailer: PHP/' . PHP_VERSION,
         ]);
 
-        return @stream_socket_client(
-            $remote,
-            $errno,
-            $errstr,
-            (float) $timeout,
-            STREAM_CLIENT_CONNECT,
-            $context
-        );
-    }
-
-    /**
-     * Habilita cifrado TLS sobre el socket existente.
-     *
-     * @param  resource $socket
-     * @param  int      $cryptoMethod
-     * @return bool
-     */
-    protected function enableCrypto($socket, int $cryptoMethod): bool
-    {
-        return (bool) @stream_socket_enable_crypto($socket, true, $cryptoMethod);
-    }
-
-    /**
-     * Envía un comando por el socket y retorna la respuesta del servidor.
-     *
-     * @param  resource $socket
-     * @param  string   $command
-     * @return string
-     */
-    protected function sendSmtpCommand($socket, string $command): string
-    {
-        fwrite($socket, $command . "\r\n");
-        return $this->readSmtpResponse($socket);
-    }
-
-    /**
-     * Lee la respuesta completa (incluyendo líneas multilínea) del servidor SMTP.
-     *
-     * @param  resource $socket
-     * @return string
-     */
-    protected function readSmtpResponse($socket): string
-    {
-        $response = '';
-        while (!feof($socket)) {
-            $line = fgets($socket, 512);
-            if ($line === false) {
-                break;
-            }
-            $response .= $line;
-            // RFC 5321: El código de respuesta de 3 dígitos seguido de un espacio marca la última línea.
-            if (preg_match('/^\d{3}(?:\s|$)/', $line)) {
-                break;
-            }
+        // ini_set para SMTP (sólo en entornos Windows o con ini configurado)
+        $smtpHost = getenv('SMTP_HOST');
+        $smtpPort = (int) (getenv('SMTP_PORT') ?: 587);
+        if ($smtpHost) {
+            ini_set('SMTP', $smtpHost);
+            ini_set('smtp_port', (string) $smtpPort);
         }
-        return $response;
-    }
 
-    /**
-     * Extrae el código numérico de una respuesta SMTP (ej: 250 de "250 OK\r\n").
-     *
-     * @param  string $response
-     * @return int
-     */
-    protected function getResponseCode(string $response): int
-    {
-        return (int) substr(trim($response), 0, 3);
+        return mail(
+            $toEmail,
+            '=?UTF-8?B?' . base64_encode($subject) . '?=',
+            base64_encode($body),
+            $headers
+        );
     }
 
     // ──────────────────────────────────────────────
@@ -517,7 +309,7 @@ class MailerService
           <div class="email-card">
             <h2 class="email-title">Nueva consulta de contacto</h2>
             <p class="email-intro">Se recibió una nueva consulta a través del formulario de contacto de
-               <strong>SFL ULS</strong>.</p>
+               <strong>TechHub ULS</strong>.</p>
             <table class="email-table">
               <tr>
                 <td class="email-label">Nombre</td>
@@ -539,7 +331,7 @@ class MailerService
             </div>
             <hr class="email-divider">
             <p class="email-footer">
-              SFL ULS — Universidad de La Serena
+              TechHub — Software Factory Lab, Universidad de La Serena
             </p>
           </div>
         </body>
