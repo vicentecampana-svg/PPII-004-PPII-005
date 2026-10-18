@@ -3,10 +3,8 @@
 declare(strict_types=1);
 
 // ══════════════════════════════════════════════
-//  CONFIGURATION & TIMEZONE (BUG-03)
+//  CONFIGURATION
 // ══════════════════════════════════════════════
-
-date_default_timezone_set(getenv('APP_TIMEZONE') ?: 'UTC');
 
 function config(?string $key = null, mixed $default = null): mixed
 {
@@ -14,9 +12,6 @@ function config(?string $key = null, mixed $default = null): mixed
 
     if ($config === null) {
         $config = require dirname(__DIR__) . '/config/app.php';
-        if (!empty($config['timezone'])) {
-            date_default_timezone_set($config['timezone']);
-        }
     }
 
     if ($key === null) {
@@ -51,7 +46,6 @@ function db(): PDO
                 PDO::ATTR_EMULATE_PREPARES   => false,
                 PDO::ATTR_TIMEOUT            => 2,
             ]);
-            $pdo->exec("SET TIME ZONE 'UTC'");
         } catch (PDOException $e) {
             $connectionFailed = true;
             throw $e;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 return [
     'app_name' => 'Software Factory Lab ULS',
     'app_env'  => getenv('APP_ENV') ?: 'development',
-    'timezone' => getenv('APP_TIMEZONE') ?: 'UTC',
 
     'db' => [
         'host'     => getenv('PG_HOST') ?: 'localhost',
