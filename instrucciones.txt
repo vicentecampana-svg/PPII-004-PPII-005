@@ -1,0 +1,1 @@
+en la repo puedes ver el documento SFL bugs y areas de mejoras y realizar de la seccion 1 a 3, y el UX-03 y lo de SQL cambiar marca base, pero contando de que ya esta corregido bug01, bug02,bug03,cal01 y el bug04 aun no debe hacer, gracia
