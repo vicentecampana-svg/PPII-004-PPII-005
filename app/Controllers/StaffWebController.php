@@ -25,20 +25,18 @@ final class StaffWebController extends Controller
     {
         try {
             $footer = $this->footerService->getAll();
-        } catch (\Throwable $e) {
-            error_log('[StaffWebController::index] FooterService: ' . $e->getMessage());
+        } catch (\Throwable) {
             $footer = ['links' => [], 'info' => null];
         }
 
         try {
             $data = $this->staffService->getAll(1, 100);
             $staff = $data['items'] ?? [];
-        } catch (\Throwable $e) {
-            error_log('[StaffWebController::index] StaffService: ' . $e->getMessage());
+        } catch (\Throwable) {
             $staff = [];
         }
 
-        if (empty($staff) && config('app_env') === 'development') {
+        if (empty($staff)) {
             $staff = [
                 [
                     'id' => 1,

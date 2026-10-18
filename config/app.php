@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 return [
     'app_name' => 'Software Factory Lab ULS',
-    // Seguro por omisión: si APP_ENV no está definida (p. ej. un despliegue
-    // que olvidó configurarla), se asume production y NO se muestran datos
-    // de muestra. El entorno de desarrollo lo declara explícitamente
-    // (APP_ENV=development en .env y docker-compose.dev.yml).
-    'app_env'  => getenv('APP_ENV') ?: 'production',
+    'app_env'  => getenv('APP_ENV') ?: 'development',
 
     'db' => [
         'host'     => getenv('PG_HOST') ?: 'localhost',

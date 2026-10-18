@@ -28,8 +28,7 @@ final class NoticiasController extends Controller
     {
         try {
             $footer = $this->footerService->getAll();
-        } catch (\Throwable $e) {
-            error_log('[NoticiasController::index] FooterService: ' . $e->getMessage());
+        } catch (\Throwable) {
             $footer = ['links' => [], 'info' => null];
         }
 
@@ -42,28 +41,24 @@ final class NoticiasController extends Controller
             $data = authCheck()
                 ? $this->newsService->getAll($page, $perPage, $query, $tagId)
                 : $this->newsService->getPublished($page, $perPage, $query, $tagId);
-        } catch (\Throwable $e) {
-            error_log('[NoticiasController::index] NewsService: ' . $e->getMessage());
+        } catch (\Throwable) {
             $data = ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage, 'total_pages' => 0];
         }
 
         try {
             $tags = $this->tagService->getAll();
-        } catch (\Throwable $e) {
-            error_log('[NoticiasController::index] TagService: ' . $e->getMessage());
+        } catch (\Throwable) {
             $tags = [];
         }
 
         $noticias = $data['items'];
-        $isDev = config('app_env') === 'development';
 
-        if (empty($noticias) && $query === '' && $tagId === null && $isDev) {
+        if (empty($noticias) && $query === '' && $tagId === null) {
             $noticias = $this->sampleNews();
             $data['total'] = count($noticias);
             $data['total_pages'] = 1;
-        } elseif ($query !== '' && empty($noticias) && $isDev) {
-            // Datos de muestra solo en desarrollo: si la base de datos está
-            // offline, en producción no se filtra nada (sección vacía).
+        } elseif ($query !== '' && empty($noticias)) {
+            // Si la base de datos está offline y se busca en datos de muestra
             $sample = $this->sampleNews();
             $filtered = array_filter($sample, function ($item) use ($query) {
                 return stripos($item['title'], $query) !== false
@@ -98,8 +93,7 @@ final class NoticiasController extends Controller
     {
         try {
             $footer = $this->footerService->getAll();
-        } catch (\Throwable $e) {
-            error_log('[NoticiasController::show] FooterService: ' . $e->getMessage());
+        } catch (\Throwable) {
             $footer = ['links' => [], 'info' => null];
         }
 
@@ -109,8 +103,7 @@ final class NoticiasController extends Controller
             $noticia = authCheck()
                 ? $this->newsService->getById($newsId)
                 : $this->newsService->getPublishedById($newsId);
-        } catch (\Throwable $e) {
-            error_log('[NoticiasController::show] NewsService::getById(' . $newsId . '): ' . $e->getMessage());
+        } catch (\Throwable) {
             $noticia = null;
         }
 
@@ -125,9 +118,8 @@ final class NoticiasController extends Controller
             $allPublished = authCheck()
                 ? $this->newsService->getAll(1, 6)['items']
                 : $this->newsService->getPublished(1, 6)['items'];
-        } catch (\Throwable $e) {
-            error_log('[NoticiasController::show] NewsService::getAll: ' . $e->getMessage());
-            $allPublished = config('app_env') === 'development' ? $this->sampleNews() : [];
+        } catch (\Throwable) {
+            $allPublished = $this->sampleNews();
         }
 
         $otrasNoticias = array_values(array_filter($allPublished, static function ($item) use ($newsId) {
