@@ -59,7 +59,9 @@ jobs:
     # existan de verdad, no solo un mock. El contenido de las filas no importa
     # para los tests, solo el esquema.
     - name: Seed test database
-      run: psql "postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DATABASE}" -f config/schema.sql
+      run: |
+        psql "postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DATABASE}" -f config/schema.sql
+        psql "postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DATABASE}" -f config/seed.sql
 
     - name: PHP Syntax Check
       run: find app/ -name "*.php" -exec php -l {} \;

@@ -65,7 +65,10 @@ if ($isLoggedIn) {
 
         <div class="header-actions">
           <?php if ($isLoggedIn) : ?>
-            <a href="/logout" class="login-link">Cerrar sesión</a>
+            <form method="POST" action="/logout" class="logout-form">
+              <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+              <button type="submit" class="login-link logout-submit">Cerrar sesión</button>
+            </form>
           <?php else : ?>
             <a href="/login" class="login-link<?= $currentPath === '/login' ? ' active' : '' ?>"<?= $currentPath === '/login' ? ' aria-current="page"' : '' ?>>Iniciar sesión</a>
           <?php endif; ?>
@@ -88,7 +91,12 @@ if ($isLoggedIn) {
           <li><a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $isActive ? ' class="active" aria-current="page"' : '' ?>><?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?></a></li>
         <?php endforeach; ?>
         <?php if ($isLoggedIn) : ?>
-          <li><a href="/logout">Cerrar sesión</a></li>
+          <li>
+            <form method="POST" action="/logout" class="logout-form">
+              <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+              <button type="submit" class="logout-submit">Cerrar sesión</button>
+            </form>
+          </li>
         <?php else : ?>
           <li><a href="/login"<?= $currentPath === '/login' ? ' class="active" aria-current="page"' : '' ?>>Iniciar sesión</a></li>
         <?php endif; ?>

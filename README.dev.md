@@ -91,20 +91,25 @@ docker compose -f docker-compose.dev.yml exec web composer install
 ```
 
 ---
-## 5. Cargar el schema en la base de datos
+## 5. Cargar el schema y los datos semilla en la base de datos
 
 > El schema **debe** cargarse con `DB_USER` (usuario de aplicación, dueño de
 > la base). Si lo cargas con `POSTGRES_USER`, las tablas quedan a nombre del
 > superusuario y la app no puede operar sobre ellas (issue #94).
 
+El proyecto separa el **esquema** (`config/schema.sql`, solo DDL) de los
+**datos semilla** (`config/seed.sql`, BUG-05). Se cargan en ese orden.
+
 ### En Windows (PowerShell)
 ```powershell
 docker compose -f docker-compose.dev.yml cp config/schema.sql postgres:/tmp/schema.sql
+docker compose -f docker-compose.dev.yml cp config/seed.sql   postgres:/tmp/seed.sql
 ```
 y luego:
 
 ```powershell
 docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$DB_USER" -d "$POSTGRES_DB" -f /tmp/schema.sql'
+docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$DB_USER" -d "$POSTGRES_DB" -f /tmp/seed.sql'
 ```
 
 ### En Linux y macOS (Bash/Zsh)
@@ -112,10 +117,23 @@ docker compose -f docker-compose.dev.yml exec postgres sh -c 'psql -U "$DB_USER"
 ```bash
 export $(grep -v '^#' .env | xargs)
 cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB
+cat config/seed.sql   | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB
 ```
 
 Esto lee tu `.env` y usa esos valores, no importa qué usuario/base hayas
 puesto.
+
+### 5.0 Migraciones (bases ya cargadas)
+
+Para bases que ya tenían datos con la marca anterior, ejecuta el SQL de cambio
+de marca (una sola vez):
+
+```bash
+docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB -f /tmp/migrations/009_brand_change_sfluls.sql
+```
+
+El resto de migraciones (`config/migrations/*.sql`) se aplican igual sobre la
+base ya existente.
 
 Para verificar las tablas:
 

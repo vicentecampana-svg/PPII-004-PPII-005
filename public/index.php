@@ -16,6 +16,60 @@ require_once dirname(__DIR__) . '/app/helpers.php';
 sessionStart();
 
 // ══════════════════════════════════════════════
+//  SEC-08 — MANEJADOR GLOBAL DE EXCEPCIONES
+// ══════════════════════════════════════════════
+//  Sin esto, una caída de la base de datos termina en un "Uncaught
+//  PDOException" con página en blanco (o con la traza visible si
+//  display_errors está activo). Acá se registra el error en el log y se
+//  entrega una respuesta 500 genérica, sin exponer detalles internos.
+set_exception_handler(static function (\Throwable $e): void {
+    error_log(sprintf(
+        '[SFL ULS] Excepción no controlada: %s en %s:%d',
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+
+    if (isApiRequest()) {
+        respServerError();
+    }
+
+    http_response_code(500);
+    echo '<!doctype html><html lang="es"><head><meta charset="utf-8">'
+        . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        . '<title>Error 500</title></head><body>'
+        . '<h1>Error interno del servidor</h1>'
+        . '<p>Ocurrió un error inesperado. Por favor, intenta nuevamente más tarde.</p>'
+        . '</body></html>';
+});
+
+register_shutdown_function(static function (): void {
+    $err = error_get_last();
+    if ($err === null || !in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        return;
+    }
+
+    error_log(sprintf(
+        '[SFL ULS] Error fatal: %s en %s:%d',
+        $err['message'],
+        $err['file'],
+        $err['line']
+    ));
+
+    if (isApiRequest()) {
+        respServerError();
+    }
+
+    http_response_code(500);
+    echo '<!doctype html><html lang="es"><head><meta charset="utf-8">'
+        . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        . '<title>Error 500</title></head><body>'
+        . '<h1>Error interno del servidor</h1>'
+        . '<p>Ocurrió un error inesperado. Por favor, intenta nuevamente más tarde.</p>'
+        . '</body></html>';
+});
+
+// ══════════════════════════════════════════════
 //  HANDLER — ejecuta controller + middleware
 // ══════════════════════════════════════════════
 
@@ -55,28 +109,6 @@ function handle(array $route): void
     }
 }
 
-function matchRoute(string $routePath, string $uri): ?array
-{
-    $routeParts = explode('/', trim($routePath, '/'));
-    $uriParts = explode('/', trim($uri, '/'));
-
-    if (count($routeParts) !== count($uriParts)) {
-        return null;
-    }
-
-    $params = [];
-    foreach ($routeParts as $i => $part) {
-        if (preg_match('/^\{(\w+)\}$/', $part, $matches)) {
-            $value = $uriParts[$i];
-            $params[$matches[1]] = is_numeric($value) ? (int) $value : $value;
-        } elseif ($part !== $uriParts[$i]) {
-            return null;
-        }
-    }
-
-    return $params;
-}
-
 // ══════════════════════════════════════════════
 //  ROUTING & SECURITY
 // ══════════════════════════════════════════════
@@ -106,7 +138,6 @@ $routes = [
         '/captcha'                      => [['App\Controllers\CaptchaController', 'show'],            []],
         '/api/captcha'                  => [['App\Controllers\CaptchaController', 'api'],             []],
         '/admin'                        => [['App\Controllers\AdminController', 'index'],              ['auth', 'force_password_change']],
-        '/logout'                       => [['App\Controllers\LogoutController', 'logout'],            []],
         '/cambiar-password'             => [['App\Controllers\PasswordController', 'show'],            ['auth']],
         '/recuperar-password'           => [['App\Controllers\PasswordRecoveryController', 'showRequest'],  ['guest']],
         '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'showReset'],    ['guest']],
@@ -135,30 +166,30 @@ $routes = [
         '/contacto'                     => [['App\Controllers\ContactoController', 'submit'],              ['csrf']],
         '/credits'                      => [['App\Controllers\CreditsController', 'submit'],               ['csrf']],
         '/creditos'                     => [['App\Controllers\CreditsController', 'submit'],               ['csrf']],
-        '/api/credits/contact'          => [['App\Controllers\CreditsApiController', 'contact'],           []],
-        '/logout'                       => [['App\Controllers\LogoutController', 'logout'],                []],
+        '/api/credits/contact'          => [['App\Controllers\CreditController', 'contact'],              []],
+        '/logout'                       => [['App\Controllers\LogoutController', 'logout'],                ['csrf']],
         '/cambiar-password'             => [['App\Controllers\PasswordController', 'submit'],              ['auth', 'csrf']],
         '/recuperar-password'           => [['App\Controllers\PasswordRecoveryController', 'submitRequest'], ['guest', 'csrf']],
         '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'submitReset'],  ['guest', 'csrf']],
 
-        '/admin/proyectos'         => [['App\Controllers\AdminController', 'saveProject'],    ['auth', 'csrf']],
-        '/admin/proyectos/delete'  => [['App\Controllers\AdminController', 'deleteProject'],  ['auth', 'csrf']],
-        '/admin/staff'             => [['App\Controllers\AdminController', 'saveStaff'],      ['auth', 'csrf']],
-        '/admin/staff/delete'      => [['App\Controllers\AdminController', 'deleteStaff'],    ['auth', 'csrf']],
-        '/admin/creditos'          => [['App\Controllers\AdminController', 'saveCreditMember'],   ['auth', 'csrf']],
-        '/admin/creditos/delete'   => [['App\Controllers\AdminController', 'deleteCreditMember'], ['auth', 'csrf']],
-        '/admin/noticias'          => [['App\Controllers\AdminController', 'saveNews'],         ['auth', 'csrf']],
-        '/admin/noticias/delete'   => [['App\Controllers\AdminController', 'deleteNews'],       ['auth', 'csrf']],
-        '/admin/noticias/status'   => [['App\Controllers\AdminController', 'toggleNewsStatus'], ['auth', 'csrf']],
-        '/admin/sobre-nosotros'    => [['App\Controllers\AdminController', 'saveSobreNosotros'],['auth', 'csrf']],
-        '/admin/footer/links'          => [['App\Controllers\AdminController', 'saveFooterLink'],   ['auth', 'csrf']],
-        '/admin/footer/links/delete'   => [['App\Controllers\AdminController', 'deleteFooterLink'], ['auth', 'csrf']],
-        '/admin/footer/social'         => [['App\Controllers\AdminController', 'saveFooterSocial'], ['auth', 'csrf']],
-        '/admin/usuarios'              => [['App\Controllers\AdminController', 'saveUser'],         ['auth', 'csrf']],
-        '/admin/usuarios/delete'       => [['App\Controllers\AdminController', 'deleteUser'],       ['auth', 'csrf']],
-        '/admin/usuarios/role'         => [['App\Controllers\AdminController', 'updateUserRole'],   ['auth', 'csrf']],
+        '/admin/proyectos'         => [['App\Controllers\AdminProjectsController', 'saveProject'],    ['auth', 'csrf']],
+        '/admin/proyectos/delete'  => [['App\Controllers\AdminProjectsController', 'deleteProject'],  ['auth', 'csrf']],
+        '/admin/staff'             => [['App\Controllers\AdminStaffController', 'saveStaff'],      ['auth', 'csrf']],
+        '/admin/staff/delete'      => [['App\Controllers\AdminStaffController', 'deleteStaff'],    ['auth', 'csrf']],
+        '/admin/creditos'          => [['App\Controllers\AdminCreditsController', 'saveCreditMember'],   ['auth', 'csrf']],
+        '/admin/creditos/delete'   => [['App\Controllers\AdminCreditsController', 'deleteCreditMember'], ['auth', 'csrf']],
+        '/admin/noticias'          => [['App\Controllers\AdminNewsController', 'saveNews'],         ['auth', 'csrf']],
+        '/admin/noticias/delete'   => [['App\Controllers\AdminNewsController', 'deleteNews'],       ['auth', 'csrf']],
+        '/admin/noticias/status'   => [['App\Controllers\AdminNewsController', 'toggleNewsStatus'], ['auth', 'csrf']],
+        '/admin/sobre-nosotros'    => [['App\Controllers\AdminContentController', 'saveSobreNosotros'],['auth', 'csrf']],
+        '/admin/footer/links'          => [['App\Controllers\AdminFooterController', 'saveFooterLink'],   ['auth', 'csrf']],
+        '/admin/footer/links/delete'   => [['App\Controllers\AdminFooterController', 'deleteFooterLink'], ['auth', 'csrf']],
+        '/admin/footer/social'         => [['App\Controllers\AdminFooterController', 'saveFooterSocial'], ['auth', 'csrf']],
+        '/admin/usuarios'              => [['App\Controllers\AdminUsersController', 'saveUser'],         ['auth', 'csrf']],
+        '/admin/usuarios/delete'       => [['App\Controllers\AdminUsersController', 'deleteUser'],       ['auth', 'csrf']],
+        '/admin/usuarios/role'         => [['App\Controllers\AdminUsersController', 'updateUserRole'],   ['auth', 'csrf']],
         '/api/auth/login'          => [['App\Controllers\AuthController', 'login'],           ['guest']],
-        '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth']],
+        '/api/auth/logout'         => [['App\Controllers\AuthController', 'logout'],          ['auth', 'csrf']],
         '/api/news'                => [['App\Controllers\NewsController', 'store'],           ['auth', 'csrf', 'role:superadmin,admin,editor,redactor']],
         '/api/projects'            => [['App\Controllers\ProjectController', 'store'],        ['auth', 'csrf', 'role:superadmin,admin']],
         '/api/services'            => [['App\Controllers\ServiceController', 'store'],        ['auth', 'csrf', 'role:superadmin,admin']],
@@ -168,7 +199,6 @@ $routes = [
         '/api/users'               => [['App\Controllers\UserController', 'store'],           ['auth', 'csrf', 'role:superadmin,admin']],
         '/api/tags'                => [['App\Controllers\TagController', 'store'],            ['auth', 'csrf', 'role:superadmin,admin,editor']],
         '/api/media/upload'        => [['App\Controllers\MediaController', 'upload'],         ['auth', 'csrf']],
-        '/api/upload'              => [['App\Controllers\MediaController', 'upload'],         ['auth', 'csrf']],
     ],
     'PUT' => [
         '/api/news/{id}'           => [['App\Controllers\NewsController', 'update'],         ['auth', 'csrf', 'role:superadmin,admin,editor,redactor']],
@@ -197,26 +227,23 @@ $routes = [
     ],
 ];
 
-// Buscar ruta exacta
-if (isset($routes[$method][$uri])) {
-    [$handler, $middleware] = $routes[$method][$uri];
-    handle(['handler' => $handler, 'middleware' => $middleware]);
+// CAL-05: resolución de rutas con el Router dedicado
+$router = new \App\Router($routes);
+
+$route = $router->resolve($method, $uri);
+if ($route !== null) {
+    handle($route);
     exit;
 }
 
-// Buscar ruta dinámica
-if (isset($routes[$method])) {
-    foreach ($routes[$method] as $routePath => [$handler, $middleware]) {
-        if (!str_contains($routePath, '{')) {
-            continue;
-        }
-
-        $params = matchRoute($routePath, $uri);
-        if ($params !== null) {
-            handle(['handler' => $handler, 'middleware' => $middleware, 'params' => $params]);
-            exit;
-        }
+// 405: la ruta existe, pero no para este método HTTP
+if ($router->methodNotAllowed($method, $uri)) {
+    if (isApiRequest()) {
+        respError('METHOD_NOT_ALLOWED', 'Método no permitido.', 405);
     }
+    http_response_code(405);
+    echo '<h1>405 - Método no permitido</h1>';
+    exit;
 }
 
 // 404

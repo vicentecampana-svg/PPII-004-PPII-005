@@ -198,6 +198,31 @@ a {
   font-weight: 600;
 }
 
+/* SEC-06: el cierre de sesión es un POST con CSRF, no un enlace GET */
+.logout-form {
+  display: inline;
+  margin: 0;
+}
+
+button.logout-submit {
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+button.logout-submit:hover {
+  color: var(--brand);
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
@@ -1979,6 +2004,15 @@ a {
 .contacto-form-group textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+/* SEC-03: honeypot invisible (solo lo completan los bots) */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .btn-submit-contacto {

@@ -85,15 +85,20 @@ docker compose -f docker-compose.dev.yml exec web composer install
 > ⚠️ El schema se carga con `DB_USER` (usuario de aplicación, issue #94), no
 > con el superusuario `POSTGRES_USER`, para que las tablas queden a su nombre.
 
+El proyecto separa el **esquema** (`config/schema.sql`, solo DDL) de los
+**datos semilla** (`config/seed.sql`, BUG-05). Se cargan en ese orden:
+
 **En Linux / macOS:**
 ```bash
 export $(grep -v '^#' .env | xargs)
 cat config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB
+cat config/seed.sql   | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $DB_USER -d $POSTGRES_DB
 ```
 
 **En Windows (PowerShell):**
 ```powershell
 Get-Content config/schema.sql | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $env:DB_USER -d $env:POSTGRES_DB
+Get-Content config/seed.sql   | docker compose -f docker-compose.dev.yml exec -T postgres psql -U $env:DB_USER -d $env:POSTGRES_DB
 ```
 
 ### 5. Acceder a la aplicación

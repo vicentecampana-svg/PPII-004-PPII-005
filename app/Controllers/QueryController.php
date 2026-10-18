@@ -4,20 +4,39 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\FormGuardService;
 use App\Services\QueryService;
+use App\Services\RateLimiterService;
 
 class QueryController
 {
     private QueryService $service;
+    private FormGuardService $guard;
+    private RateLimiterService $rateLimiter;
 
     public function __construct()
     {
         $this->service = new QueryService();
+        $this->guard = new FormGuardService();
+        $this->rateLimiter = new RateLimiterService();
     }
 
     public function store(): void
     {
         $data = getJsonInput();
+
+        // SEC-03: límite por IP y correo para evitar spam de consultas.
+        $ip = $this->rateLimiter->getClientIp();
+        $email = trim((string) ($data['email'] ?? ''));
+
+        try {
+            $this->guard->assertAllowed('api_queries', $ip, $email);
+        } catch (\RuntimeException) {
+            respError('TOO_MANY_REQUESTS', 'Demasiados envíos en poco tiempo. Inténtalo más tarde.', 429);
+            return;
+        }
+
+        $this->guard->record('api_queries', $ip, $email);
 
         try {
             $item = $this->service->create($data);

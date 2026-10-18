@@ -25,6 +25,13 @@ return [
         'idle_timeout_seconds' => 900, // 15 minutos
     ],
 
+    // SEC-01: IPs de proxies inversos de confianza (balanceadores, CDNs).
+    // Solo si REMOTE_ADDR coincide con una de estas se considera
+    // X-Forwarded-For; en cualquier otro caso se usa REMOTE_ADDR directo.
+    'trusted_proxies' => array_filter(
+        array_map('trim', explode(',', getenv('TRUSTED_PROXIES') ?: ''))
+    ),
+
     'cors' => [
         'allowed_origins' => array_filter(
             array_map('trim', explode(',', getenv('CORS_ALLOWED_ORIGINS') ?: 'http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000,http://localhost:5173'))
