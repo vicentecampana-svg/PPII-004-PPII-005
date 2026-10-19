@@ -6,6 +6,8 @@ namespace App\Controllers;
 
 use App\Services\CreditsService;
 use App\Services\FooterService;
+use App\Services\FormGuardService;
+use App\Services\RateLimiterService;
 
 /**
  * Controlador de la vista pública de Créditos (/credits).
@@ -58,6 +60,28 @@ final class CreditsController extends Controller
     public function submit(): void
     {
         sessionStart();
+
+        // SEC-03: honeypot + límite por IP y correo para evitar spam.
+        $guard = new FormGuardService();
+        $ip = (new RateLimiterService())->getClientIp();
+        $email = trim((string) ($_POST['email'] ?? ''));
+
+        try {
+            $guard->assertNotHoneypot($_POST);
+            $guard->assertAllowed('credits_contact', $ip, $email);
+        } catch (\InvalidArgumentException) {
+            // Un bot: se simula éxito para no revelar el honeypot.
+            $_SESSION['flash_success'] = 'Tu mensaje ha sido enviado exitosamente.';
+            header('Location: /credits');
+            exit;
+        } catch (\RuntimeException) {
+            $_SESSION['flash_error'] = 'Demasiados envíos en poco tiempo. Inténtalo más tarde.';
+            header('Location: /credits');
+            exit;
+        }
+
+        $guard->record('credits_contact', $ip, $email);
+
         try {
             $result = $this->creditsService->sendContactMessage($_POST);
             $_SESSION['flash_success'] = $result['message'];

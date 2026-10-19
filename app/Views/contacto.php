@@ -27,6 +27,12 @@ declare(strict_types=1);
       <form action="/contacto" method="POST" class="contacto-form">
         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
 
+        <!-- Honeypot (SEC-03): invisible para las personas, los bots lo completan -->
+        <div class="contacto-form-group hp-field" aria-hidden="true">
+          <label for="contact-website">Sitio web</label>
+          <input type="text" id="contact-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
         <div class="contacto-form-group">
           <label for="contact-nombre">Nombre</label>
           <input type="text" id="contact-nombre" name="name" required placeholder="Nombre de contacto" autocomplete="name">

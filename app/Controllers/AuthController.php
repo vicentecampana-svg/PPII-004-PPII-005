@@ -38,12 +38,12 @@ class AuthController
         $password = (string) $data['password'];
         $captcha = (string) ($data['captcha'] ?? '');
 
-        // 1. Validar CAPTCHA si fue enviado o si la sesión tiene CAPTCHA pendiente
-        if (isset($data['captcha']) || isset($_SESSION['_captcha_code'])) {
-            if (!$this->captchaService->validate($captcha)) {
-                respUnprocessable(['captcha' => 'El código de seguridad (CAPTCHA) es incorrecto o ha expirado.']);
-                return;
-            }
+        // 1. SEC-02: el CAPTCHA es obligatorio en el login por API, igual que
+        // en el formulario web. Antes un script podía omitirlo y forzar
+        // credenciales sin resolver el desafío.
+        if (!$this->captchaService->validate($captcha)) {
+            respUnprocessable(['captcha' => 'El código de seguridad (CAPTCHA) es obligatorio o ha expirado.']);
+            return;
         }
 
         // 2. Verificar bloqueo por límite de intentos

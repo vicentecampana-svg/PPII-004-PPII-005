@@ -64,13 +64,46 @@ class RateLimiterService
         );
     }
 
+    /**
+     * SEC-01: devuelve la IP real del cliente.
+     *
+     * `X-Forwarded-For` es controlable por el cliente, así que solo se lee
+     * cuando la IP directa (REMOTE_ADDR) corresponde a un proxy inverso de
+     * confianza configurado en `trusted_proxies`. En cualquier otro caso se
+     * usa REMOTE_ADDR, evitando que un atacante evada el bloqueo por IP del
+     * login falsificando la cabecera.
+     */
     public function getClientIp(): string
     {
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ips = explode(',', (string) $_SERVER['HTTP_X_FORWARDED_FOR']);
-            return trim($ips[0]);
+        $remote = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+        if ($remote === '') {
+            return '127.0.0.1';
         }
 
-        return (string) ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+        if (!$this->isTrustedProxy($remote)) {
+            return $remote;
+        }
+
+        $forwarded = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+        if ($forwarded === '') {
+            return $remote;
+        }
+
+        // El proxy de confianza agrega la IP que vio al final de la cadena;
+        // esa es la IP del cliente desde el punto de vista del proxy.
+        $ips = array_values(array_filter(array_map('trim', explode(',', $forwarded))));
+
+        return $ips === [] ? $remote : $ips[count($ips) - 1];
+    }
+
+    private function isTrustedProxy(string $ip): bool
+    {
+        foreach (config('trusted_proxies', []) as $trusted) {
+            if ($trusted !== '' && $trusted === $ip) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

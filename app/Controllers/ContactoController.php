@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\FooterService;
+use App\Services\FormGuardService;
 use App\Services\QueryService;
+use App\Services\RateLimiterService;
 
 /**
  * Página pública de Contacto y envío de formulario de consultas.
@@ -50,6 +52,29 @@ final class ContactoController extends Controller
         $phone = trim((string) ($_POST['phone'] ?? ''));
         $subject = trim((string) ($_POST['subject'] ?? ''));
         $message = trim((string) ($_POST['message'] ?? ''));
+
+        // SEC-03: honeypot + límite por IP y correo para evitar spam.
+        $guard = new FormGuardService();
+        $ip = (new RateLimiterService())->getClientIp();
+
+        try {
+            $guard->assertNotHoneypot($_POST);
+        } catch (\InvalidArgumentException) {
+            // Un bot: se simula éxito para no revelar el honeypot.
+            $_SESSION['_flash_success'] = 'Gracias, tu consulta fue enviada.';
+            header('Location: /contacto');
+            exit;
+        }
+
+        try {
+            $guard->assertAllowed('contacto', $ip, $email);
+        } catch (\RuntimeException) {
+            $_SESSION['_flash_error'] = 'Demasiados envíos en poco tiempo. Inténtalo más tarde.';
+            header('Location: /contacto');
+            exit;
+        }
+
+        $guard->record('contacto', $ip, $email);
 
         if ($name === '' || $email === '' || $message === '') {
             $_SESSION['_flash_error'] = 'Por favor complete todos los campos requeridos (nombre, correo y motivo).';

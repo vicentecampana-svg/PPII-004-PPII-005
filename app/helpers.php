@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Database;
+use App\Response;
+use App\Session;
+
 // ══════════════════════════════════════════════
 //  CONFIGURATION
 // ══════════════════════════════════════════════
@@ -25,98 +29,41 @@ function config(?string $key = null, mixed $default = null): mixed
 //  DATABASE — Conexión PDO singleton a PostgreSQL
 // ══════════════════════════════════════════════
 
+// CAL-04: la conexión y las consultas viven en App\Database; estas funciones
+// se conservan como envoltorios para no romper los llamados existentes.
 function db(): PDO
 {
-    static $pdo = null;
-    static $connectionFailed = false;
-
-    if ($connectionFailed) {
-        throw new PDOException('Conexión a base de datos no disponible.');
-    }
-
-    if ($pdo === null) {
-        $db = config('db');
-
-        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s;connect_timeout=2', $db['host'], $db['port'], $db['database']);
-
-        try {
-            $pdo = new PDO($dsn, $db['username'], $db['password'], [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-                PDO::ATTR_TIMEOUT            => 2,
-            ]);
-        } catch (PDOException $e) {
-            $connectionFailed = true;
-            throw $e;
-        }
-    }
-
-    return $pdo;
+    return Database::connection();
 }
 
 function dbQuery(string $sql, array $params = []): PDOStatement
 {
-    $params = array_map(fn($v) => is_bool($v) ? ($v ? 'true' : 'false') : $v, $params);
-    $stmt = db()->prepare($sql);
-    $stmt->execute($params);
-    return $stmt;
+    return Database::query($sql, $params);
 }
 
 function dbFetchOne(string $sql, array $params = []): ?array
 {
-    $row = dbQuery($sql, $params)->fetch();
-    return $row ?: null;
+    return Database::fetchOne($sql, $params);
 }
 
 function dbFetchAll(string $sql, array $params = []): array
 {
-    return dbQuery($sql, $params)->fetchAll();
+    return Database::fetchAll($sql, $params);
 }
 
 function dbInsert(string $table, array $data): int
 {
-    $columns = implode(', ', array_keys($data));
-    $placeholders = implode(', ', array_fill(0, count($data), '?'));
-    $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders}) RETURNING id";
-    return (int) dbQuery($sql, array_values($data))->fetchColumn();
+    return Database::insert($table, $data);
 }
 
 function dbUpdate(string $table, array $data, string $where, array $whereParams = []): int
 {
-    // PDO no admite mezclar placeholders "?" y ":nombre" en una misma consulta,
-    // así que el SET usa el mismo estilo que el WHERE recibido ('id = ?' o 'id = :id').
-    $params = [];
-    $setParts = [];
-    foreach ($data as $col => $val) {
-        $placeholder = 'set_' . str_replace(['-', '.'], '_', $col);
-        $setParts[] = "{$col} = :{$placeholder}";
-        $params[$placeholder] = $val;
-    }
-
-    $whereIndex = 0;
-    $positionalWhereParams = [];
-    $where = preg_replace_callback('/\?/', function () use (&$whereIndex, &$positionalWhereParams, $whereParams): string {
-        $placeholder = 'where_' . $whereIndex;
-        $positionalWhereParams[$placeholder] = array_values($whereParams)[$whereIndex] ?? null;
-        $whereIndex++;
-        return ':' . $placeholder;
-    }, $where);
-
-    if ($whereIndex > 0) {
-        $params = array_merge($params, $positionalWhereParams);
-    } else {
-        $params = array_merge($params, $whereParams);
-    }
-
-    $set = implode(', ', $setParts);
-    $sql = "UPDATE {$table} SET {$set} WHERE {$where}";
-    return dbQuery($sql, $params)->rowCount();
+    return Database::update($table, $data, $where, $whereParams);
 }
 
 function dbDelete(string $table, string $where, array $params = []): int
 {
-    return dbQuery("DELETE FROM {$table} WHERE {$where}", $params)->rowCount();
+    return Database::delete($table, $where, $params);
 }
 
 // ══════════════════════════════════════════════
@@ -134,12 +81,26 @@ function sendSecurityHeaders(): void
 {
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: SAMEORIGIN');
-    header('X-XSS-Protection: 1; mode=block');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
 
+    // SEC-05: Content-Security-Policy. Se permiten orígenes externos solo
+    // para las fuentes de Google; el resto del contenido debe provenir del
+    // propio origen. `unsafe-inline` se mantiene porque el layout aún incluye
+    // scripts y estilos en línea (ver views/layout/footer.php y views/credits.php).
+    $csp = "default-src 'self'; "
+        . "script-src 'self' 'unsafe-inline'; "
+        . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        . "font-src 'self' https://fonts.gstatic.com; "
+        . "img-src 'self' data:; "
+        . "connect-src 'self'; "
+        . "frame-ancestors 'none'; "
+        . "base-uri 'self'; "
+        . "form-action 'self'";
+    header('Content-Security-Policy: ' . $csp);
+
     if (isHttps()) {
-        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+        header('Strict-Transport-Security: max-age=31557600; includeSubDomains');
     }
 }
 
@@ -172,138 +133,51 @@ function handleCors(): void
 //  SESSION / AUTH
 // ══════════════════════════════════════════════
 
+// CAL-04: la sesión y la autenticación viven en App\Session; estas funciones
+// se conservan como envoltorios para no romper los llamados existentes.
 function sessionStart(): void
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        $secure = isHttps();
-        session_set_cookie_params([
-            'lifetime' => 0,
-            'path'     => '/',
-            'domain'   => '',
-            'secure'   => $secure,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-        ini_set('session.use_strict_mode', '1');
-        ini_set('session.use_only_cookies', '1');
-        session_start();
-    }
-
-    enforceSessionIdleTimeout();
-
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
+    Session::start();
 }
 
-/**
- * IU-002 / RNF-SEC-004: las sesiones autenticadas del panel expiran a los
- * 15 minutos de inactividad y deben autenticarse nuevamente.
- *
- * Si `_last_activity` no existe (sesión creada antes de este rasgo o test
- * que autentica la sesión a mano), se inicializa para otorgar gracia en vez
- * de expirar; la expiración real solo ocurre con un timestamp vencido.
- */
 function enforceSessionIdleTimeout(): void
 {
-    if (!isset($_SESSION['user_id'])) {
-        return;
-    }
-
-    $timeout = (int) config('session.idle_timeout_seconds', 900);
-    $last    = $_SESSION['_last_activity'] ?? null;
-
-    if ($last === null) {
-        $_SESSION['_last_activity'] = time();
-        return;
-    }
-
-    if (time() - (int) $last > $timeout) {
-        $_SESSION = [];
-        session_regenerate_id(true);
-        $_SESSION['_session_expired'] = true;
-    } else {
-        $_SESSION['_last_activity'] = time();
-    }
+    Session::enforceIdleTimeout();
 }
 
 function authCheck(): bool
 {
-    sessionStart();
-    return isset($_SESSION['user_id']);
+    return Session::check();
 }
 
 function authUser(): ?array
 {
-    sessionStart();
-    if (!authCheck()) {
-        return null;
-    }
-    return [
-        'id'                   => $_SESSION['user_id'],
-        'username'             => $_SESSION['username'],
-        'role_id'              => $_SESSION['role_id'],
-        'role_name'            => $_SESSION['role_name'],
-        'must_change_password' => $_SESSION['must_change_password'] ?? false,
-    ];
+    return Session::user();
 }
 
 function authLogin(int $userId, string $username, int $roleId, string $roleName, bool $mustChangePassword = false): void
 {
-    sessionStart();
-    session_regenerate_id(true);
-    $_SESSION['user_id'] = $userId;
-    $_SESSION['username'] = $username;
-    $_SESSION['role_id'] = $roleId;
-    $_SESSION['role_name'] = $roleName;
-    $_SESSION['must_change_password'] = $mustChangePassword;
-    $_SESSION['_last_activity'] = time();
+    Session::login($userId, $username, $roleId, $roleName, $mustChangePassword);
 }
 
 function authLogout(): void
 {
-    sessionStart();
-    $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
-        $params = session_get_cookie_params();
-        setcookie(
-            session_name(),
-            '',
-            time() - 42000,
-            $params['path'],
-            $params['domain'],
-            $params['secure'],
-            $params['httponly']
-        );
-    }
-    session_destroy();
-    session_start();
-    session_regenerate_id(true);
+    Session::logout();
 }
 
 function authHasRole(string ...$roles): bool
 {
-    $user = authUser();
-    return $user !== null && in_array($user['role_name'], $roles, true);
+    return Session::hasRole(...$roles);
 }
 
 function authMustChangePassword(): bool
 {
-    sessionStart();
-    return !empty($_SESSION['must_change_password']);
+    return Session::mustChangePassword();
 }
 
-/**
- * Token CSRF para formularios HTML y API. Se genera por sesión
- * y mwCsrf() lo valida en cada petición mutante (POST, PUT, PATCH, DELETE).
- */
 function csrfToken(): string
 {
-    sessionStart();
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
+    return Session::csrfToken();
 }
 
 // ══════════════════════════════════════════════
@@ -408,67 +282,61 @@ function mwForcePasswordChange(): void
 //  RESPONSE — JSON API
 // ══════════════════════════════════════════════
 
+// CAL-04: las respuestas viven en App\Response; estas funciones se conservan
+// como envoltorios para no romper los llamados existentes.
 function respJson(mixed $data, int $statusCode = 200): never
 {
-    http_response_code($statusCode);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit;
+    Response::json($data, $statusCode);
 }
 
 function respSuccess(mixed $data = null, int $statusCode = 200): never
 {
-    respJson(['success' => true, 'data' => $data], $statusCode);
+    Response::success($data, $statusCode);
 }
 
 function respCreated(mixed $data = null): never
 {
-    respSuccess($data, 201);
+    Response::created($data);
 }
 
 function respNoContent(): never
 {
-    http_response_code(204);
-    exit;
+    Response::noContent();
 }
 
 function respError(string $code, string $message, int $statusCode = 400, ?array $details = null): never
 {
-    $payload = ['success' => false, 'error' => ['code' => $code, 'message' => $message]];
-    if ($details !== null) {
-        $payload['error']['details'] = $details;
-    }
-    respJson($payload, $statusCode);
+    Response::error($code, $message, $statusCode, $details);
 }
 
 function respBadRequest(string|array $message = 'Solicitud inválida'): never
 {
-    respError('BAD_REQUEST', is_string($message) ? $message : 'Solicitud inválida', 400, is_array($message) ? $message : null);
+    Response::badRequest($message);
 }
 
 function respUnauthorized(string|array $message = 'No autenticado'): never
 {
-    respError('UNAUTHORIZED', is_string($message) ? $message : 'No autenticado', 401, is_array($message) ? $message : null);
+    Response::unauthorized($message);
 }
 
 function respForbidden(string|array $message = 'Acceso denegado'): never
 {
-    respError('FORBIDDEN', is_string($message) ? $message : 'Acceso denegado', 403, is_array($message) ? $message : null);
+    Response::forbidden($message);
 }
 
 function respNotFound(string|array $message = 'Recurso no encontrado'): never
 {
-    respError('NOT_FOUND', is_string($message) ? $message : 'Recurso no encontrado', 404, is_array($message) ? $message : null);
+    Response::notFound($message);
 }
 
 function respUnprocessable(array $errors): never
 {
-    respJson(['success' => false, 'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Error de validación', 'details' => $errors]], 422);
+    Response::unprocessable($errors);
 }
 
 function respServerError(string $message = 'Error interno del servidor'): never
 {
-    respError('SERVER_ERROR', $message, 500);
+    Response::serverError($message);
 }
 
 // ══════════════════════════════════════════════

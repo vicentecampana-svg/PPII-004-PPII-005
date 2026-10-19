@@ -202,7 +202,9 @@ class MediaService
     private function ensureDirectoryExists(): void
     {
         if (!is_dir($this->uploadDir)) {
-            @mkdir($this->uploadDir, 0777, true);
+            // SEC-07: 0755 basta para que el servidor web sirva los archivos;
+            // 0777 expone el directorio a escritura por cualquier usuario.
+            @mkdir($this->uploadDir, 0755, true);
         }
     }
 }
