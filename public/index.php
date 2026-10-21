@@ -68,7 +68,7 @@ function matchRoute(string $routePath, string $uri): ?array
     foreach ($routeParts as $i => $part) {
         if (preg_match('/^\{(\w+)\}$/', $part, $matches)) {
             $value = $uriParts[$i];
-            $params[$matches[1]] = is_numeric($value) ? (int) $value : $value;
+            $params[$matches[1]] = ($matches[1] === 'id' && is_numeric($value)) ? (int) $value : $value;
         } elseif ($part !== $uriParts[$i]) {
             return null;
         }
@@ -108,8 +108,12 @@ $routes = [
         '/admin'                        => [['App\Controllers\AdminController', 'index'],              ['auth', 'force_password_change']],
         '/logout'                       => [['App\Controllers\LogoutController', 'logout'],            []],
         '/cambiar-password'             => [['App\Controllers\PasswordController', 'show'],            ['auth']],
+        '/cambiar_password'             => [['App\Controllers\PasswordController', 'show'],            ['auth']],
+        '/cambiar-contrasena'           => [['App\Controllers\PasswordController', 'show'],            ['auth']],
         '/recuperar-password'           => [['App\Controllers\PasswordRecoveryController', 'showRequest'],  ['guest']],
-        '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'showReset'],    ['guest']],
+        '/recuperar_password'           => [['App\Controllers\PasswordRecoveryController', 'showRequest'],  ['guest']],
+        '/restablecer-password'         => [['App\Controllers\PasswordRecoveryController', 'showReset'],    []],
+        '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'showReset'],    []],
         '/api/auth/me'             => [['App\Controllers\AuthController', 'me'],             ['auth']],
         '/api/news'                => [['App\Controllers\NewsController', 'index'],           []],
         '/api/news/{id}'           => [['App\Controllers\NewsController', 'show'],            []],
@@ -138,8 +142,12 @@ $routes = [
         '/api/credits/contact'          => [['App\Controllers\CreditsApiController', 'contact'],           []],
         '/logout'                       => [['App\Controllers\LogoutController', 'logout'],                []],
         '/cambiar-password'             => [['App\Controllers\PasswordController', 'submit'],              ['auth', 'csrf']],
+        '/cambiar_password'             => [['App\Controllers\PasswordController', 'submit'],              ['auth', 'csrf']],
+        '/cambiar-contrasena'           => [['App\Controllers\PasswordController', 'submit'],              ['auth', 'csrf']],
         '/recuperar-password'           => [['App\Controllers\PasswordRecoveryController', 'submitRequest'], ['guest', 'csrf']],
-        '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'submitReset'],  ['guest', 'csrf']],
+        '/recuperar_password'           => [['App\Controllers\PasswordRecoveryController', 'submitRequest'], ['guest', 'csrf']],
+        '/restablecer-password'         => [['App\Controllers\PasswordRecoveryController', 'submitReset'],  ['csrf']],
+        '/restablecer-password/{token}' => [['App\Controllers\PasswordRecoveryController', 'submitReset'],  ['csrf']],
 
         '/admin/proyectos'         => [['App\Controllers\AdminController', 'saveProject'],    ['auth', 'csrf']],
         '/admin/proyectos/delete'  => [['App\Controllers\AdminController', 'deleteProject'],  ['auth', 'csrf']],

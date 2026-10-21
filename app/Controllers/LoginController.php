@@ -103,6 +103,18 @@ final class LoginController extends Controller
             (bool) $user['must_change_password']
         );
 
+        if (!empty($user['must_change_password'])) {
+            header('Location: /cambiar-password');
+            exit;
+        }
+
+        $intended = $_SESSION['_intended_url'] ?? null;
+        unset($_SESSION['_intended_url']);
+        if ($intended && !str_starts_with($intended, '/login') && !str_starts_with($intended, '/logout')) {
+            header('Location: ' . $intended);
+            exit;
+        }
+
         header('Location: /admin');
         exit;
     }

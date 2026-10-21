@@ -52,7 +52,7 @@ final class PasswordController extends Controller
             'errors'          => $_SESSION['_password_errors'] ?? [],
             'success'         => $_SESSION['_password_success'] ?? null,
             'user'            => authUser(),
-            'enlacesFooter'   => $footer['links'],
+            'enlacesFooter'   => $footer['links'] ?? [],
             'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
 
@@ -78,7 +78,7 @@ final class PasswordController extends Controller
 
         if ($currentPassword === '') {
             $errors['current_password'] = 'Debes ingresar tu contraseña actual.';
-        } elseif (!password_verify($currentPassword, $user['password'])) {
+        } elseif (!password_verify($currentPassword, (string) ($user['password'] ?? ''))) {
             $errors['current_password'] = 'La contraseña actual es incorrecta.';
         }
 
@@ -97,15 +97,23 @@ final class PasswordController extends Controller
             return;
         }
 
-        $this->userService->update($userId, [
-            'password'             => $newPassword,
-            'must_change_password' => false,
-        ]);
+        try {
+            $this->userService->update($userId, [
+                'password'             => $newPassword,
+                'must_change_password' => false,
+            ]);
 
-        $_SESSION['must_change_password'] = false;
-        $this->audit->log($userId, 'cambiar_password', 'user', $userId, 'Contraseña cambiada por el usuario');
+            $_SESSION['must_change_password'] = false;
+            $this->audit->log($userId, 'cambiar_password', 'user', $userId, 'Contraseña cambiada por el usuario');
 
-        $_SESSION['_password_success'] = 'Contraseña actualizada correctamente.';
-        $this->redirect('/admin');
+            $_SESSION['_password_success'] = 'Contraseña actualizada correctamente.';
+            $this->redirect('/admin');
+        } catch (\App\Exceptions\ValidationException $e) {
+            $_SESSION['_password_errors'] = $e->getErrors();
+            $this->redirect('/cambiar-password');
+        } catch (\Throwable $e) {
+            $_SESSION['_password_errors'] = ['general' => 'Ocurrió un error al actualizar la contraseña. Intente nuevamente.'];
+            $this->redirect('/cambiar-password');
+        }
     }
 }

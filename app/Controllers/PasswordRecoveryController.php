@@ -98,8 +98,15 @@ final class PasswordRecoveryController extends Controller
     //  GET /restablecer-password/{token}
     // ──────────────────────────────────────────────
 
-    public function showReset(string $token): void
+    public function showReset(?string $token = null): void
     {
+        $token = $token ?? (string) ($_GET['token'] ?? '');
+        if ($token === '') {
+            $_SESSION['_recovery_errors'] = ['general' => 'El enlace de recuperación es inválido o no incluye el token.'];
+            header('Location: /recuperar-password');
+            exit;
+        }
+
         $tokenRow = $this->resetService->findValidToken($token);
 
         if (!$tokenRow) {
@@ -127,8 +134,15 @@ final class PasswordRecoveryController extends Controller
     //  POST /restablecer-password/{token}
     // ──────────────────────────────────────────────
 
-    public function submitReset(string $token): void
+    public function submitReset(?string $token = null): void
     {
+        $token = $token ?? (string) ($_POST['token'] ?? $_GET['token'] ?? '');
+        if ($token === '') {
+            $_SESSION['_recovery_errors'] = ['general' => 'El enlace de recuperación es inválido o no incluye el token.'];
+            header('Location: /recuperar-password');
+            exit;
+        }
+
         $newPassword     = (string) ($_POST['new_password']     ?? '');
         $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
 
@@ -157,6 +171,7 @@ final class PasswordRecoveryController extends Controller
             exit;
         }
 
+        authLogout();
         $_SESSION['_login_flash_success'] = 'Contraseña restablecida correctamente. Ya puedes iniciar sesión.';
         header('Location: /login');
         exit;

@@ -145,4 +145,62 @@ final class PasswordControllerTest extends TestCase
 
         $this->assertSame('/login', $this->redirectedTo);
     }
+
+    public function testSubmitFailsSafelyWhenUserPasswordHashIsNullWithoutThrowingTypeError(): void
+    {
+        $this->authenticateUser(42, 'test.user');
+
+        $_POST = [
+            'current_password' => 'AnyPassword123!',
+            'new_password'     => 'NewSecurePassword456!',
+            'confirm_password' => 'NewSecurePassword456!',
+        ];
+
+        $this->userRepo->expects($this->once())
+            ->method('findWithPasswordById')
+            ->with(42)
+            ->willReturn([
+                'id'       => 42,
+                'username' => 'test.user',
+                'password' => null,
+            ]);
+
+        $this->userService->expects($this->never())->method('update');
+
+        $controller = $this->createController();
+        $controller->submit();
+
+        $this->assertSame('/cambiar-password', $this->redirectedTo);
+        $this->assertSame('La contraseña actual es incorrecta.', $_SESSION['_password_errors']['current_password'] ?? '');
+    }
+
+    public function testSubmitHandlesUpdateExceptionWithoutThrowingFatalError(): void
+    {
+        $this->authenticateUser(42, 'test.user');
+
+        $_POST = [
+            'current_password' => 'CurrentValidPass123!',
+            'new_password'     => 'NewSecurePassword456!',
+            'confirm_password' => 'NewSecurePassword456!',
+        ];
+
+        $this->userRepo->expects($this->once())
+            ->method('findWithPasswordById')
+            ->with(42)
+            ->willReturn([
+                'id'       => 42,
+                'username' => 'test.user',
+                'password' => password_hash('CurrentValidPass123!', PASSWORD_DEFAULT),
+            ]);
+
+        $this->userService->expects($this->once())
+            ->method('update')
+            ->willThrowException(new \RuntimeException('Database connection lost'));
+
+        $controller = $this->createController();
+        $controller->submit();
+
+        $this->assertSame('/cambiar-password', $this->redirectedTo);
+        $this->assertSame('Ocurrió un error al actualizar la contraseña. Intente nuevamente.', $_SESSION['_password_errors']['general'] ?? '');
+    }
 }

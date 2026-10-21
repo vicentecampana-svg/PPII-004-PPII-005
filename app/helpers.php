@@ -363,6 +363,10 @@ function mwAuth(): void
         if (isApiRequest()) {
             respUnauthorized();
         }
+        $targetUri = $_SERVER['REQUEST_URI'] ?? '';
+        if ($targetUri !== '' && !str_starts_with($targetUri, '/login') && !str_starts_with($targetUri, '/logout')) {
+            $_SESSION['_intended_url'] = $targetUri;
+        }
         header('Location: /login');
         exit;
     }
@@ -400,7 +404,8 @@ function mwForcePasswordChange(): void
     if (authCheck() && authMustChangePassword()) {
         $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
         $uri = rtrim($uri, '/') ?: '/';
-        if ($uri !== '/cambiar-password' && $uri !== '/logout') {
+        $allowed = ['/cambiar-password', '/cambiar_password', '/cambiar-contrasena', '/logout'];
+        if (!in_array($uri, $allowed, true)) {
             if (isApiRequest()) {
                 respError('PASSWORD_CHANGE_REQUIRED', 'Debe cambiar su contraseña.', 403);
             }
