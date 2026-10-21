@@ -363,13 +363,39 @@ function mwAuth(): void
         if (isApiRequest()) {
             respUnauthorized();
         }
-        $targetUri = $_SERVER['REQUEST_URI'] ?? '';
-        if ($targetUri !== '' && !str_starts_with($targetUri, '/login') && !str_starts_with($targetUri, '/logout')) {
+        $targetUri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+        $isGet = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET';
+        if ($isGet && isSafeIntendedUrl($targetUri)) {
             $_SESSION['_intended_url'] = $targetUri;
         }
         header('Location: /login');
         exit;
     }
+}
+
+/**
+ * Indica si una URL puede usarse como destino posterior al login
+ * (`_intended_url`): solo rutas internas absolutas, nunca /login, /logout
+ * ni URLs externas o protocol-relative (//host, /\host) para evitar open redirect.
+ */
+function isSafeIntendedUrl(?string $url): bool
+{
+    if ($url === null || $url === '' || $url[0] !== '/') {
+        return false;
+    }
+
+    if (str_starts_with($url, '//') || str_contains($url, '\\') || preg_match('/[\x00-\x1F\x7F]/', $url)) {
+        return false;
+    }
+
+    $path = parse_url($url, PHP_URL_PATH);
+    if (!is_string($path)) {
+        return false;
+    }
+
+    $path = rtrim($path, '/') ?: '/';
+
+    return !in_array($path, ['/login', '/logout'], true);
 }
 
 function mwGuest(): void

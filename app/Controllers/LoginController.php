@@ -103,14 +103,17 @@ final class LoginController extends Controller
             (bool) $user['must_change_password']
         );
 
+        // Con cambio de contraseña obligatorio se descarta la URL pretendida:
+        // el cambio exitoso devuelve al usuario al panel por /admin.
         if (!empty($user['must_change_password'])) {
+            unset($_SESSION['_intended_url']);
             header('Location: /cambiar-password');
             exit;
         }
 
         $intended = $_SESSION['_intended_url'] ?? null;
         unset($_SESSION['_intended_url']);
-        if ($intended && !str_starts_with($intended, '/login') && !str_starts_with($intended, '/logout')) {
+        if (isSafeIntendedUrl(is_string($intended) ? $intended : null)) {
             header('Location: ' . $intended);
             exit;
         }

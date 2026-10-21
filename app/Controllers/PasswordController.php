@@ -107,6 +107,8 @@ final class PasswordController extends Controller
             $this->audit->log($userId, 'cambiar_password', 'user', $userId, 'Contraseña cambiada por el usuario');
 
             $_SESSION['_password_success'] = 'Contraseña actualizada correctamente.';
+            // /admin muestra el aviso desde _flash_success (AdminController::index).
+            $_SESSION['_flash_success'] = 'Contraseña actualizada correctamente.';
             $this->redirect('/admin');
         } catch (\App\Exceptions\ValidationException $e) {
             $_SESSION['_password_errors'] = $e->getErrors();

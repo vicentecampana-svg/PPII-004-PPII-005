@@ -100,6 +100,7 @@ final class PasswordControllerTest extends TestCase
         $this->assertSame('/admin', $this->redirectedTo);
         $this->assertFalse($_SESSION['must_change_password']);
         $this->assertSame('Contraseña actualizada correctamente.', $_SESSION['_password_success']);
+        $this->assertSame('Contraseña actualizada correctamente.', $_SESSION['_flash_success']);
         $this->assertEmpty($_SESSION['_password_errors'] ?? []);
     }
 

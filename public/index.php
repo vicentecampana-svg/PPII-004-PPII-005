@@ -48,8 +48,9 @@ function handle(array $route): void
     $controller = new $class();
 
     if (isset($route['params'])) {
-        $params = array_map(fn($v) => is_numeric($v) ? (int) $v : $v, $route['params']);
-        $controller->$action(...$params);
+        // matchRoute() ya tipa `id` como int; el resto (ej. {token}) debe seguir
+        // siendo string, de lo contrario un token numérico daría TypeError.
+        $controller->$action(...$route['params']);
     } else {
         $controller->$action();
     }
