@@ -62,6 +62,15 @@ $roleClass = match ($roleNormalized) {
           <span class="admin-role-badge <?= $roleClass ?>"><?= e($roleName) ?></span>
         </div>
       </div>
+      <div class="admin-header-actions">
+        <a href="/cambiar-password" class="admin-btn-logout admin-btn-password">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          Cambiar contraseña
+        </a>
+      </div>
     </div>
 
     <!-- Barra de Pestañas (Tabs según Mockup) -->

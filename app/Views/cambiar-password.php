@@ -5,9 +5,10 @@ declare(strict_types=1);
 /**
  * @var string $csrfToken
  * @var array $errors
- * @var string|null $success
+ * @var bool $forced  true si el usuario debe cambiar la contraseña obligatoriamente.
  */
 $errors ??= [];
+$forced ??= false;
 ?>
 <section class="login-section">
   <form class="login-card" method="post" action="/cambiar-password" novalidate>
@@ -18,12 +19,6 @@ $errors ??= [];
 
     <?php if (!empty($errors['general'])) : ?>
       <p class="form-error" role="alert" aria-live="assertive"><?= e($errors['general']) ?></p>
-    <?php endif; ?>
-
-    <?php if (!empty($success)) : ?>
-      <p role="status" aria-live="polite" class="alert-flash-success">
-        <?= e($success) ?>
-      </p>
     <?php endif; ?>
 
     <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
@@ -71,5 +66,9 @@ $errors ??= [];
     </div>
 
     <button type="submit" class="btn btn-destructive">Guardar contraseña</button>
+
+    <?php if (!$forced) : ?>
+      <p class="form-footer-link"><a href="/admin">Volver al panel</a></p>
+    <?php endif; ?>
   </form>
 </section>

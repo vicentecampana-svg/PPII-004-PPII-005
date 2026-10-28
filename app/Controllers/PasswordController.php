@@ -35,19 +35,21 @@ final class PasswordController extends Controller
             'metaDescription' => 'Cambio de contraseña para usuarios de SFL ULS Lab.',
             'csrfToken'       => csrfToken(),
             'errors'          => $_SESSION['_password_errors'] ?? [],
-            'success'         => $_SESSION['_password_success'] ?? null,
             'user'            => authUser(),
+            'forced'          => authMustChangePassword(),
             'enlacesFooter'   => $footer['links'],
             'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
 
-        unset($_SESSION['_password_errors'], $_SESSION['_password_success']);
+        unset($_SESSION['_password_errors']);
     }
 
     public function submit(): void
     {
         $userId = (int) (authUser()['id'] ?? 0);
-        $user = $this->userRepo->findById($userId);
+        // findById() omite el hash a propósito; para verificar la contraseña
+        // actual se necesita la variante que sí lo incluye.
+        $user = $this->userRepo->findWithPasswordById($userId);
 
         if (!$user) {
             authLogout();
@@ -90,7 +92,8 @@ final class PasswordController extends Controller
         $_SESSION['must_change_password'] = false;
         $this->audit->log($userId, 'cambiar_password', 'user', $userId, 'Contraseña cambiada por el usuario');
 
-        $_SESSION['_password_success'] = 'Contraseña actualizada correctamente.';
+        // Se redirige al panel, que solo muestra los mensajes de _flash_success.
+        $_SESSION['_flash_success'] = 'Contraseña actualizada correctamente.';
         header('Location: /admin');
         exit;
     }

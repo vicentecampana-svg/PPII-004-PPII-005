@@ -107,6 +107,12 @@ textarea {
   color: var(--destructive);
 }
 
+/* Acceso a /cambiar-password: misma forma que el botón de salida, sin el rojo de acción destructiva. */
+.admin-btn-password:hover,
+.admin-btn-password:focus-visible {
+  color: var(--brand);
+}
+
 /* ══════════════════════════════════════════════
    BARRA DE PESTAÑAS (TABS)
    ══════════════════════════════════════════════ */
