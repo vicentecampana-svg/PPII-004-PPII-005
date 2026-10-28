@@ -59,16 +59,18 @@ $sessionExpired ??= false;
     </div>
 
     <div class="field">
-      <label for="captcha">Código de seguridad</label>
+      <div class="captcha-label-row">
+        <label for="captcha">Código de seguridad</label>
+        <button type="button" class="captcha-reload-btn" id="captcha-reload-btn"
+                aria-label="Recargar código de seguridad CAPTCHA" title="Recargar código"
+                onclick="document.getElementById('captcha-img').src='/captcha?' + Date.now()">
+          <span aria-hidden="true">⟳</span>
+        </button>
+      </div>
       <div class="captcha-box">
         <img src="/captcha" alt="Código de seguridad CAPTCHA" id="captcha-img" class="captcha-img"
              title="Haz clic para recargar el código"
              onclick="this.src='/captcha?' + Date.now()">
-        <button type="button" class="captcha-reload-btn" id="captcha-reload-btn"
-                aria-label="Recargar código de seguridad CAPTCHA"
-                onclick="document.getElementById('captcha-img').src='/captcha?' + Date.now()">
-          Recargar
-        </button>
       </div>
       <input
         type="text" id="captcha" name="captcha"

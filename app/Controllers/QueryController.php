@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\CaptchaService;
 use App\Services\FormGuardService;
 use App\Services\QueryService;
 use App\Services\RateLimiterService;
@@ -24,14 +25,29 @@ class QueryController
     public function store(): void
     {
         $data = getJsonInput();
-
-        // SEC-03: límite por IP y correo para evitar spam de consultas.
         $ip = $this->rateLimiter->getClientIp();
         $email = trim((string) ($data['email'] ?? ''));
 
+        // SEC-10: mismas defensas que el formulario de contacto (CSRF en la
+        // ruta, honeypot y CAPTCHA), para que no sirva de entrada alternativa
+        // a un bot.
+        try {
+            $this->guard->assertNotHoneypot($data);
+        } catch (\InvalidArgumentException) {
+            $this->guard->recordRejection('api_queries', FormGuardService::REJECT_HONEYPOT, $ip, $email);
+            respCreated(null);
+        }
+
+        if (!(new CaptchaService())->validate((string) ($data['captcha'] ?? ''))) {
+            $this->guard->recordRejection('api_queries', FormGuardService::REJECT_CAPTCHA, $ip, $email);
+            respError('INVALID_CAPTCHA', 'El código de seguridad (CAPTCHA) es incorrecto o ha expirado.', 422);
+        }
+
+        // SEC-03: límite por IP y correo para evitar spam de consultas.
         try {
             $this->guard->assertAllowed('api_queries', $ip, $email);
         } catch (\RuntimeException) {
+            $this->guard->recordRejection('api_queries', FormGuardService::REJECT_LIMIT, $ip, $email);
             respError('TOO_MANY_REQUESTS', 'Demasiados envíos en poco tiempo. Inténtalo más tarde.', 429);
             return;
         }

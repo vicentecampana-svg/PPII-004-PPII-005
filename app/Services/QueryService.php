@@ -11,19 +11,16 @@ class QueryService
 {
     private QueryRepository $repo;
     private AuditService $audit;
-    private MailerService $mailer;
-    private FooterService $footer;
+    private ContactDigestService $digest;
 
     public function __construct(
         ?QueryRepository $repo = null,
         ?AuditService $audit = null,
-        ?MailerService $mailer = null,
-        ?FooterService $footer = null
+        ?ContactDigestService $digest = null
     ) {
         $this->repo   = $repo   ?? new QueryRepository();
         $this->audit  = $audit  ?? new AuditService();
-        $this->mailer = $mailer ?? new MailerService();
-        $this->footer = $footer ?? new FooterService();
+        $this->digest = $digest ?? new ContactDigestService($this->repo);
     }
 
     public function getAll(int $page, int $perPage): array
@@ -66,8 +63,7 @@ class QueryService
 
         $this->audit->log(null, 'crear', 'contact_request', $id, 'Consulta recibida de: ' . $data['name']);
 
-        $contact = $this->repo->findById($id);
-        $this->notify($contact);
+        $this->notify();
 
         return $this->repo->findById($id);
     }
@@ -110,45 +106,17 @@ class QueryService
     }
 
     /**
-     * Envía una notificación por correo al encargado cuando llega una nueva
-     * consulta de contacto. Un fallo de correo no debe impedir registrar la
-     * consulta, por eso los errores se ignoran aquí.
+     * SEC-09: el encargado recibe un aviso agrupado de las consultas
+     * acumuladas, no un correo por consulta. Un fallo de correo no debe
+     * impedir registrar la consulta, por eso los errores se ignoran aquí.
      */
-    private function notify(array $contact): void
+    private function notify(): void
     {
-        $recipient = $this->resolveNotifyEmail();
-        if ($recipient === '') {
-            return;
-        }
-
         try {
-            $this->mailer->sendContactNotification($recipient, $contact);
-        } catch (\Throwable) {
+            $this->digest->sendIfDue();
+        } catch (\Throwable $e) {
             // La notificación es accesoria; la consulta ya quedó registrada.
+            error_log('[SFL ULS] No se pudo enviar el aviso de consultas: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Resuelve el correo del encargado: primero CONTACT_NOTIFY_EMAIL, luego el
-     * email configurado en el footer y, como último recurso, un correo por defecto.
-     */
-    private function resolveNotifyEmail(): string
-    {
-        $env = getenv('CONTACT_NOTIFY_EMAIL');
-        if ($env !== false && $env !== '' && filter_var($env, FILTER_VALIDATE_EMAIL)) {
-            return $env;
-        }
-
-        try {
-            $footer = $this->footer->getAll();
-            $email = trim((string) ($footer['info']['email'] ?? ''));
-            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return $email;
-            }
-        } catch (\Throwable) {
-            // Si el footer falla, se usa el correo por defecto.
-        }
-
-        return 'contacto@techhub.cl';
     }
 }

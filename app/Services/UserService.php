@@ -39,6 +39,45 @@ class UserService
         return $this->repo->findById($id);
     }
 
+    /**
+     * SEC-12: costo fijo para todos los hashes. Así la verificación tarda lo
+     * mismo para cualquier cuenta, sin depender de la versión de PHP (el
+     * costo por defecto es 10 en PHP 8.2 y 12 desde PHP 8.4).
+     */
+    public const HASH_OPTIONS = ['cost' => 12];
+
+    public static function hashPassword(string $password): string
+    {
+        return password_hash($password, PASSWORD_BCRYPT, self::HASH_OPTIONS);
+    }
+
+    /**
+     * SEC-12: verifica una contraseña contra el hash guardado sin revelar,
+     * por el tiempo de respuesta, si la cuenta existe. Sin hash (correo no
+     * registrado) se calcula igual un hash con el mismo costo, que tarda lo
+     * mismo que la verificación de una contraseña real.
+     */
+    public static function verifyPassword(string $password, ?string $hash): bool
+    {
+        if ($hash === null || $hash === '') {
+            self::hashPassword($password);
+            return false;
+        }
+
+        return password_verify($password, $hash);
+    }
+
+    /**
+     * Tras un inicio de sesión correcto, actualiza el hash si se generó con
+     * otro costo, para que todas las cuentas tarden lo mismo en verificarse.
+     */
+    public function rehashIfNeeded(int $id, string $password, string $hash): void
+    {
+        if (password_needs_rehash($hash, PASSWORD_BCRYPT, self::HASH_OPTIONS)) {
+            $this->repo->update($id, ['password' => self::hashPassword($password)]);
+        }
+    }
+
     public function getByEmail(string $email): ?array
     {
         return $this->repo->findByEmail($email);
@@ -71,7 +110,7 @@ class UserService
         $id = $this->repo->create([
             'username'             => $data['username'],
             'email'                => $data['email'],
-            'password'             => password_hash($data['password'], PASSWORD_DEFAULT),
+            'password'             => self::hashPassword($data['password']),
             'role_id'              => (int) $data['role_id'],
             'active'               => $data['active'] ?? true,
             'must_change_password' => $data['must_change_password'] ?? true,
@@ -115,7 +154,7 @@ class UserService
         }
 
         if (isset($data['password']) && $data['password'] !== '') {
-            $fields['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            $fields['password'] = self::hashPassword($data['password']);
             // RF-AUT-003: quien define una contraseña inicial o la restablece
             // (panel o API) obliga al usuario a cambiarla en el próximo acceso.
             // El cambio propio (PasswordController) envía el flag explícito en false.
@@ -148,7 +187,7 @@ class UserService
         // RF-AUT-003: una contraseña restablecida por el Super Usuario obliga
         // a cambiarla en el próximo inicio de sesión.
         $this->repo->update($id, [
-            'password'             => password_hash($newPassword, PASSWORD_DEFAULT),
+            'password'             => self::hashPassword($newPassword),
             'must_change_password' => true,
         ]);
 
@@ -174,7 +213,7 @@ class UserService
         }
 
         $this->repo->update($id, [
-            'password'             => password_hash($newPassword, PASSWORD_DEFAULT),
+            'password'             => self::hashPassword($newPassword),
             'must_change_password' => false,
         ]);
 

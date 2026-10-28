@@ -47,4 +47,32 @@ class QueryRepository
         $r = dbFetchOne("SELECT COUNT(*) AS t FROM contact_request WHERE status = 'pendiente'");
         return (int) ($r['t'] ?? 0);
     }
+
+    /** SEC-09: consultas aún no incluidas en un aviso al encargado, de la más antigua a la más nueva. */
+    public function findUnnotified(int $limit): array
+    {
+        return dbFetchAll(
+            "SELECT id, name, email, phone, subject, message, sent_at, status
+             FROM contact_request
+             WHERE notified_at IS NULL
+             ORDER BY id
+             LIMIT :limit",
+            ['limit' => $limit]
+        );
+    }
+
+    public function countUnnotified(): int
+    {
+        $r = dbFetchOne("SELECT COUNT(*) AS t FROM contact_request WHERE notified_at IS NULL");
+        return (int) ($r['t'] ?? 0);
+    }
+
+    /** Marca como avisadas las consultas pendientes con id hasta $maxId inclusive. */
+    public function markNotifiedUpTo(int $maxId): int
+    {
+        return dbQuery(
+            "UPDATE contact_request SET notified_at = NOW() WHERE notified_at IS NULL AND id <= :max_id",
+            ['max_id' => $maxId]
+        )->rowCount();
+    }
 }

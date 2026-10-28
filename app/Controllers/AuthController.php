@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\CaptchaService;
+use App\Services\FormGuardService;
 use App\Services\RateLimiterService;
 use App\Services\UserService;
 
@@ -42,19 +43,21 @@ class AuthController
         // en el formulario web. Antes un script podía omitirlo y forzar
         // credenciales sin resolver el desafío.
         if (!$this->captchaService->validate($captcha)) {
+            (new FormGuardService())->recordRejection('api_login', FormGuardService::REJECT_CAPTCHA, $ip, $email);
             respUnprocessable(['captcha' => 'El código de seguridad (CAPTCHA) es obligatorio o ha expirado.']);
             return;
         }
 
         // 2. Verificar bloqueo por límite de intentos
         if ($this->rateLimiter->isBlocked($ip, $email)) {
+            (new FormGuardService())->recordRejection('api_login', FormGuardService::REJECT_LIMIT, $ip, $email);
             respError('TOO_MANY_REQUESTS', 'Demasiados intentos fallidos. Su cuenta o IP ha sido bloqueada temporalmente por 15 minutos.', 429);
             return;
         }
 
         $user = $this->userService->getByEmail($email);
 
-        if (!$user || !password_verify($password, (string) ($user['password'] ?? ''))) {
+        if (!UserService::verifyPassword($password, $user['password'] ?? null)) {
             $this->rateLimiter->recordFailedAttempt($ip, $email);
             respUnauthorized(['general' => 'Credenciales inválidas.']);
             return;
@@ -66,6 +69,7 @@ class AuthController
         }
 
         $this->rateLimiter->recordSuccess($ip, $email);
+        $this->userService->rehashIfNeeded((int) $user['id'], $password, (string) $user['password']);
 
         authLogin(
             (int) $user['id'],

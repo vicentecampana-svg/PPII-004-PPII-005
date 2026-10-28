@@ -339,6 +339,32 @@ function respServerError(string $message = 'Error interno del servidor'): never
     Response::serverError($message);
 }
 
+/**
+ * SEC-12: envía la redirección al navegador y deja que el script siga
+ * ejecutándose. Sirve para que el tiempo de respuesta no dependa del trabajo
+ * posterior (p. ej. enviar un correo solo si la cuenta existe).
+ */
+function respRedirectAndContinue(string $location): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    ignore_user_abort(true);
+
+    header('Location: ' . $location, true, 302);
+    header('Content-Length: 0');
+    header('Connection: close');
+
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    flush();
+
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+}
+
 // ══════════════════════════════════════════════
 //  UTILIDADES
 // ══════════════════════════════════════════════

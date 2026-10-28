@@ -85,12 +85,27 @@ final class PasswordRecoveryController extends Controller
 
         $baseUrl = $this->resolveBaseUrl();
         $ip      = $this->rateLimiter->getClientIp();
-        $this->resetService->requestReset($email, $baseUrl, $ip);
 
         // Siempre mostrar el mismo mensaje, independiente de si el correo existe
         $_SESSION['_recovery_success'] = 'Si el correo está registrado, recibirás un enlace de recuperación en breve.';
         $_SESSION['_recovery_email']   = $email;
-        header('Location: /recuperar-password');
+
+        // El registro (con el cooldown que muestra la página) es igual exista
+        // o no el correo, así que se hace antes de responder.
+        $remaining = $this->resetService->registerRequest($email, $ip);
+
+        // SEC-12: la respuesta sale antes de buscar la cuenta y enviar el
+        // correo. Si no, la respuesta tardaría más cuando la cuenta existe y
+        // revelaría qué correos están registrados.
+        respRedirectAndContinue('/recuperar-password');
+
+        if ($remaining === 0) {
+            try {
+                $this->resetService->sendResetLink($email, $baseUrl);
+            } catch (\Throwable $e) {
+                error_log('[SFL ULS] No se pudo procesar la recuperación de contraseña: ' . $e->getMessage());
+            }
+        }
         exit;
     }
 

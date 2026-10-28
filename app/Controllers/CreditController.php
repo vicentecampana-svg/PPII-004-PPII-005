@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\CaptchaService;
 use App\Services\CreditMemberService;
 use App\Services\CreditsService;
 use App\Services\FormGuardService;
@@ -25,22 +26,26 @@ class CreditController
     private CreditsService $creditsService;
     private FormGuardService $guard;
     private RateLimiterService $rateLimiter;
+    private CaptchaService $captcha;
 
     public function __construct(
         ?CreditMemberService $service = null,
         ?CreditsService $creditsService = null,
         ?FormGuardService $guard = null,
-        ?RateLimiterService $rateLimiter = null
+        ?RateLimiterService $rateLimiter = null,
+        ?CaptchaService $captcha = null
     ) {
         $this->service = $service ?? new CreditMemberService();
         $this->creditsService = $creditsService ?? new CreditsService();
         $this->guard = $guard ?? new FormGuardService();
         $this->rateLimiter = $rateLimiter ?? new RateLimiterService();
+        $this->captcha = $captcha ?? new CaptchaService();
     }
 
     /**
      * POST /api/credits/contact — recepción segura del formulario de contacto
-     * de créditos, con límite por IP y correo (SEC-03).
+     * de créditos: CSRF (en la ruta), honeypot y límite por IP y correo
+     * (SEC-03), y CAPTCHA (SEC-10).
      */
     public function contact(): void
     {
@@ -53,8 +58,22 @@ class CreditController
         $email = trim((string) ($input['email'] ?? ''));
 
         try {
+            $this->guard->assertNotHoneypot($input);
+        } catch (\InvalidArgumentException) {
+            $this->guard->recordRejection('credits_contact', FormGuardService::REJECT_HONEYPOT, $ip, $email);
+            // Un bot: se simula éxito para no revelar el honeypot.
+            respSuccess(['success' => true, 'message' => 'Tu mensaje ha sido enviado exitosamente.']);
+        }
+
+        if (!$this->captcha->validate((string) ($input['captcha'] ?? ''))) {
+            $this->guard->recordRejection('credits_contact', FormGuardService::REJECT_CAPTCHA, $ip, $email);
+            respError('INVALID_CAPTCHA', 'El código de seguridad (CAPTCHA) es incorrecto o ha expirado.', 422);
+        }
+
+        try {
             $this->guard->assertAllowed('credits_contact', $ip, $email);
         } catch (\RuntimeException) {
+            $this->guard->recordRejection('credits_contact', FormGuardService::REJECT_LIMIT, $ip, $email);
             respError('TOO_MANY_REQUESTS', 'Demasiados envíos en poco tiempo. Inténtalo más tarde.', 429);
             return;
         }

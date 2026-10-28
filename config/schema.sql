@@ -80,7 +80,8 @@ CREATE TABLE public.audit_log (
     entity character varying(100) NOT NULL,
     entity_id integer NOT NULL,
     details text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    ip character varying(45) -- SEC-13: IP del cliente; NULL en tareas de consola
 );
 
 
@@ -116,7 +117,8 @@ CREATE TABLE public.contact_request (
     subject character varying(255),
     message text NOT NULL,
     sent_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    status character varying(50) NOT NULL
+    status character varying(50) NOT NULL,
+    notified_at timestamp with time zone -- SEC-09: NULL = aún no incluida en un aviso al encargado
 );
 
 
@@ -931,6 +933,55 @@ CREATE INDEX IF NOT EXISTS idx_form_submission_form_ip
     ON public.form_submission (form, ip, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_form_submission_form_email
     ON public.form_submission (form, LOWER(email), created_at DESC);
+
+
+--
+-- Name: mail_log; Type: TABLE; Schema: public
+-- Issue: SEC-09 — Protección de la cuota del proveedor de correo
+--
+-- Registra cada correo que se intenta enviar (sin destinatario ni contenido)
+-- para aplicar el tope diario de cada ámbito. Ver MailBudgetService.
+--
+CREATE TABLE IF NOT EXISTS public.mail_log (
+    id        BIGSERIAL    PRIMARY KEY,
+    scope     VARCHAR(32)  NOT NULL,
+    delivered BOOLEAN,
+    sent_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mail_log_scope_sent_at
+    ON public.mail_log (scope, sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_contact_request_unnotified
+    ON public.contact_request (id)
+    WHERE notified_at IS NULL;
+
+
+--
+-- Name: form_rejection; Type: TABLE; Schema: public
+-- Issue: SEC-13 — Registro de rechazos para analizar ataques
+--
+-- Envíos rechazados de formularios públicos y del login (honeypot, CAPTCHA
+-- incorrecto o límite de envíos alcanzado), con la IP del cliente.
+--
+CREATE TABLE IF NOT EXISTS public.form_rejection (
+    id         BIGSERIAL    PRIMARY KEY,
+    form       VARCHAR(64)  NOT NULL,
+    reason     VARCHAR(32)  NOT NULL,
+    ip         VARCHAR(45)  NOT NULL,
+    email      VARCHAR(255),
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_form_rejection_created_at
+    ON public.form_rejection (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_form_rejection_ip
+    ON public.form_rejection (ip, created_at DESC);
+
+-- SEC-13: los intentos de login ya no se borran al iniciar sesión.
+CREATE INDEX IF NOT EXISTS idx_login_attempt_ip
+    ON public.login_attempt (ip, attempted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_login_attempt_email
+    ON public.login_attempt (LOWER(email), attempted_at DESC);
 
 
 --

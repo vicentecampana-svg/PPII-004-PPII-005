@@ -1291,10 +1291,17 @@ button.logout-submit:hover {
   background: var(--destructive-dark);
 }
 
+/* Etiqueta del CAPTCHA a la izquierda y botón de recarga a la derecha. */
+.captcha-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
 .captcha-box {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  justify-content: center;
   margin-bottom: 8px;
 }
 
@@ -1309,22 +1316,21 @@ button.logout-submit:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 14px;
-  height: 44px;
-  background: #e2e8f0;
-  color: #1e293b;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius);
-  font-size: 0.85rem;
-  font-weight: 600;
+  flex: 0 0 auto;
+  padding: 0;
+  height: 24px;
+  background: none;
+  color: var(--muted-foreground);
+  border: 0;
+  font-size: 1.1rem;
+  line-height: 1;
   cursor: pointer;
   margin: 0 !important;
-  width: auto !important;
-  transition: background 0.15s ease;
+  width: 24px !important;
 }
 
 .captcha-reload-btn:hover {
-  background: #cbd5e1;
+  color: var(--brand);
 }
 
 .alert-flash-success {

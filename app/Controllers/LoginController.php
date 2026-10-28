@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Services\CaptchaService;
 use App\Services\FooterService;
+use App\Services\FormGuardService;
 use App\Services\RateLimiterService;
 use App\Services\UserService;
 
@@ -63,11 +64,13 @@ final class LoginController extends Controller
 
         // 1. Validar CAPTCHA antes de cualquier consulta a base de datos o contraseña
         if (!$errors && !$this->captchaService->validate($captcha)) {
+            (new FormGuardService())->recordRejection('login', FormGuardService::REJECT_CAPTCHA, $ip, $email);
             $errors['captcha'] = 'El código de seguridad (CAPTCHA) es incorrecto o ha expirado.';
         }
 
         // 2. Verificar bloqueo por límite de intentos
         if (!$errors && $this->rateLimiter->isBlocked($ip, $email)) {
+            (new FormGuardService())->recordRejection('login', FormGuardService::REJECT_LIMIT, $ip, $email);
             $errors['general'] = 'Demasiados intentos fallidos. Su cuenta o dirección IP ha sido bloqueada temporalmente por 15 minutos.';
         }
 
@@ -77,7 +80,7 @@ final class LoginController extends Controller
         if (!$errors) {
             $user = $this->userService->getByEmail($email);
 
-            if (!$user || !password_verify($password, (string) ($user['password'] ?? ''))) {
+            if (!UserService::verifyPassword($password, $user['password'] ?? null)) {
                 $this->rateLimiter->recordFailedAttempt($ip, $email);
                 $errors['general'] = 'Correo o contraseña incorrectos.';
             } elseif (!$user['active']) {
@@ -94,6 +97,7 @@ final class LoginController extends Controller
 
         // Login exitoso: limpiar intentos fallidos y crear sesión
         $this->rateLimiter->recordSuccess($ip, $email);
+        $this->userService->rehashIfNeeded((int) $user['id'], $password, (string) $user['password']);
 
         authLogin(
             (int) $user['id'],
