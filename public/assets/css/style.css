@@ -1426,6 +1426,16 @@ button.logout-submit:hover {
   color: var(--destructive);
 }
 
+/* Validación de contraseñas en el navegador (assets/js/password-policy.js). */
+.field-error-line {
+  display: block;
+}
+
+.field input[aria-invalid="true"],
+.admin-form-input[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
 /* ══════════════════════════════════════════════
    STAFF PAGE
    ══════════════════════════════════════════════ */

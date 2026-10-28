@@ -75,7 +75,7 @@ final class PasswordController extends Controller
         }
 
         if ($newPassword !== $confirmPassword) {
-            $errors['confirm_password'] = 'Las contraseñas no coinciden.';
+            $errors['confirm_password'] = PasswordPolicy::MISMATCH_MESSAGE;
         }
 
         if ($errors) {

@@ -11,7 +11,8 @@ $errors ??= [];
 $forced ??= false;
 ?>
 <section class="login-section">
-  <form class="login-card" method="post" action="/cambiar-password" novalidate>
+  <form class="login-card" method="post" action="/cambiar-password" novalidate
+        <?= \App\Services\PasswordPolicy::clientConfigAttribute() ?>>
     <h1>Cambiar Contraseña</h1>
     <p class="auth-instructions">
       <?= e(\App\Services\PasswordPolicy::hint()) ?>
@@ -44,11 +45,10 @@ $forced ??= false;
         placeholder="Mínimo 12 caracteres" maxlength="120" minlength="12"
         autocomplete="new-password"
         aria-required="true"
+        data-password-new data-error-id="new-password-error"
         <?= !empty($errors['new_password']) ? 'aria-invalid="true" aria-describedby="new-password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['new_password'])) : ?>
-        <p class="field-error" id="new-password-error" role="alert"><?= e($errors['new_password']) ?></p>
-      <?php endif; ?>
+      <p class="field-error" id="new-password-error"<?= empty($errors['new_password']) ? ' hidden' : '' ?>><?= e($errors['new_password'] ?? '') ?></p>
     </div>
 
     <div class="field">
@@ -58,11 +58,10 @@ $forced ??= false;
         placeholder="Repite la nueva contraseña" maxlength="120"
         autocomplete="new-password"
         aria-required="true"
+        data-password-confirm="new_password" data-error-id="confirm-password-error"
         <?= !empty($errors['confirm_password']) ? 'aria-invalid="true" aria-describedby="confirm-password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['confirm_password'])) : ?>
-        <p class="field-error" id="confirm-password-error" role="alert"><?= e($errors['confirm_password']) ?></p>
-      <?php endif; ?>
+      <p class="field-error" id="confirm-password-error"<?= empty($errors['confirm_password']) ? ' hidden' : '' ?>><?= e($errors['confirm_password'] ?? '') ?></p>
     </div>
 
     <button type="submit" class="btn btn-destructive">Guardar contraseña</button>
@@ -72,3 +71,4 @@ $forced ??= false;
     <?php endif; ?>
   </form>
 </section>
+<script src="<?= e(assetUrl('/assets/js/password-policy.js')) ?>" defer></script>
