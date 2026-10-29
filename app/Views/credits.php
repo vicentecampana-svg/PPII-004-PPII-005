@@ -72,6 +72,12 @@ $miembros ??= [];
       <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
       <input type="hidden" name="member_key" id="modal-member-key" value="">
 
+      <!-- Honeypot (SEC-03): invisible para las personas, los bots lo completan -->
+      <div class="form-group hp-field" aria-hidden="true">
+        <label for="contact-website">Sitio web</label>
+        <input type="text" id="contact-website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
       <div class="form-group">
         <label for="contact-name">Tu nombre <span class="required" aria-hidden="true">*</span></label>
         <input type="text" id="contact-name" name="name" required minlength="2" maxlength="150" placeholder="Ej. Juan Pérez" autocomplete="name" aria-required="true">
@@ -85,6 +91,22 @@ $miembros ??= [];
       <div class="form-group">
         <label for="contact-message">Mensaje <span class="required" aria-hidden="true">*</span></label>
         <textarea id="contact-message" name="message" rows="4" required minlength="5" maxlength="5000" placeholder="Escribe tu mensaje o consulta..." aria-required="true"></textarea>
+      </div>
+
+      <!-- SEC-10: CAPTCHA propio de la plataforma; la imagen se carga al abrir la ventana -->
+      <div class="form-group">
+        <div class="captcha-label-row">
+          <label for="contact-captcha">Código de seguridad <span class="required" aria-hidden="true">*</span></label>
+          <button type="button" class="captcha-reload-btn" id="contact-captcha-reload"
+                  aria-label="Recargar código de seguridad CAPTCHA" title="Recargar código">
+            <span aria-hidden="true">⟳</span>
+          </button>
+        </div>
+        <div class="captcha-box">
+          <img alt="Código de seguridad CAPTCHA" id="contact-captcha-img" class="captcha-img"
+               title="Haz clic para recargar el código" width="160" height="48">
+        </div>
+        <input type="text" id="contact-captcha" name="captcha" required maxlength="10" placeholder="Ingresa el código" autocomplete="off" aria-required="true">
       </div>
 
       <div class="credits-modal-actions">
@@ -112,7 +134,19 @@ $miembros ??= [];
     const submitBtn = document.getElementById('modal-submit-btn');
     const submitText = document.getElementById('submit-text');
     const submitSpinner = document.getElementById('submit-spinner');
+    const captchaImg = document.getElementById('contact-captcha-img');
+    const captchaInput = document.getElementById('contact-captcha');
     let lastActiveElement = null;
+
+    // Cada código sirve para un solo intento, así que se pide uno nuevo al
+    // abrir la ventana y después de cada envío.
+    function reloadCaptcha() {
+      captchaImg.src = '/captcha?' + Date.now();
+      captchaInput.value = '';
+    }
+
+    captchaImg.addEventListener('click', reloadCaptcha);
+    document.getElementById('contact-captcha-reload').addEventListener('click', reloadCaptcha);
 
     function openModal(memberKey, memberName, memberRole, triggeringElement) {
       lastActiveElement = triggeringElement || document.activeElement;
@@ -123,6 +157,7 @@ $miembros ??= [];
       alertError.classList.add('is-hidden');
       form.reset();
       memberKeyInput.value = memberKey;
+      reloadCaptcha();
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -203,13 +238,16 @@ $miembros ??= [];
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-CSRF-Token': form.elements.csrf_token.value
           },
           body: JSON.stringify({
             member_key: memberKey,
             name: name,
             email: email,
-            message: message
+            message: message,
+            website: form.elements.website.value,
+            captcha: captchaInput.value.trim()
           })
         });
 
@@ -223,7 +261,10 @@ $miembros ??= [];
             closeModal();
           }, 2000);
         } else {
-          const errMsg = data.error?.message || 'No se pudo enviar el mensaje. Verifica los datos.';
+          // 403: el token CSRF ya no coincide (la sesión expiró por inactividad).
+          const errMsg = response.status === 403
+            ? 'La página expiró por inactividad. Recárgala e inténtalo nuevamente.'
+            : (data.error?.message || 'No se pudo enviar el mensaje. Verifica los datos.');
           alertError.textContent = errMsg;
           alertError.classList.remove('is-hidden');
         }
@@ -231,6 +272,7 @@ $miembros ??= [];
         alertError.textContent = 'Error de conexión con el servidor. Intenta más tarde.';
         alertError.classList.remove('is-hidden');
       } finally {
+        reloadCaptcha();
         submitBtn.disabled = false;
         submitText.textContent = 'Enviar mensaje';
         if (submitSpinner) submitSpinner.classList.add('is-hidden');

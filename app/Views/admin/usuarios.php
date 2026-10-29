@@ -122,7 +122,7 @@ $standardRoles = [
         <?php endif; ?>
       </div>
 
-      <form method="post" action="/admin/usuarios">
+      <form method="post" action="/admin/usuarios" <?= \App\Services\PasswordPolicy::clientConfigAttribute() ?>>
         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
         <?php if ($editingUser) : ?>
           <input type="hidden" name="id" value="<?= (int) $editingUser['id'] ?>">
@@ -159,13 +159,18 @@ $standardRoles = [
             Contraseña <?= $editingUser ? '<span class="admin-help-text">(dejar en blanco para conservar)</span>' : '' ?>
             <span class="admin-help-text"><?= e(\App\Services\PasswordPolicy::hint()) ?></span>
           </label>
+          <?php /* Sin minlength/required nativos: password-policy.js valida la política completa
+                   y muestra sus propios mensajes (el servidor vuelve a validar). */ ?>
           <input type="password" 
                  id="user-password" 
                  name="password" 
                  class="admin-form-input" 
-                 minlength="12" 
+                 maxlength="120"
                  placeholder="Mínimo 12 caracteres"
-                 <?= !$editingUser ? 'required' : '' ?>>
+                 autocomplete="new-password"
+                 data-password-new data-error-id="user-password-error"
+                 <?= $editingUser ? 'data-password-optional' : 'aria-required="true"' ?>>
+          <p class="field-error" id="user-password-error" hidden></p>
         </div>
 
         <!-- Rol inicial -->
@@ -209,3 +214,4 @@ $standardRoles = [
     </div>
   </aside>
 </div>
+<script src="<?= e(assetUrl('/assets/js/password-policy.js')) ?>" defer></script>

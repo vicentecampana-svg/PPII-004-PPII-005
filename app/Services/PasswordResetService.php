@@ -73,6 +73,22 @@ final class PasswordResetService
      */
     public function requestReset(string $email, string $baseUrl, string $ip = ''): int
     {
+        $remaining = $this->registerRequest($email, $ip);
+        if ($remaining === 0) {
+            $this->sendResetLink($email, $baseUrl);
+        }
+
+        return $remaining;
+    }
+
+    /**
+     * Primera parte de requestReset(): aplica el cooldown y registra la
+     * solicitud. Hace lo mismo exista o no el correo.
+     *
+     * @return int Segundos restantes de cooldown (0 si la solicitud se registró).
+     */
+    public function registerRequest(string $email, string $ip = ''): int
+    {
         $remaining = $this->secondsUntilNextAllowed($email);
         if ($remaining > 0) {
             return $remaining;
@@ -80,11 +96,21 @@ final class PasswordResetService
 
         $this->requestRepo->log($email, $ip);
 
+        return 0;
+    }
+
+    /**
+     * Segunda parte de requestReset(): genera el token y envía el enlace si
+     * el correo pertenece a una cuenta activa. Su duración depende de si la
+     * cuenta existe, por eso el controlador la ejecuta después de responder.
+     */
+    public function sendResetLink(string $email, string $baseUrl): void
+    {
         $user = $this->userRepo->findByEmail($email);
 
         if (!$user || !$user['active']) {
             // No generar token ni enviar correo, pero sin filtrar información
-            return 0;
+            return;
         }
 
         // Token plano: 32 bytes aleatorios en hex (64 caracteres URL-safe)
@@ -103,8 +129,6 @@ final class PasswordResetService
             $user['username'],
             $resetLink
         );
-
-        return 0;
     }
 
     /**

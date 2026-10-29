@@ -5,12 +5,14 @@ declare(strict_types=1);
 /**
  * @var string $csrfToken
  * @var array $errors
- * @var string|null $success
+ * @var bool $forced  true si el usuario debe cambiar la contraseña obligatoriamente.
  */
 $errors ??= [];
+$forced ??= false;
 ?>
 <section class="login-section">
-  <form class="login-card" method="post" action="/cambiar-password" novalidate>
+  <form class="login-card" method="post" action="/cambiar-password" novalidate
+        <?= \App\Services\PasswordPolicy::clientConfigAttribute() ?>>
     <h1>Cambiar Contraseña</h1>
     <p class="auth-instructions">
       <?= e(\App\Services\PasswordPolicy::hint()) ?>
@@ -18,12 +20,6 @@ $errors ??= [];
 
     <?php if (!empty($errors['general'])) : ?>
       <p class="form-error" role="alert" aria-live="assertive"><?= e($errors['general']) ?></p>
-    <?php endif; ?>
-
-    <?php if (!empty($success)) : ?>
-      <p role="status" aria-live="polite" class="alert-flash-success">
-        <?= e($success) ?>
-      </p>
     <?php endif; ?>
 
     <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
@@ -49,11 +45,10 @@ $errors ??= [];
         placeholder="Mínimo 12 caracteres" maxlength="120" minlength="12"
         autocomplete="new-password"
         aria-required="true"
+        data-password-new data-error-id="new-password-error"
         <?= !empty($errors['new_password']) ? 'aria-invalid="true" aria-describedby="new-password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['new_password'])) : ?>
-        <p class="field-error" id="new-password-error" role="alert"><?= e($errors['new_password']) ?></p>
-      <?php endif; ?>
+      <p class="field-error" id="new-password-error"<?= empty($errors['new_password']) ? ' hidden' : '' ?>><?= e($errors['new_password'] ?? '') ?></p>
     </div>
 
     <div class="field">
@@ -63,13 +58,17 @@ $errors ??= [];
         placeholder="Repite la nueva contraseña" maxlength="120"
         autocomplete="new-password"
         aria-required="true"
+        data-password-confirm="new_password" data-error-id="confirm-password-error"
         <?= !empty($errors['confirm_password']) ? 'aria-invalid="true" aria-describedby="confirm-password-error"' : '' ?>
         required>
-      <?php if (!empty($errors['confirm_password'])) : ?>
-        <p class="field-error" id="confirm-password-error" role="alert"><?= e($errors['confirm_password']) ?></p>
-      <?php endif; ?>
+      <p class="field-error" id="confirm-password-error"<?= empty($errors['confirm_password']) ? ' hidden' : '' ?>><?= e($errors['confirm_password'] ?? '') ?></p>
     </div>
 
     <button type="submit" class="btn btn-destructive">Guardar contraseña</button>
+
+    <?php if (!$forced) : ?>
+      <p class="form-footer-link"><a href="/admin">Volver al panel</a></p>
+    <?php endif; ?>
   </form>
 </section>
+<script src="<?= e(assetUrl('/assets/js/password-policy.js')) ?>" defer></script>

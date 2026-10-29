@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\CaptchaService;
 use App\Services\CreditsService;
 use App\Services\FooterService;
 use App\Services\FormGuardService;
@@ -68,13 +69,26 @@ final class CreditsController extends Controller
 
         try {
             $guard->assertNotHoneypot($_POST);
-            $guard->assertAllowed('credits_contact', $ip, $email);
         } catch (\InvalidArgumentException) {
+            $guard->recordRejection('credits_contact', FormGuardService::REJECT_HONEYPOT, $ip, $email);
             // Un bot: se simula éxito para no revelar el honeypot.
             $_SESSION['flash_success'] = 'Tu mensaje ha sido enviado exitosamente.';
             header('Location: /credits');
             exit;
+        }
+
+        // SEC-10: este envío sin JavaScript exige el mismo CAPTCHA que el modal.
+        if (!(new CaptchaService())->validate((string) ($_POST['captcha'] ?? ''))) {
+            $guard->recordRejection('credits_contact', FormGuardService::REJECT_CAPTCHA, $ip, $email);
+            $_SESSION['flash_error'] = 'El código de seguridad (CAPTCHA) es incorrecto o ha expirado.';
+            header('Location: /credits');
+            exit;
+        }
+
+        try {
+            $guard->assertAllowed('credits_contact', $ip, $email);
         } catch (\RuntimeException) {
+            $guard->recordRejection('credits_contact', FormGuardService::REJECT_LIMIT, $ip, $email);
             $_SESSION['flash_error'] = 'Demasiados envíos en poco tiempo. Inténtalo más tarde.';
             header('Location: /credits');
             exit;

@@ -9,12 +9,51 @@
 --      psql -U $DB_USER -d $POSTGRES_DB -f config/schema.sql
 --      psql -U $DB_USER -d $POSTGRES_DB -f config/seed.sql
 --
+--  Las filas se ordenan según sus claves foráneas: roles/estados/etiquetas
+--  antes de usuarios y noticias.
+--
 --  NOTA: las contraseñas de prueba de app_user son públicas (README.md) y
 --  todas las cuentas quedan con must_change_password = false porque son
 --  credenciales de administración inicial; se recomienda rotarlas.
 --
 -- =============================================================================
 
+-- Data for Name: role; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.role (id, name, description) FROM stdin;
+1	superadmin	Acceso total al sistema
+2	admin	Gestión de contenido y usuarios
+3	editor	Edición de contenido
+4	redactor	Creación de noticias propias
+\.
+
+
+--
+-- Data for Name: news_status; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.news_status (id, name) FROM stdin;
+1	pendiente
+2	publicada
+3	archivada
+\.
+
+
+--
+-- Data for Name: tag; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.tag (id, name) FROM stdin;
+1	Desarrollo Web
+2	Inteligencia Artificial
+3	Ciberseguridad
+4	Cloud Computing
+5	DevOps
+\.
+
+
+--
 -- Data for Name: app_user; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -85,17 +124,6 @@ COPY public.news (id, author_id, editor_id, status_id, tag_id, title, subtitle, 
 
 
 --
--- Data for Name: news_status; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.news_status (id, name) FROM stdin;
-1	pendiente
-2	publicada
-3	archivada
-\.
-
-
---
 -- Data for Name: project; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -103,18 +131,6 @@ COPY public.project (id, name, description, image, link, active) FROM stdin;
 1	Sistema de Gestión Académica	Plataforma para gestión de notas y asistencia universitaria	proyecto-1.jpg	\N	t
 2	App de Seguimiento de Salud	Aplicación móvil para monitoreo de signos vitales	proyecto-1.jpg	\N	t
 3	Portal de Vinculación con el Medio	Sitio web que conecta proyectos estudiantiles con la comunidad	proyecto-1.jpg	\N	t
-\.
-
-
---
--- Data for Name: role; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.role (id, name, description) FROM stdin;
-1	superadmin	Acceso total al sistema
-2	admin	Gestión de contenido y usuarios
-3	editor	Edición de contenido
-4	redactor	Creación de noticias propias
 \.
 
 
@@ -134,19 +150,6 @@ COPY public.service (id, name, description, image, link, active) FROM stdin;
 --
 
 COPY public.staff_member (id, name, "position", photo, description) FROM stdin;
-\.
-
-
---
--- Data for Name: tag; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.tag (id, name) FROM stdin;
-1	Desarrollo Web
-2	Inteligencia Artificial
-3	Ciberseguridad
-4	Cloud Computing
-5	DevOps
 \.
 
 

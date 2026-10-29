@@ -35,9 +35,11 @@ class MailerService
     private string $fromEmail;
     private string $fromName;
     private string $logPath;
+    private MailBudgetService $budget;
 
-    public function __construct()
+    public function __construct(?MailBudgetService $budget = null)
     {
+        $this->budget     = $budget ?? new MailBudgetService();
         $this->driver     = getenv('MAIL_DRIVER') ?: 'log';
         $this->fromEmail  = getenv('SMTP_FROM') ?: getenv('RESEND_FROM') ?: 'onboarding@resend.dev';
         $this->fromName   = getenv('SMTP_FROM_NAME') ?: 'Software Factory Lab ULS';
@@ -57,15 +59,7 @@ class MailerService
         $subject = 'Recuperación de contraseña — TechHub ULS';
         $body    = $this->buildPasswordResetBody($toName, $resetLink);
 
-        if ($this->driver === 'log') {
-            return $this->logMail($toEmail, $subject, $body, $resetLink);
-        }
-
-        if ($this->driver === 'resend') {
-            return $this->sendResend($toEmail, $toName, $subject, $body);
-        }
-
-        return $this->sendSmtp($toEmail, $toName, $subject, $body);
+        return $this->deliver(MailBudgetService::SCOPE_PASSWORD_RESET, $toEmail, $toName, $subject, $body, $resetLink);
     }
 
     // ──────────────────────────────────────────────
@@ -74,34 +68,56 @@ class MailerService
 
     /**
      * Envía un correo genérico (contacto, notificaciones, etc.).
+     *
+     * @param string $scope Ámbito del tope diario (MailBudgetService::SCOPE_*).
      */
-    public function send(string $toEmail, string $toName, string $subject, string $htmlBody): bool
+    public function send(string $toEmail, string $toName, string $subject, string $htmlBody, string $scope): bool
     {
-        if ($this->driver === 'log') {
-            return $this->logMail($toEmail, $subject, $htmlBody, '');
-        }
-
-        if ($this->driver === 'resend') {
-            return $this->sendResend($toEmail, $toName, $subject, $htmlBody);
-        }
-
-        return $this->sendSmtp($toEmail, $toName, $subject, $htmlBody);
+        return $this->deliver($scope, $toEmail, $toName, $subject, $htmlBody, '');
     }
 
     /**
-     * Notifica al encargado sobre una nueva consulta recibida desde el
-     * formulario de contacto.
+     * Avisa al encargado de las consultas de contacto acumuladas desde el
+     * último aviso (SEC-09: un solo correo por periodo, no uno por consulta).
      *
-     * @param  string $toEmail Correo del encargado / equipo responsable.
-     * @param  array  $contact Datos de la consulta (name, email, phone, subject, message).
-     * @return bool            true si se procesó sin errores.
+     * @param  string $toEmail  Correo del encargado / equipo responsable.
+     * @param  array  $contacts Consultas a detallar (name, email, phone, subject, message, sent_at).
+     * @param  int    $total    Total de consultas acumuladas; puede ser mayor que count($contacts).
+     * @return bool             true si se procesó sin errores.
      */
-    public function sendContactNotification(string $toEmail, array $contact): bool
+    public function sendContactDigest(string $toEmail, array $contacts, int $total): bool
     {
-        $subject = 'Nueva consulta de contacto — ' . (($contact['subject'] ?? 'Formulario') ?: 'Formulario');
-        $body    = $this->buildContactNotificationBody($contact);
+        $subject = $total === 1
+            ? 'Nueva consulta de contacto — SFL ULS'
+            : "{$total} nuevas consultas de contacto — SFL ULS";
+        $body = $this->buildContactDigestBody($contacts, $total);
 
-        return $this->send($toEmail, 'Encargado SFL ULS', $subject, $body);
+        return $this->send($toEmail, 'Encargado SFL ULS', $subject, $body, MailBudgetService::SCOPE_CONTACT);
+    }
+
+    /**
+     * SEC-09: cada envío consume el tope diario de su ámbito. Si el tope se
+     * alcanzó, el correo no sale y se registra el motivo en el log.
+     */
+    private function deliver(string $scope, string $toEmail, string $toName, string $subject, string $body, string $link): bool
+    {
+        $reservation = $this->budget->reserve($scope);
+        if ($reservation === null) {
+            error_log("[MailerService] Correo no enviado: se alcanzó el tope diario del ámbito '{$scope}'.");
+            return false;
+        }
+
+        if ($this->driver === 'log') {
+            $sent = $this->logMail($toEmail, $subject, $body, $link);
+        } elseif ($this->driver === 'resend') {
+            $sent = $this->sendResend($toEmail, $toName, $subject, $body);
+        } else {
+            $sent = $this->sendSmtp($toEmail, $toName, $subject, $body);
+        }
+
+        $this->budget->markDelivered($reservation, $sent);
+
+        return $sent;
     }
 
     // ──────────────────────────────────────────────
@@ -272,16 +288,45 @@ class MailerService
         HTML;
     }
 
-    private function buildContactNotificationBody(array $contact): string
+    private function buildContactDigestBody(array $contacts, int $total): string
     {
-        $name    = htmlspecialchars((string) ($contact['name'] ?? ''), ENT_QUOTES, 'UTF-8');
-        $email   = htmlspecialchars((string) ($contact['email'] ?? ''), ENT_QUOTES, 'UTF-8');
-        $phone   = htmlspecialchars((string) ($contact['phone'] ?? ''), ENT_QUOTES, 'UTF-8');
-        $subject = htmlspecialchars((string) ($contact['subject'] ?? 'Formulario'), ENT_QUOTES, 'UTF-8');
-        $message = nl2br(htmlspecialchars((string) ($contact['message'] ?? ''), ENT_QUOTES, 'UTF-8'));
+        $items = '';
+        foreach ($contacts as $contact) {
+            $name    = htmlspecialchars((string) ($contact['name'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $email   = htmlspecialchars((string) ($contact['email'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $phone   = htmlspecialchars((string) ($contact['phone'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $subject = htmlspecialchars((string) (($contact['subject'] ?? '') ?: 'Formulario'), ENT_QUOTES, 'UTF-8');
+            $sentAt  = htmlspecialchars((string) ($contact['sent_at'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $message = nl2br(htmlspecialchars((string) ($contact['message'] ?? ''), ENT_QUOTES, 'UTF-8'));
 
-        $phoneRow = $phone !== ''
-            ? '<tr><td class="email-label">Teléfono</td><td class="email-value">' . $phone . '</td></tr>'
+            $phoneRow = $phone !== ''
+                ? '<tr><td class="email-label">Teléfono</td><td class="email-value">' . $phone . '</td></tr>'
+                : '';
+
+            $items .= <<<HTML
+            <table class="email-table">
+              <tr><td class="email-label">Asunto</td><td class="email-value">{$subject}</td></tr>
+              <tr><td class="email-label">Nombre</td><td class="email-value">{$name}</td></tr>
+              <tr><td class="email-label">Correo</td><td class="email-value">{$email}</td></tr>
+              {$phoneRow}
+              <tr><td class="email-label">Recibida</td><td class="email-value">{$sentAt}</td></tr>
+            </table>
+            <div class="email-message">
+              <p class="email-message-label"><strong>Mensaje:</strong></p>
+              <p class="email-message-text">{$message}</p>
+            </div>
+            <hr class="email-divider">
+            HTML;
+        }
+
+        $shown = count($contacts);
+        $intro = $total === 1
+            ? 'Se recibió una nueva consulta a través del formulario de contacto de <strong>SFL ULS</strong>.'
+            : "Se recibieron <strong>{$total}</strong> nuevas consultas a través del formulario de contacto"
+                . ' de <strong>SFL ULS</strong> desde el último aviso.';
+        $more = $total > $shown
+            ? '<p class="email-intro">Se muestran las ' . $shown . ' más antiguas; el resto quedó registrado'
+                . ' en el sistema y llegará en el próximo aviso.</p>'
             : '';
 
         return <<<HTML
@@ -289,7 +334,7 @@ class MailerService
         <html lang="es">
         <head>
           <meta charset="UTF-8">
-          <title>Nueva consulta de contacto</title>
+          <title>Nuevas consultas de contacto</title>
           <style>
             body { font-family: Arial, sans-serif; background: #f8fafc; padding: 32px; margin: 0; }
             .email-card { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px; border: 1px solid #e2e8f0; }
@@ -307,31 +352,13 @@ class MailerService
         </head>
         <body>
           <div class="email-card">
-            <h2 class="email-title">Nueva consulta de contacto</h2>
-            <p class="email-intro">Se recibió una nueva consulta a través del formulario de contacto de
-               <strong>TechHub ULS</strong>.</p>
-            <table class="email-table">
-              <tr>
-                <td class="email-label">Nombre</td>
-                <td class="email-value">{$name}</td>
-              </tr>
-              <tr>
-                <td class="email-label">Correo</td>
-                <td class="email-value">{$email}</td>
-              </tr>
-              {$phoneRow}
-              <tr>
-                <td class="email-label">Asunto</td>
-                <td class="email-value">{$subject}</td>
-              </tr>
-            </table>
-            <div class="email-message">
-              <p class="email-message-label"><strong>Mensaje:</strong></p>
-              <p class="email-message-text">{$message}</p>
-            </div>
+            <h2 class="email-title">Nuevas consultas de contacto</h2>
+            <p class="email-intro">{$intro}</p>
+            {$more}
             <hr class="email-divider">
+            {$items}
             <p class="email-footer">
-              TechHub — Software Factory Lab, Universidad de La Serena
+              SFL ULS — Software Factory Lab, Universidad de La Serena
             </p>
           </div>
         </body>

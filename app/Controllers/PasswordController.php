@@ -7,7 +7,9 @@ namespace App\Controllers;
 use App\Repositories\UserRepository;
 use App\Services\AuditService;
 use App\Services\FooterService;
+use App\Services\FormGuardService;
 use App\Services\PasswordPolicy;
+use App\Services\RateLimiterService;
 use App\Services\UserService;
 
 /**
@@ -15,15 +17,23 @@ use App\Services\UserService;
  */
 final class PasswordController extends Controller
 {
+    /** SEC-11: intentos fallidos con la contraseña actual antes de cerrar la sesión. */
+    public const MAX_FAILED_ATTEMPTS = 5;
+    public const FAILED_ATTEMPT_FORM = 'cambiar_password_fallido';
+
     private UserService $userService;
     private UserRepository $userRepo;
     private AuditService $audit;
+    private FormGuardService $guard;
+    private RateLimiterService $rateLimiter;
 
     public function __construct()
     {
         $this->userService = new UserService();
         $this->userRepo = new UserRepository();
         $this->audit = new AuditService();
+        $this->guard = new FormGuardService();
+        $this->rateLimiter = new RateLimiterService();
     }
 
     public function show(): void
@@ -35,24 +45,32 @@ final class PasswordController extends Controller
             'metaDescription' => 'Cambio de contraseña para usuarios de SFL ULS Lab.',
             'csrfToken'       => csrfToken(),
             'errors'          => $_SESSION['_password_errors'] ?? [],
-            'success'         => $_SESSION['_password_success'] ?? null,
             'user'            => authUser(),
+            'forced'          => authMustChangePassword(),
             'enlacesFooter'   => $footer['links'],
             'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
 
-        unset($_SESSION['_password_errors'], $_SESSION['_password_success']);
+        unset($_SESSION['_password_errors']);
     }
 
     public function submit(): void
     {
         $userId = (int) (authUser()['id'] ?? 0);
-        $user = $this->userRepo->findById($userId);
+        // findById() omite el hash a propósito; para verificar la contraseña
+        // actual se necesita la variante que sí lo incluye.
+        $user = $this->userRepo->findWithPasswordById($userId);
 
         if (!$user) {
             authLogout();
             header('Location: /login');
             exit;
+        }
+
+        // SEC-11: con la cuenta bloqueada no se verifica la contraseña, para que
+        // otra sesión del mismo usuario no pueda seguir probando.
+        if ($this->failedAttempts($user) >= self::MAX_FAILED_ATTEMPTS) {
+            $this->lockOut($userId);
         }
 
         $currentPassword = (string) ($_POST['current_password'] ?? '');
@@ -64,6 +82,7 @@ final class PasswordController extends Controller
         if ($currentPassword === '') {
             $errors['current_password'] = 'Debes ingresar tu contraseña actual.';
         } elseif (!password_verify($currentPassword, $user['password'])) {
+            $this->recordFailedAttempt($userId, $user);
             $errors['current_password'] = 'La contraseña actual es incorrecta.';
         }
 
@@ -73,7 +92,7 @@ final class PasswordController extends Controller
         }
 
         if ($newPassword !== $confirmPassword) {
-            $errors['confirm_password'] = 'Las contraseñas no coinciden.';
+            $errors['confirm_password'] = PasswordPolicy::MISMATCH_MESSAGE;
         }
 
         if ($errors) {
@@ -90,8 +109,47 @@ final class PasswordController extends Controller
         $_SESSION['must_change_password'] = false;
         $this->audit->log($userId, 'cambiar_password', 'user', $userId, 'Contraseña cambiada por el usuario');
 
-        $_SESSION['_password_success'] = 'Contraseña actualizada correctamente.';
+        // Se redirige al panel, que solo muestra los mensajes de _flash_success.
+        $_SESSION['_flash_success'] = 'Contraseña actualizada correctamente.';
         header('Location: /admin');
+        exit;
+    }
+
+    /**
+     * SEC-11: intentos fallidos con la contraseña actual en la ventana de
+     * FormGuardService. Se cuentan por usuario en la base de datos, no en la
+     * sesión, para que no se puedan multiplicar abriendo varias sesiones.
+     */
+    private function failedAttempts(array $user): int
+    {
+        return $this->guard->countRecentByEmail(self::FAILED_ATTEMPT_FORM, (string) $user['email']);
+    }
+
+    private function recordFailedAttempt(int $userId, array $user): void
+    {
+        $this->guard->record(self::FAILED_ATTEMPT_FORM, $this->rateLimiter->getClientIp(), (string) $user['email']);
+        $this->audit->log($userId, 'cambiar_password_fallido', 'user', $userId, 'Contraseña actual incorrecta al cambiar la contraseña');
+
+        if ($this->failedAttempts($user) >= self::MAX_FAILED_ATTEMPTS) {
+            $this->lockOut($userId);
+        }
+    }
+
+    /**
+     * Cierra la sesión tras demasiados intentos fallidos: para volver a
+     * intentarlo hay que iniciar sesión otra vez (con CAPTCHA y su propio
+     * límite de intentos) y esperar a que termine la ventana.
+     */
+    private function lockOut(int $userId): never
+    {
+        $this->audit->log($userId, 'bloqueo_cambiar_password', 'user', $userId, 'Sesión cerrada por intentos fallidos al cambiar la contraseña');
+
+        authLogout();
+        $_SESSION['_login_errors'] = [
+            'general' => 'Por seguridad cerramos tu sesión tras varios intentos fallidos con la contraseña actual. '
+                . 'Espera ' . FormGuardService::WINDOW_MINUTES . ' minutos antes de volver a intentar el cambio.',
+        ];
+        header('Location: /login');
         exit;
     }
 }

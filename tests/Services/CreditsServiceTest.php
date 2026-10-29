@@ -4,6 +4,7 @@ namespace Tests\Services;
 
 use PHPUnit\Framework\TestCase;
 use App\Services\CreditsService;
+use App\Services\MailBudgetService;
 use App\Services\MailerService;
 
 class CreditsServiceTest extends TestCase
@@ -108,7 +109,8 @@ class CreditsServiceTest extends TestCase
                 $this->isType('string'),
                 $this->equalTo('Vicente Campaña'),
                 $this->stringContains('[SFL Lab - Créditos]'),
-                $this->stringContains('Mensaje de prueba')
+                $this->stringContains('Mensaje de prueba'),
+                $this->equalTo(MailBudgetService::SCOPE_CREDITS)
             )
             ->willReturn(true);
 

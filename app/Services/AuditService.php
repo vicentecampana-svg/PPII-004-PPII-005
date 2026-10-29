@@ -42,6 +42,19 @@ class AuditService
             $userId = $user ? (int) $user['id'] : null;
         }
 
-        return $this->repo->log($userId, $action, $entity, $entityId, $details);
+        return $this->repo->log($userId, $action, $entity, $entityId, $details, $this->clientIp());
+    }
+
+    /**
+     * SEC-13: IP del cliente que originó la acción, para analizar ataques.
+     * En tareas de consola (cron, tests) no hay cliente y queda en NULL.
+     */
+    private function clientIp(): ?string
+    {
+        if (PHP_SAPI === 'cli' || empty($_SERVER['REMOTE_ADDR'])) {
+            return null;
+        }
+
+        return (new RateLimiterService())->getClientIp();
     }
 }

@@ -9,6 +9,20 @@ class RateLimiterService
     private const MAX_ATTEMPTS = 5;
     private const LOCKOUT_MINUTES = 15;
 
+    /**
+     * Condición para el alias `f`: fallo dentro de la ventana de bloqueo y sin
+     * un login exitoso posterior desde la misma IP o con el mismo correo. Es
+     * el mismo efecto que antes tenía borrar esos fallos al iniciar sesión.
+     */
+    private const RECENT_UNCLEARED_FAILURE = "f.success = false
+                  AND f.attempted_at > (CURRENT_TIMESTAMP - INTERVAL '" . self::LOCKOUT_MINUTES . " minutes')
+                  AND NOT EXISTS (
+                      SELECT 1 FROM login_attempt s
+                      WHERE s.success = true
+                        AND s.attempted_at >= f.attempted_at
+                        AND (s.ip = f.ip OR LOWER(s.email) = LOWER(f.email))
+                  )";
+
     public function isBlocked(string $ip, string $email): bool
     {
         $ipBlocked = $this->countFailedAttemptsByIp($ip) >= self::MAX_ATTEMPTS;
@@ -23,10 +37,9 @@ class RateLimiterService
     public function countFailedAttemptsByIp(string $ip): int
     {
         $sql = "SELECT COUNT(*) AS t
-                FROM login_attempt
-                WHERE ip = :ip
-                  AND success = false
-                  AND attempted_at > (CURRENT_TIMESTAMP - INTERVAL '" . self::LOCKOUT_MINUTES . " minutes')";
+                FROM login_attempt f
+                WHERE f.ip = :ip
+                  AND " . self::RECENT_UNCLEARED_FAILURE;
 
         $row = dbFetchOne($sql, ['ip' => $ip]);
         return (int) ($row['t'] ?? 0);
@@ -39,10 +52,9 @@ class RateLimiterService
         }
 
         $sql = "SELECT COUNT(*) AS t
-                FROM login_attempt
-                WHERE LOWER(email) = LOWER(:email)
-                  AND success = false
-                  AND attempted_at > (CURRENT_TIMESTAMP - INTERVAL '" . self::LOCKOUT_MINUTES . " minutes')";
+                FROM login_attempt f
+                WHERE LOWER(f.email) = LOWER(:email)
+                  AND " . self::RECENT_UNCLEARED_FAILURE;
 
         $row = dbFetchOne($sql, ['email' => trim($email)]);
         return (int) ($row['t'] ?? 0);
@@ -56,10 +68,16 @@ class RateLimiterService
         );
     }
 
+    /**
+     * SEC-13: el login exitoso se registra en vez de borrar los intentos
+     * fallidos, para conservar el historial con IP y poder analizar ataques.
+     * Los fallos anteriores dejan de contar para el bloqueo (ver
+     * RECENT_UNCLEARED_FAILURE).
+     */
     public function recordSuccess(string $ip, string $email): void
     {
         dbQuery(
-            "DELETE FROM login_attempt WHERE ip = :ip OR LOWER(email) = LOWER(:email)",
+            "INSERT INTO login_attempt (ip, email, success, attempted_at) VALUES (:ip, :email, true, CURRENT_TIMESTAMP)",
             ['ip' => $ip, 'email' => trim($email)]
         );
     }

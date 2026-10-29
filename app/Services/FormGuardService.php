@@ -21,6 +21,11 @@ class FormGuardService
     public const MAX_SUBMISSIONS = 5;
     public const WINDOW_MINUTES = 15;
 
+    /** SEC-13: motivos de rechazo que se registran en `form_rejection`. */
+    public const REJECT_HONEYPOT = 'honeypot';
+    public const REJECT_CAPTCHA = 'captcha';
+    public const REJECT_LIMIT = 'limite';
+
     /**
      * Verifica el honeypot del formulario.
      *
@@ -46,6 +51,26 @@ class FormGuardService
         }
     }
 
+    /**
+     * SEC-13: registra un envío rechazado (con su IP) para poder analizar
+     * ataques. No cuenta para el límite de envíos.
+     *
+     * @param string $reason Uno de los REJECT_*.
+     */
+    public function recordRejection(string $form, string $reason, string $ip, string $email = ''): void
+    {
+        try {
+            dbInsert('form_rejection', [
+                'form'   => $form,
+                'reason' => $reason,
+                'ip'     => $ip,
+                'email'  => trim($email) !== '' ? mb_substr(trim($email), 0, 255) : null,
+            ]);
+        } catch (\Throwable $e) {
+            error_log('[SFL ULS] No se pudo registrar el rechazo de formulario: ' . $e->getMessage());
+        }
+    }
+
     /** Registra un envío para el control de límite. */
     public function record(string $form, string $ip, string $email = ''): void
     {
@@ -57,6 +82,26 @@ class FormGuardService
             ]);
         } catch (\Throwable $e) {
             error_log('[SFL ULS] No se pudo registrar el envío de formulario: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Envíos del formulario asociados al correo en la ventana actual, sin
+     * importar la IP. Sirve para límites por cuenta, que no deben afectar a
+     * otras personas que compartan la misma IP (p. ej. un laboratorio).
+     */
+    public function countRecentByEmail(string $form, string $email): int
+    {
+        try {
+            return (int) (dbFetchOne(
+                "SELECT COUNT(*) AS t FROM form_submission
+                  WHERE form = :form AND LOWER(email) = LOWER(:email)
+                    AND created_at > (NOW() - INTERVAL '" . self::WINDOW_MINUTES . " minutes')",
+                ['form' => $form, 'email' => trim($email)]
+            )['t'] ?? 0);
+        } catch (\Throwable $e) {
+            error_log('[SFL ULS] No se pudo evaluar el límite de envíos: ' . $e->getMessage());
+            return 0;
         }
     }
 

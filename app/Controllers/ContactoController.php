@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\CaptchaService;
 use App\Services\FooterService;
 use App\Services\FormGuardService;
 use App\Services\QueryService;
@@ -33,13 +34,15 @@ final class ContactoController extends Controller
 
         $flashSuccess = $_SESSION['_flash_success'] ?? null;
         $flashError = $_SESSION['_flash_error'] ?? null;
-        unset($_SESSION['_flash_success'], $_SESSION['_flash_error']);
+        $old = $_SESSION['_contact_old'] ?? [];
+        unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_contact_old']);
 
         $this->render('contacto', [
             'pageTitle' => 'Contáctenos — SFL ULS Lab',
             'metaDescription' => 'Envía tu consulta o requerimiento al Software Factory Lab de la Universidad de La Serena.',
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
+            'old' => $old,
             'enlacesFooter' => $footer['links'] ?? [],
             'contacto' => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
@@ -60,32 +63,37 @@ final class ContactoController extends Controller
         try {
             $guard->assertNotHoneypot($_POST);
         } catch (\InvalidArgumentException) {
+            $guard->recordRejection('contacto', FormGuardService::REJECT_HONEYPOT, $ip, $email);
             // Un bot: se simula éxito para no revelar el honeypot.
             $_SESSION['_flash_success'] = 'Gracias, tu consulta fue enviada.';
             header('Location: /contacto');
             exit;
         }
 
+        // Si el envío falla, se conserva lo escrito para no obligar a repetirlo.
+        $_SESSION['_contact_old'] = compact('name', 'email', 'phone', 'subject', 'message');
+
+        // SEC-10: CAPTCHA antes de consumir el límite de envíos.
+        if (!(new CaptchaService())->validate((string) ($_POST['captcha'] ?? ''))) {
+            $guard->recordRejection('contacto', FormGuardService::REJECT_CAPTCHA, $ip, $email);
+            $this->fail('El código de seguridad (CAPTCHA) es incorrecto o ha expirado.');
+        }
+
         try {
             $guard->assertAllowed('contacto', $ip, $email);
         } catch (\RuntimeException) {
-            $_SESSION['_flash_error'] = 'Demasiados envíos en poco tiempo. Inténtalo más tarde.';
-            header('Location: /contacto');
-            exit;
+            $guard->recordRejection('contacto', FormGuardService::REJECT_LIMIT, $ip, $email);
+            $this->fail('Demasiados envíos en poco tiempo. Inténtalo más tarde.');
         }
 
         $guard->record('contacto', $ip, $email);
 
         if ($name === '' || $email === '' || $message === '') {
-            $_SESSION['_flash_error'] = 'Por favor complete todos los campos requeridos (nombre, correo y motivo).';
-            header('Location: /contacto');
-            exit;
+            $this->fail('Por favor complete todos los campos requeridos (nombre, correo y motivo).');
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['_flash_error'] = 'El correo electrónico ingresado no es válido.';
-            header('Location: /contacto');
-            exit;
+            $this->fail('El correo electrónico ingresado no es válido.');
         }
 
         try {
@@ -97,14 +105,21 @@ final class ContactoController extends Controller
                 'message' => $message,
             ]);
         } catch (\Throwable $e) {
-            $_SESSION['_flash_error'] = 'Ocurrió un error al enviar tu formulario. Por favor, intenta nuevamente.';
-            header('Location: /contacto');
-            exit;
+            $this->fail('Ocurrió un error al enviar tu formulario. Por favor, intenta nuevamente.');
         }
+
+        unset($_SESSION['_contact_old']);
 
         $ticketUrl = trim((string) getenv('TICKET_PLATFORM_URL'));
         $redirect = ($ticketUrl !== '' && filter_var($ticketUrl, FILTER_VALIDATE_URL)) ? $ticketUrl : 'about:blank';
         header('Location: ' . $redirect);
+        exit;
+    }
+
+    private function fail(string $message): never
+    {
+        $_SESSION['_flash_error'] = $message;
+        header('Location: /contacto');
         exit;
     }
 }

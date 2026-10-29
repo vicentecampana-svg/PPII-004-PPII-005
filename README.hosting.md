@@ -82,6 +82,19 @@ SMTP_USER=no-reply@uls.cl
 SMTP_PASS=
 SMTP_FROM=no-reply@uls.cl
 SMTP_FROM_NAME=TechHub ULS
+
+# Tope de correos por ámbito (SEC-09): protege la cuota del proveedor de
+# correo. MAIL_DAILY_LIMIT es el máximo diario del plan y cada ámbito usa
+# solo el porcentaje indicado, contado en las últimas 24 horas.
+MAIL_DAILY_LIMIT=100
+MAIL_SHARE_CONTACT=20
+MAIL_SHARE_CREDITS=20
+MAIL_SHARE_PASSWORD_RESET=15
+
+# Aviso agrupado de consultas de contacto (SEC-09): como máximo un correo al
+# encargado cada CONTACT_DIGEST_INTERVAL_MINUTES (requiere el cron de la sección 8)
+CONTACT_NOTIFY_EMAIL=
+CONTACT_DIGEST_INTERVAL_MINUTES=60
 ```
 
 > ⚠️ **Importante**: Asegúrate de que el archivo `.env` tenga permisos restrictivos para que solo el usuario del servidor web pueda leerlo (`chmod 600 .env`).
@@ -221,4 +234,18 @@ cd /var/www/sfl-uls
 sudo git pull origin main
 sudo composer install --no-dev --optimize-autoloader
 sudo systemctl reload apache2 # o systemctl reload php8.2-fpm
+```
+
+### Aviso agrupado de consultas (cron)
+
+Las consultas de contacto se avisan al encargado en un solo correo por
+periodo (`CONTACT_DIGEST_INTERVAL_MINUTES`). El aviso también se dispara al
+llegar una consulta, pero sin este cron las últimas consultas acumuladas
+esperarían a que llegue otra. Prográmalo con el usuario del servidor web y las
+mismas variables de entorno que la aplicación:
+
+```bash
+sudo crontab -u www-data -e
+# Cada 5 minutos; solo envía si ya pasó el intervalo y hay consultas sin avisar
+*/5 * * * * cd /var/www/sfl-uls && set -a && . ./.env && set +a && php bin/contact-digest.php >/dev/null
 ```

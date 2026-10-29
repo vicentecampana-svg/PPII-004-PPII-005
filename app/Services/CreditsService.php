@@ -79,7 +79,7 @@ class CreditsService
             $message
         );
 
-        $this->persistAuditRecord($member['name'], $name, $email, $message);
+        $this->persistAuditRecord($member['name'], $name, $email, $message, $dispatched);
 
         return [
             'success'   => true,
@@ -103,7 +103,10 @@ class CreditsService
     }
 
     /**
-     * Despacha el correo mediante MailerService con fallback a mail() nativo.
+     * Despacha el correo mediante MailerService.
+     *
+     * SEC-09: ya no se recurre a mail() nativo si el envío falla, porque eso
+     * se saltaría el tope diario de correos del ámbito.
      */
     private function dispatchEmail(
         string $to,
@@ -129,47 +132,37 @@ class CreditsService
 
         try {
             $htmlBody = nl2br(htmlspecialchars($textBody, ENT_QUOTES, 'UTF-8'));
-            $sent = $this->mailer->send($to, $recipientName, $subject, $htmlBody);
-            if ($sent) {
-                return true;
-            }
-        } catch (\Throwable) {
-            // Degradar graciosamente a mail() nativo si falla
+            return $this->mailer->send($to, $recipientName, $subject, $htmlBody, MailBudgetService::SCOPE_CREDITS);
+        } catch (\Throwable $e) {
+            error_log('[SFL ULS] No se pudo enviar el mensaje de créditos: ' . $e->getMessage());
+            return false;
         }
-
-        $cleanSenderEmail = str_replace(["\r", "\n"], '', $senderEmail);
-        $cleanSenderName = str_replace(["\r", "\n"], '', $senderName);
-        $encodedSubject = "=?UTF-8?B?" . base64_encode($subject) . "?=";
-
-        $headers = [
-            'From: SFL ULS Lab <contacto@sfl.uls.cl>',
-            "Reply-To: {$cleanSenderName} <{$cleanSenderEmail}>",
-            'X-Mailer: PHP/' . phpversion(),
-            'MIME-Version: 1.0',
-            'Content-Type: text/plain; charset=UTF-8',
-        ];
-
-        return (bool) @mail($to, $encodedSubject, $textBody, implode("\r\n", $headers));
     }
 
     /**
-     * Opcional: Persistir registro en la base de datos para trazabilidad.
+     * Persiste el mensaje en la base de datos para trazabilidad.
+     *
+     * SEC-09: si el correo no llegó al integrante (por ejemplo, porque se
+     * alcanzó el tope diario), el mensaje queda pendiente y sin avisar, así
+     * que se incluye en el próximo aviso agrupado al encargado.
      */
     private function persistAuditRecord(
         string $recipientName,
         string $senderName,
         string $senderEmail,
-        string $message
+        string $message,
+        bool $dispatched
     ): void {
         try {
             if (function_exists('dbInsert')) {
                 dbInsert('contact_request', [
-                    'name'    => mb_substr($senderName, 0, 150),
-                    'email'   => mb_substr($senderEmail, 0, 150),
-                    'phone'   => null,
-                    'subject' => mb_substr("Créditos: {$recipientName}", 0, 255),
-                    'message' => $message,
-                    'status'  => 'enviado',
+                    'name'        => mb_substr($senderName, 0, 150),
+                    'email'       => mb_substr($senderEmail, 0, 150),
+                    'phone'       => null,
+                    'subject'     => mb_substr("Créditos: {$recipientName}", 0, 255),
+                    'message'     => $message,
+                    'status'      => $dispatched ? 'enviado' : 'pendiente',
+                    'notified_at' => $dispatched ? date('Y-m-d H:i:sP') : null,
                 ]);
             }
         } catch (\Throwable) {
