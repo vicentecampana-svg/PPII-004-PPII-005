@@ -5,6 +5,7 @@ namespace Tests\Services;
 use PHPUnit\Framework\TestCase;
 use App\Services\NewsService;
 use App\Repositories\NewsRepository;
+use App\Services\AuditService;
 
 class NewsServiceTest extends TestCase
 {
@@ -15,7 +16,7 @@ class NewsServiceTest extends TestCase
     {
         parent::setUp();
         $this->repoMock = $this->createMock(NewsRepository::class);
-        $this->service = new NewsService($this->repoMock);
+        $this->service = new NewsService($this->repoMock, $this->createMock(AuditService::class));
     }
 
     public function testGetAllReturnsPaginatedData()
