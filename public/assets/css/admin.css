@@ -250,6 +250,26 @@ textarea {
   align-items: start;
 }
 
+.admin-news-layout {
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+
+.admin-news-main-col {
+  min-width: 0;
+}
+
+.admin-news-layout .admin-item-desc {
+  display: flex;
+  min-width: 0;
+}
+
+.admin-news-layout .admin-item-excerpt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 960px) {
   .admin-layout-grid {
     grid-template-columns: 1fr;
