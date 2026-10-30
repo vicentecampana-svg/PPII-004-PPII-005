@@ -113,9 +113,9 @@ El archivo [`config/schema.sql`](config/schema.sql) incluye usuarios precargados
 
 | Rol | Correo Electrónico | Contraseña | Permisos |
 | :--- | :--- | :--- | :--- |
-| **SuperAdmin** | `admin@techhub.cl` | `admin123` | Control total del sistema, usuarios, roles, footer y contenidos. |
-| **Admin** | `editor@techhub.cl` | `Admin123456!` | Gestión de proyectos, staff, noticias y contenido institucional. |
-| **Redactor** | `redactor@techhub.cl` | `Admin123456!` | Creación y publicación de noticias. |
+| **SuperAdmin** | `admin@sfluls.cl` | `admin123` | Control total del sistema, usuarios, roles, footer y contenidos. |
+| **Admin** | `editor@sfluls.cl` | `Admin123456!` | Gestión de proyectos, staff, noticias y contenido institucional. |
+| **Redactor** | `redactor@sfluls.cl` | `Admin123456!` | Creación y publicación de noticias. |
 
 ---
 
