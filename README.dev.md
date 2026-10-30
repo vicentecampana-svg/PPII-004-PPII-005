@@ -188,6 +188,22 @@ docker compose -f docker-compose.dev.yml down
 
 ---
 
+### Reiniciar desde cero después de cambios en el repositorio
+
+Si un cambio requiere recrear la base de datos desde cero, ejecuta este comando
+antes de volver a levantar el entorno:
+
+```bash
+docker compose -f docker-compose.dev.yml down -v
+```
+
+> **Atención:** `-v` también elimina el volumen `postgres_dev_data` y todos los
+> datos guardados en PostgreSQL. Después, levanta el entorno y vuelve a cargar
+> el schema y los datos semilla siguiendo el paso 5. Para cambios habituales de
+> código que no requieren reiniciar la base, usa `down` sin `-v`.
+
+---
+
 ## 9. Reconstruir (volver a iniciarlo cuando lo cierres)
 
 ```bash
