@@ -14,9 +14,9 @@ $roleNormalized = strtolower((string) ($user['role_name'] ?? ''));
 $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], true);
 ?>
 
-<div class="admin-layout-grid">
+<div class="admin-layout-grid admin-news-layout">
   <!-- Columna izquierda: Listado de Noticias -->
-  <div class="admin-main-col">
+  <div class="admin-main-col admin-news-main-col">
     <div class="admin-tab-header">
       <h2 class="admin-tab-content-title">Noticias</h2>
     </div>
