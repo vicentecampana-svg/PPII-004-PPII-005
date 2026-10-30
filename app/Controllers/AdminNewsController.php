@@ -34,6 +34,9 @@ final class AdminNewsController extends AdminControllerBase
         $subtitle = trim((string) ($_POST['subtitle'] ?? ''));
         $content = trim((string) ($_POST['content'] ?? ''));
         $image = trim((string) ($_POST['existing_image'] ?? ''));
+        $authorDisplay = in_array($role, ['superadmin', 'admin', 'editor'], true)
+            ? trim((string) ($_POST['author'] ?? ''))
+            : trim((string) ($user['username'] ?? ''));
         $isPublic = isset($_POST['is_public']);
         $isApproved = isset($_POST['is_approved']) ? (bool) $_POST['is_approved'] : false;
 
@@ -59,10 +62,11 @@ final class AdminNewsController extends AdminControllerBase
 
         try {
             $data = [
-                'title'    => $title,
-                'subtitle' => $subtitle !== '' ? $subtitle : null,
-                'content'  => $content,
-                'image'    => $image !== '' ? $image : null,
+                'title'          => $title,
+                'author_display' => $authorDisplay !== '' ? $authorDisplay : null,
+                'subtitle'       => $subtitle !== '' ? $subtitle : null,
+                'content'        => $content,
+                'image'          => $image !== '' ? $image : null,
                 'is_public' => $isPublic,
             ];
 

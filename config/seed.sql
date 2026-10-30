@@ -117,9 +117,18 @@ COPY public.footer_info (id, email, phone, address, copyright_text, social_faceb
 -- Data for Name: news; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.news (id, author_id, editor_id, status_id, tag_id, title, subtitle, content, image, publication_date, created_at, updated_at) FROM stdin;
-1	1	\N	2	\N	SFL ULS inicia nuevo semestre de proyectos	Se abren las postulaciones para integrar el laboratorio	El laboratorio SFL ULS de la Universidad de La Serena inicia sus actividades del segundo semestre 2026. Se buscan estudiantes interesados en desarrollar proyectos reales.	noticia-1.jpg	2026-08-19 05:09:31.216664	2026-08-19 05:09:31.216664	\N
-2	1	\N	1	\N	Hackathon de Innovación 2026	Evento de 48 horas de desarrollo intensivo	Se realizará una hackathon donde los equipos deberán crear soluciones tecnológicas para problemáticas regionales.	noticia-1.jpg	\N	2026-08-19 05:09:31.216664	\N
+COPY public.news (id, author_id, editor_id, status_id, tag_id, title, author_display, subtitle, content, image, publication_date, created_at, updated_at, is_public) FROM stdin;
+1	1	\N	2	\N	SFL ULS inicia nuevo semestre de proyectos	\N	Se abren las postulaciones para integrar el laboratorio	El laboratorio SFL ULS de la Universidad de La Serena inicia sus actividades del segundo semestre 2026. Se buscan estudiantes interesados en desarrollar proyectos reales.	noticia-1.jpg	2026-08-19 05:09:31.216664	2026-08-19 05:09:31.216664	\N	t
+2	1	\N	1	\N	Hackathon de Innovación 2026	\N	Evento de 48 horas de desarrollo intensivo	Se realizará una hackathon donde los equipos deberán crear soluciones tecnológicas para problemáticas regionales.	noticia-1.jpg	\N	2026-08-19 05:09:31.216664	\N	t
+3	2	\N	2	\N	SFL ULS realiza entrevistas para seleccionar a integrantes de sus proyectos	Staff SFL	El proceso permitió conocer a los postulantes y conformar los equipos que participarán en la cartera de proyectos del SFL ULS.	El SFL ULS desarrolló un período de entrevistas para seleccionar a quienes participarán en sus proyectos. El proceso contó con cerca de 50 personas entrevistadas. Las entrevistas permitieron conocer la motivación, los conocimientos y la disposición al trabajo en equipo de las y los postulantes. Como resultado, se seleccionó a quienes se integrarán a los proyectos del SFL ULS.\n\nEl equipo agradece a todas las personas que postularon y felicita a quienes fueron seleccionadas.	\N	2026-10-30 00:00:01	2026-10-30 00:00:01	\N	t
+4	2	\N	2	\N	SFL ULS implementa metodología QA para asegurar la calidad de sus desarrollos	Staff SFL	La iniciativa estandariza los procesos de revisión y prueba en toda la fábrica de software para entregar soluciones más confiables a la comunidad universitaria.	El SFL ULS implementó la metodología QA (proyecto PPII-001), un marco de trabajo que define cómo se asegura la calidad de cada solución desarrollada por el equipo. A partir de ahora, los proyectos de la fábrica siguen los mismos criterios de revisión antes de ser entregados.\n\nLa metodología establece estándares comunes para planificar pruebas, verificar requisitos, registrar y corregir errores. Esto permite detectar problemas en etapas tempranas, cuando corregirlos es más rápido y menos costoso.\n\nCon esta implementación, el SFL ULS avanza hacia estándares profesionales de la industria del software. Se esperan sistemas más estables y seguros para las unidades que los utilizan, y un proceso de trabajo más ordenado para el equipo.	\N	2026-10-30 00:00:02	2026-10-30 00:00:02	\N	t
+5	2	\N	2	\N	PPII-002 | El Observatorio de Datos Sostenibles suma contenidos a su sitio web	Staff SFL	El SFL ULS trabaja en el poblamiento del sitio para que la comunidad acceda de forma clara a la información del Observatorio.	El SFL ULS está a cargo del poblamiento del sitio web del Observatorio de Datos Sostenibles. El trabajo consiste en incorporar y organizar contenidos, datos e información para que el sitio refleje la labor del Observatorio.\n\nCon esto, investigadores, estudiantes y público general contarán con un espacio actualizado para consultar sus datos y publicaciones.	\N	2026-10-30 00:00:03	2026-10-30 00:00:03	\N	t
+6	2	\N	2	\N	PPII-005 | SFL ULS presenta su sitio web oficial	Staff SFL	El nuevo sitio consolida la identidad del SFL ULS y reúne en un solo lugar su portafolio de proyectos.	El SFL ULS cuenta con su propio sitio web oficial. El espacio presenta quiénes somos, cómo trabajamos y los proyectos que desarrollamos para la universidad.\n\nEl sitio funciona también como portafolio profesional: muestra el alcance del trabajo del equipo en desarrollo web, sistemas de gestión e innovación. Aquí se publicarán las noticias y avances de cada proyecto.	\N	2026-10-30 00:00:04	2026-10-30 00:00:04	\N	t
+7	2	\N	2	\N	PPII-008 | El Departamento de Ingeniería Industrial actualiza su sitio web	Staff SFL	El SFL ULS renueva el sitio del Departamento para mejorar el acceso a su información académica e institucional.	El SFL ULS trabaja en la actualización del sitio web del Departamento de Ingeniería Industrial. La renovación apunta a ordenar sus contenidos y mejorar la experiencia de quienes lo visitan.\n\nEstudiantes, postulantes y académicos podrán encontrar con mayor facilidad información sobre programas, actividades y noticias del Departamento.	\N	2026-10-30 00:00:05	2026-10-30 00:00:05	\N	t
+8	2	\N	2	\N	PPII-003 | Nuevo sistema optimiza la supervisión de alumnos en práctica	Staff SFL	La plataforma desarrollada por el SFL ULS automatiza el seguimiento de estudiantes en práctica profesional.	El SFL ULS desarrolla un Sistema de Supervisión de Alumnos en Práctica. Su objetivo es automatizar y optimizar el seguimiento que hoy realizan supervisores y coordinadores.\n\nEl sistema permitirá centralizar la información de cada práctica y reducir tareas manuales. Así, los equipos académicos podrán dedicar más tiempo al acompañamiento de los estudiantes.	\N	2026-10-30 00:00:06	2026-10-30 00:00:06	\N	t
+9	2	\N	2	\N	PPII-011 | SFL ULS modela un módulo ERP para Ingeniería Comercial	Staff SFL	El proyecto acerca a la carrera a los sistemas de gestión empresarial que utilizan las organizaciones.	El SFL ULS trabaja en el modelamiento de un módulo ERP para la carrera de Ingeniería Comercial. Los sistemas ERP (Planificación de Recursos Empresariales) integran áreas como finanzas, ventas e inventario en una sola plataforma.\n\nEl modelamiento define los procesos, flujos de información y requisitos del módulo según las necesidades de la carrera.	\N	2026-10-30 00:00:07	2026-10-30 00:00:07	\N	t
+10	2	\N	2	\N	PPII-012 | Plataforma de visualización de datos: dashboards para decidir mejor	Staff SFL	El SFL ULS implementa una plataforma de dashboards estratégicos que transforma datos en información para la toma de decisiones.	El SFL ULS implementa una Plataforma de Visualización de Datos con dashboards estratégicos. La herramienta presenta indicadores clave de forma visual, clara y actualizada.\n\nCon ella, las autoridades y equipos de gestión podrán analizar información de manera rápida y tomar decisiones basadas en datos.	\N	2026-10-30 00:00:08	2026-10-30 00:00:08	\N	t
+11	2	\N	2	\N	PPII-007 | Tecnología contra las plagas: SFL ULS desarrolla un modelo de control mediante IoT	Staff SFL	El proyecto combina hardware y software para monitorear y controlar plagas, aplicando la ingeniería a un problema concreto.	El SFL ULS desarrolla un Modelo de Control de Plagas basado en Internet de las Cosas (IoT). La propuesta integra dispositivos físicos conectados con un software que recibe y procesa la información que estos capturan.\n\nEl proyecto muestra cómo la ingeniería puede responder a desafíos del entorno con soluciones tecnológicas propias.	\N	2026-10-30 00:00:09	2026-10-30 00:00:09	\N	t
 \.
 
 
@@ -150,6 +159,14 @@ COPY public.service (id, name, description, image, link, active) FROM stdin;
 --
 
 COPY public.staff_member (id, name, "position", photo, description) FROM stdin;
+1	Manuel Huenche	QA	\N	\N
+2	Adolfo Andrés Toledo Oyarce	QAS Lead	\N	\N
+3	Brandon Muñoz	QAS	\N	\N
+4	Edinson Godoy	QAS	\N	\N
+5	Cristian Cubillos	Tech Lead	\N	\N
+6	Bastian Rojas	Technical Coordinator	\N	\N
+7	Luis Felipe Molina	Business Coordinator	\N	\N
+8	José P. Villanueva V.	Chief Information Officer	\N	\N
 \.
 
 
@@ -199,7 +216,7 @@ SELECT pg_catalog.setval('public.footer_info_id_seq', 1, false);
 -- Name: news_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.news_id_seq', 2, true);
+SELECT pg_catalog.setval('public.news_id_seq', 11, true);
 
 
 --
@@ -234,7 +251,7 @@ SELECT pg_catalog.setval('public.service_id_seq', 3, true);
 -- Name: staff_member_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.staff_member_id_seq', 1, false);
+SELECT pg_catalog.setval('public.staff_member_id_seq', 8, true);
 
 
 --

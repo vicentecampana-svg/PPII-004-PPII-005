@@ -72,6 +72,7 @@ class NewsController
         }
 
         $data = getJsonInput();
+        $this->removeUntrustedByline($data);
 
         try {
             $item = $this->service->create($data, (int) authUser()['id']);
@@ -113,6 +114,7 @@ class NewsController
         }
 
         $data = getJsonInput();
+        $this->removeUntrustedByline($data);
 
         try {
             $item = $this->service->update($id, $data);
@@ -154,6 +156,14 @@ class NewsController
             respNotFound();
         } catch (\Exception $e) {
             respServerError();
+        }
+    }
+
+    private function removeUntrustedByline(array &$data): void
+    {
+        $role = strtolower((string) (authUser()['role_name'] ?? ''));
+        if (!in_array($role, ['superadmin', 'admin', 'editor'], true)) {
+            unset($data['author_display']);
         }
     }
 

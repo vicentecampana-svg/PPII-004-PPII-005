@@ -80,16 +80,22 @@ class NewsService
 
         $statusId = $this->repo->getStatusId('pendiente');
         $tagIds = $this->extractTagIds($data);
+        $authorDisplay = $data['author_display'] ?? null;
+        if (is_string($authorDisplay)) {
+            $authorDisplay = trim($authorDisplay);
+            $authorDisplay = $authorDisplay !== '' ? $authorDisplay : null;
+        }
 
         $id = $this->repo->create([
-            'author_id'  => $authorId,
-            'status_id'  => $statusId,
-            'title'      => $data['title'],
-            'subtitle'   => $data['subtitle'] ?? null,
-            'content'    => $data['content'],
-            'image'      => $data['image'] ?? null,
-            'is_public'  => $data['is_public'] ?? true,
-            'tag_id'     => $tagIds[0] ?? ($data['tag_id'] ?? null),
+            'author_id'      => $authorId,
+            'status_id'      => $statusId,
+            'author_display' => $authorDisplay,
+            'title'          => $data['title'],
+            'subtitle'       => $data['subtitle'] ?? null,
+            'content'        => $data['content'],
+            'image'           => $data['image'] ?? null,
+            'is_public'      => $data['is_public'] ?? true,
+            'tag_id'         => $tagIds[0] ?? ($data['tag_id'] ?? null),
         ]);
 
         if (!empty($tagIds)) {
@@ -114,6 +120,14 @@ class NewsService
         }
 
         $fields = ['updated_at' => date('Y-m-d H:i:s')];
+        if (array_key_exists('author_display', $data)) {
+            $authorDisplay = $data['author_display'];
+            if (is_string($authorDisplay)) {
+                $authorDisplay = trim($authorDisplay);
+                $authorDisplay = $authorDisplay !== '' ? $authorDisplay : null;
+            }
+            $fields['author_display'] = $authorDisplay;
+        }
         if (array_key_exists('title', $data)) {
             $fields['title'] = $data['title'];
         }
@@ -212,6 +226,7 @@ class NewsService
         if (empty($data['content']) || trim($data['content']) === '') {
             $errors['content'] = 'El contenido es obligatorio.';
         }
+        $this->validateAuthorDisplay($data, $errors);
         return $errors;
     }
 
@@ -224,6 +239,18 @@ class NewsService
         if (array_key_exists('content', $data) && (empty($data['content']) || trim($data['content']) === '')) {
             $errors['content'] = 'El contenido no puede estar vacío.';
         }
+        $this->validateAuthorDisplay($data, $errors);
         return $errors;
+    }
+
+    private function validateAuthorDisplay(array $data, array &$errors): void
+    {
+        if (!array_key_exists('author_display', $data) || $data['author_display'] === null) {
+            return;
+        }
+
+        if (!is_string($data['author_display']) || mb_strlen(trim($data['author_display'])) > 255) {
+            $errors['author_display'] = 'El nombre del redactor debe tener como máximo 255 caracteres.';
+        }
     }
 }

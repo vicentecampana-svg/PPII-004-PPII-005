@@ -66,6 +66,26 @@ class NewsServiceTest extends TestCase
         $this->assertEquals('Test News', $result['title']);
     }
 
+    public function testCreateStoresCustomByline()
+    {
+        $data = [
+            'title' => 'Test News',
+            'content' => 'Content of the news',
+            'author_display' => 'Staff SFL',
+        ];
+
+        $this->repoMock->method('getStatusId')->with('pendiente')->willReturn(1);
+        $this->repoMock->expects($this->once())
+            ->method('create')
+            ->with($this->callback(static fn(array $record): bool => $record['author_display'] === 'Staff SFL'))
+            ->willReturn(1);
+        $this->repoMock->method('findById')->with(1)->willReturn(['id' => 1, 'author' => 'Staff SFL'] + $data);
+
+        $result = $this->service->create($data, 1);
+
+        $this->assertSame('Staff SFL', $result['author']);
+    }
+
     public function testCreateThrowsExceptionOnInvalidData()
     {
         $this->expectException(\InvalidArgumentException::class);

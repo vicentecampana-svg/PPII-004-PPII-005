@@ -281,6 +281,7 @@ CREATE TABLE public.news (
     status_id integer NOT NULL,
     tag_id integer,
     title character varying(255) NOT NULL,
+    author_display character varying(255),
     subtitle character varying(255),
     content text NOT NULL,
     image character varying(255),
@@ -1023,4 +1024,3 @@ CREATE INDEX idx_staff_member_orden ON public.staff_member USING btree (orden AS
 --
 
 \unrestrict 7QUYGPQx6iLPUsV0sozO9TS0ZTuYLgWUJZTW2tkxIiS1j1K0zsMF7t8Z8iPmhXM
-
