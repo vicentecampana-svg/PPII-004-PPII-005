@@ -222,6 +222,12 @@ COPY public.service (id, name, description, image, link, active) FROM stdin;
 1	Desarrollo de Software a la Medida	Creamos soluciones digitales adaptadas a las necesidades de tu organización	proyecto-1.jpg	\N	t
 2	Consultoría en Tecnología	Asesoría técnica para la transformación digital de empresas y organizaciones	proyecto-1.jpg	\N	t
 3	Capacitación en Programación	Cursos y talleres de programación para estudiantes y profesionales	proyecto-1.jpg	\N	t
+4	Internet of things	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
+5	SFL	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	https://www.sfluls.cl	t
+6	Observatorio de datos sustentables	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	https://ods.sfluls.cl	t
+7	Repositorio	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
+8	Seguridad de la información y ciberseguridad	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
+9	IALAB	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
 \.
 
 
@@ -262,6 +268,6 @@ SELECT pg_catalog.setval('public.password_reset_request_id_seq', 1, false);
 SELECT pg_catalog.setval('public.password_reset_token_id_seq', 1, false);
 SELECT pg_catalog.setval('public.project_id_seq', 3, true);
 SELECT pg_catalog.setval('public.role_id_seq', 1, false);
-SELECT pg_catalog.setval('public.service_id_seq', 3, true);
+SELECT pg_catalog.setval('public.service_id_seq', 9, true);
 SELECT pg_catalog.setval('public.staff_member_id_seq', 8, true);
 SELECT pg_catalog.setval('public.tag_id_seq', 5, true);

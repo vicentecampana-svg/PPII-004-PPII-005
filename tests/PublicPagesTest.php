@@ -127,6 +127,27 @@ final class PublicPagesTest extends TestCase
         $this->assertStringContainsString('¿Tienes un requerimiento especial?', $output);
     }
 
+    public function testServiciosViewOmitsActionWithoutLink(): void
+    {
+        $servicios = [
+            [
+                'id' => 7,
+                'name' => 'Repositorio',
+                'description' => 'Servicio tecnológico de la Universidad de La Serena.',
+                'image' => 'proyecto-1.jpg',
+                'link' => null,
+                'active' => true,
+            ],
+        ];
+
+        ob_start();
+        require dirname(__DIR__) . '/app/Views/servicios.php';
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Repositorio', $output);
+        $this->assertStringNotContainsString('Solicitar servicio', $output);
+    }
+
     public function testContactoViewRendersForm(): void
     {
         ob_start();
