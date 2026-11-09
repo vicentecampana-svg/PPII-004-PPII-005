@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\FooterService;
+use App\Services\ServiceService;
 
 /**
  * CAL-03: controlador del panel para el pie de página.
@@ -83,6 +84,20 @@ final class AdminFooterController extends AdminControllerBase
         $linkedin = trim((string) ($_POST['social_linkedin'] ?? ''));
         $twitter = trim((string) ($_POST['social_twitter'] ?? ''));
         $instagram = trim((string) ($_POST['social_instagram'] ?? ''));
+
+        // RF-FTR-001: una URL inválida se rechaza indicando el motivo.
+        $invalid = [];
+        foreach (['LinkedIn' => $linkedin, 'X / Twitter' => $twitter, 'Instagram' => $instagram] as $network => $url) {
+            if ($url !== '' && !ServiceService::isHttpUrl($url)) {
+                $invalid[] = $network;
+            }
+        }
+        if ($invalid) {
+            $_SESSION['_flash_error'] = 'La URL de ' . implode(', ', $invalid)
+                . ' no es válida: debe comenzar con http:// o https://. No se guardaron los cambios.';
+            header('Location: /admin?tab=footer');
+            exit;
+        }
 
         try {
             $data = [

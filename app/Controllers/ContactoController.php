@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Exceptions\ValidationException;
 use App\Services\CaptchaService;
 use App\Services\FooterService;
 use App\Services\FormGuardService;
 use App\Services\QueryService;
 use App\Services\RateLimiterService;
+use App\Services\ServiceService;
 
 /**
  * Página pública de Contacto y envío de formulario de consultas.
@@ -35,7 +37,8 @@ final class ContactoController extends Controller
         $flashSuccess = $_SESSION['_flash_success'] ?? null;
         $flashError = $_SESSION['_flash_error'] ?? null;
         $old = $_SESSION['_contact_old'] ?? [];
-        unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_contact_old']);
+        $ticketUrl = $_SESSION['_contact_ticket_url'] ?? null;
+        unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_contact_old'], $_SESSION['_contact_ticket_url']);
 
         $this->render('contacto', [
             'pageTitle' => 'Contáctenos — SFL ULS Lab',
@@ -43,6 +46,8 @@ final class ContactoController extends Controller
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
             'old' => $old,
+            'ticketUrl' => $ticketUrl,
+            'types' => QueryService::TYPES,
             'enlacesFooter' => $footer['links'] ?? [],
             'contacto' => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
@@ -88,12 +93,9 @@ final class ContactoController extends Controller
 
         $guard->record('contacto', $ip, $email);
 
-        if ($name === '' || $email === '' || $message === '') {
-            $this->fail('Por favor complete todos los campos requeridos (nombre, correo y motivo).');
-        }
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->fail('El correo electrónico ingresado no es válido.');
+        // RF-LEG-001: sin consentimiento explícito no se almacena ningún dato.
+        if (empty($_POST['consent'])) {
+            $this->fail('Debes dar tu consentimiento para el tratamiento de tus datos personales; sin él no podemos registrar tu solicitud.');
         }
 
         try {
@@ -101,18 +103,26 @@ final class ContactoController extends Controller
                 'name' => $name,
                 'email' => $email,
                 'phone' => $phone ?: null,
-                'subject' => $subject ?: 'Consulta general',
+                'subject' => $subject,
                 'message' => $message,
             ]);
+        } catch (ValidationException $e) {
+            // RF-CON-001: se indica cada campo inválido y el motivo.
+            $this->fail(implode(' ', $e->getErrors()));
         } catch (\Throwable $e) {
             $this->fail('Ocurrió un error al enviar tu formulario. Por favor, intenta nuevamente.');
         }
 
         unset($_SESSION['_contact_old']);
 
+        // RF-CON-001: el usuario ve la confirmación en el sitio. Si existe una
+        // plataforma de tickets, se ofrece como enlace en la confirmación.
+        $_SESSION['_flash_success'] = 'Gracias, tu solicitud fue enviada. El equipo la revisará y te responderá por correo.';
         $ticketUrl = trim((string) getenv('TICKET_PLATFORM_URL'));
-        $redirect = ($ticketUrl !== '' && filter_var($ticketUrl, FILTER_VALIDATE_URL)) ? $ticketUrl : 'about:blank';
-        header('Location: ' . $redirect);
+        if ($ticketUrl !== '' && ServiceService::isHttpUrl($ticketUrl)) {
+            $_SESSION['_contact_ticket_url'] = $ticketUrl;
+        }
+        header('Location: /contacto');
         exit;
     }
 

@@ -36,11 +36,13 @@ final class NoticiasController extends Controller
         $perPage = 12;
         $query = trim((string) ($_GET['q'] ?? $_GET['search'] ?? ''));
         $tagId = isset($_GET['tag_id']) && is_numeric($_GET['tag_id']) ? (int) $_GET['tag_id'] : null;
+        // RF-NEW-003: un término vacío no ejecuta la búsqueda; se pide uno.
+        $emptySearch = (isset($_GET['q']) || isset($_GET['search'])) && $query === '' && $tagId === null;
 
         try {
-            $data = authCheck()
-                ? $this->newsService->getAll($page, $perPage, $query, $tagId)
-                : $this->newsService->getPublished($page, $perPage, $query, $tagId);
+            // RF-NEW-002: el sitio solo muestra publicadas; las Privadas, solo
+            // a usuarios autenticados.
+            $data = $this->newsService->getPublished($page, $perPage, $query, $tagId, authCheck());
         } catch (\Throwable) {
             $data = ['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage, 'total_pages' => 0];
         }
@@ -84,6 +86,7 @@ final class NoticiasController extends Controller
             'tags'            => $tags,
             'selectedTagId'   => $tagId,
             'query'           => $query,
+            'emptySearch'     => $emptySearch,
             'enlacesFooter'   => $footer['links'] ?? [],
             'contacto'        => $footer['info'] ?? ['address' => 'La Serena, Chile', 'email' => 'contacto@sfl.uls.cl'],
         ]);
@@ -100,9 +103,7 @@ final class NoticiasController extends Controller
         $newsId = (int) $id;
 
         try {
-            $noticia = authCheck()
-                ? $this->newsService->getById($newsId)
-                : $this->newsService->getPublishedById($newsId);
+            $noticia = $this->newsService->getPublishedById($newsId, authCheck());
         } catch (\Throwable) {
             $noticia = null;
         }
@@ -115,9 +116,7 @@ final class NoticiasController extends Controller
 
         // Obtener otras noticias relevantes
         try {
-            $allPublished = authCheck()
-                ? $this->newsService->getAll(1, 6)['items']
-                : $this->newsService->getPublished(1, 6)['items'];
+            $allPublished = $this->newsService->getPublished(1, 6, '', null, authCheck())['items'];
         } catch (\Throwable) {
             $allPublished = $this->sampleNews();
         }

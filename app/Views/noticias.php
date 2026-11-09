@@ -41,6 +41,9 @@ $query ??= '';
         </div>
       </form>
       <div class="noticias-search-divider"></div>
+      <?php if (!empty($emptySearch)) : ?>
+        <p class="form-error" role="alert">Ingresa un término de búsqueda.</p>
+      <?php endif; ?>
     </div>
 
     <!-- Filtros de tags si existen -->

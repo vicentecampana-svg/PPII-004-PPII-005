@@ -55,7 +55,9 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
                 <div class="admin-item-title"><?= e($item['title']) ?></div>
                 <div class="admin-item-desc">
                   <?php if ($isPublished) : ?>
-                    <span class="admin-badge-approved">Aprobada</span>
+                    <span class="admin-badge-approved">Aprobada · <?= !empty($item['is_public']) ? 'Pública' : 'Privada' ?></span>
+                  <?php elseif ($statusName === 'archivada') : ?>
+                    <span class="admin-badge-pending">Archivada</span>
                   <?php else : ?>
                     <span class="admin-badge-pending">Pendiente</span>
                   <?php endif; ?>
@@ -67,32 +69,55 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
             </div>
 
             <div class="admin-item-actions">
-              <!-- Botón Aprobar / Desaprobar (Estado) -->
-              <?php if ($isEditorOrAdmin) : ?>
+              <!-- RF-NEW-002: aprobar con visibilidad, rechazar o despublicar -->
+              <?php if ($isEditorOrAdmin && $statusName === 'pendiente') : ?>
                 <form method="post" action="/admin/noticias/status" class="admin-form-inline">
                   <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
                   <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
-                  <input type="hidden" name="status" value="<?= $isPublished ? 'pendiente' : 'publicada' ?>">
-                    <?php if (!$isPublished) : ?>
-                    <button type="submit" 
-                            class="admin-btn-icon approve" 
-                            title="Aprobar y publicar noticia"
-                            aria-label="Aprobar <?= e($item['title']) ?>">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </button>
-                    <?php else : ?>
-                    <button type="submit" 
-                            class="admin-btn-icon unapprove" 
-                            title="Cambiar a pendiente (despublicar)"
-                            aria-label="Despublicar <?= e($item['title']) ?>">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                    <?php endif; ?>
+                  <input type="hidden" name="status" value="publicada">
+                  <select name="visibility" class="admin-form-select" required
+                          aria-label="Visibilidad de <?= e($item['title']) ?>">
+                    <option value="">Visibilidad…</option>
+                    <option value="publica">Pública</option>
+                    <option value="privada">Privada</option>
+                  </select>
+                  <button type="submit"
+                          class="admin-btn-icon approve"
+                          title="Aprobar y publicar noticia"
+                          aria-label="Aprobar <?= e($item['title']) ?>">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </form>
+                <form method="post" action="/admin/noticias/status" class="admin-form-inline">
+                  <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+                  <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
+                  <input type="hidden" name="status" value="archivada">
+                  <button type="submit"
+                          class="admin-btn-icon unapprove"
+                          title="Rechazar noticia (queda archivada)"
+                          aria-label="Rechazar <?= e($item['title']) ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <line x1="5.6" y1="5.6" x2="18.4" y2="18.4"></line>
+                    </svg>
+                  </button>
+                </form>
+              <?php elseif ($isEditorOrAdmin && $isPublished) : ?>
+                <form method="post" action="/admin/noticias/status" class="admin-form-inline">
+                  <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+                  <input type="hidden" name="id" value="<?= (int) $item['id'] ?>">
+                  <input type="hidden" name="status" value="pendiente">
+                  <button type="submit"
+                          class="admin-btn-icon unapprove"
+                          title="Cambiar a pendiente (despublicar)"
+                          aria-label="Despublicar <?= e($item['title']) ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
                 </form>
               <?php endif; ?>
 
@@ -192,6 +217,17 @@ $isEditorOrAdmin = in_array($roleNormalized, ['superadmin', 'admin', 'editor'], 
                     rows="6" 
                     placeholder="Escribe el contenido de la noticia..."
                     required><?= e($editingNews['content'] ?? '') ?></textarea>
+        </div>
+
+        <!-- Tags (RF-NEW-001: hasta 5, de 2 a 30 caracteres) -->
+        <div class="admin-form-group">
+          <label class="admin-form-label" for="news-tags">Tags (separados por comas, máximo 5)</label>
+          <input type="text"
+                 id="news-tags"
+                 name="tags"
+                 class="admin-form-input"
+                 value="<?= e(implode(', ', array_column($editingNews['tags'] ?? [], 'name'))) ?>"
+                 placeholder="Ej: Desarrollo Web, Cloud Computing">
         </div>
 
         <!-- Imagen -->

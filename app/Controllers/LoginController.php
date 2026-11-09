@@ -12,6 +12,9 @@ use App\Services\UserService;
 
 final class LoginController extends Controller
 {
+    /** Roles con acceso al panel de administración. */
+    private const PANEL_ROLES = ['superadmin', 'admin', 'editor', 'redactor'];
+
     private UserService $userService;
     private CaptchaService $captchaService;
     private RateLimiterService $rateLimiter;
@@ -79,12 +82,13 @@ final class LoginController extends Controller
         // 3. Comprobar credenciales solo si pasó CAPTCHA y no está bloqueado
         if (!$errors) {
             $user = $this->userService->getByEmail($email);
+            $passwordOk = UserService::verifyPassword($password, $user['password'] ?? null);
 
-            if (!UserService::verifyPassword($password, $user['password'] ?? null)) {
+            // RNF-SEC-004: el mismo mensaje para cualquier fallo, sin revelar si
+            // la cuenta existe, está desactivada o fue eliminada.
+            if (!$passwordOk || empty($user['active']) || !empty($user['deleted_at'])) {
                 $this->rateLimiter->recordFailedAttempt($ip, $email);
                 $errors['general'] = 'Correo o contraseña incorrectos.';
-            } elseif (!$user['active']) {
-                $errors['general'] = 'La cuenta está desactivada.';
             }
         }
 
@@ -107,7 +111,10 @@ final class LoginController extends Controller
             (bool) $user['must_change_password']
         );
 
-        header('Location: /admin');
+        // RNF-SEC-002: el rol Usuario no tiene panel; vuelve al sitio, donde
+        // ve también las noticias Privadas.
+        $isStaff = in_array(strtolower((string) $user['role_name']), self::PANEL_ROLES, true);
+        header('Location: ' . ($isStaff || $user['must_change_password'] ? '/admin' : '/noticias'));
         exit;
     }
 

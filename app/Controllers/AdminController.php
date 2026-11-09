@@ -84,6 +84,21 @@ final class AdminController extends AdminControllerBase
             }
         }
 
+        $servicesList = [];
+        $editingService = null;
+        if ($tab === 'servicios' && $roleNormalized === 'superadmin') {
+            try {
+                $servicesList = $this->serviceService->getAll(1, 100, true)['items'] ?? [];
+
+                $editId = (int) ($_GET['edit_id'] ?? 0);
+                if ($editId > 0) {
+                    $editingService = $this->serviceService->getById($editId);
+                }
+            } catch (\Throwable) {
+                // Degradar graciosamente
+            }
+        }
+
         // Si la pestaña es staff y el usuario tiene permisos, cargar listado
         if ($tab === 'staff' && in_array($roleNormalized, ['superadmin', 'admin'], true)) {
             try {
@@ -184,6 +199,8 @@ final class AdminController extends AdminControllerBase
             'activeTab'          => $tab,
             'projects'           => $projects,
             'editingProject'     => $editingProject,
+            'servicesList'       => $servicesList,
+            'editingService'     => $editingService,
             'staffList'          => $staffList,
             'editingStaff'       => $editingStaff,
             'newsList'           => $newsList,

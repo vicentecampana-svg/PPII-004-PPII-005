@@ -42,6 +42,7 @@ class QueryServiceTest extends TestCase
         $data = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
+            'subject' => 'Consulta',
             'message' => 'Hello there',
         ];
 
@@ -49,7 +50,7 @@ class QueryServiceTest extends TestCase
         $this->repoMock->method('findById')->with(1)->willReturn(['id' => 1] + $data);
 
         // SEC-09: cada consulta solo intenta el aviso agrupado, no envía un correo propio.
-        $this->digestMock->expects($this->once())->method('sendIfDue');
+        $this->digestMock->expects($this->once())->method('sendPending');
 
         $result = $this->service->create($data);
 
@@ -62,12 +63,13 @@ class QueryServiceTest extends TestCase
         $data = [
             'name' => 'Jane Doe',
             'email' => 'jane@example.com',
+            'subject' => 'Consulta',
             'message' => 'Hello there',
         ];
 
         $this->repoMock->method('create')->willReturn(1);
         $this->repoMock->method('findById')->with(1)->willReturn(['id' => 1] + $data);
-        $this->digestMock->method('sendIfDue')->willThrowException(new \RuntimeException('SMTP caído'));
+        $this->digestMock->method('sendPending')->willThrowException(new \RuntimeException('SMTP caído'));
 
         $result = $this->service->create($data);
 

@@ -26,11 +26,13 @@ $servicios ??= [];
           <div class="servicio-card-body">
             <h3 class="servicio-card-title"><?= htmlspecialchars($s['name'], ENT_QUOTES, 'UTF-8') ?></h3>
             <p class="servicio-card-desc"><?= htmlspecialchars($s['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
-            <div class="servicio-card-action">
-              <a href="<?= htmlspecialchars($s['link'] ?: '/contacto', ENT_QUOTES, 'UTF-8') ?>" class="btn btn-destructive btn-sm">
-                Solicitar servicio
-              </a>
-            </div>
+            <?php if (!empty($s['link'])) : ?>
+              <div class="servicio-card-action">
+                <a href="<?= htmlspecialchars($s['link'], ENT_QUOTES, 'UTF-8') ?>" class="btn btn-destructive btn-sm">
+                  Solicitar servicio
+                </a>
+              </div>
+            <?php endif; ?>
           </div>
         </article>
       <?php endforeach; ?>

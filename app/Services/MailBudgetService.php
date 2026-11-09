@@ -23,6 +23,7 @@ class MailBudgetService
     public const SCOPE_CONTACT = 'contacto';
     public const SCOPE_CREDITS = 'creditos';
     public const SCOPE_PASSWORD_RESET = 'recuperacion';
+    public const SCOPE_ACCOUNTS = 'cuentas';
 
     public const DEFAULT_DAILY_LIMIT = 100;
     private const WINDOW_HOURS = 24;
@@ -32,6 +33,7 @@ class MailBudgetService
         self::SCOPE_CONTACT        => ['env' => 'MAIL_SHARE_CONTACT', 'default' => 20],
         self::SCOPE_CREDITS        => ['env' => 'MAIL_SHARE_CREDITS', 'default' => 20],
         self::SCOPE_PASSWORD_RESET => ['env' => 'MAIL_SHARE_PASSWORD_RESET', 'default' => 15],
+        self::SCOPE_ACCOUNTS       => ['env' => 'MAIL_SHARE_ACCOUNTS', 'default' => 10],
     ];
 
     public function dailyLimit(): int

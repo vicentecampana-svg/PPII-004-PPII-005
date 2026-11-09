@@ -14,7 +14,7 @@ $editingProject ??= null;
   <!-- Columna izquierda: Listado de Proyectos -->
   <div class="admin-main-col">
     <div class="admin-tab-header">
-      <h2 class="admin-tab-content-title">Proyectos y servicios</h2>
+      <h2 class="admin-tab-content-title">Proyectos</h2>
     </div>
 
     <?php if (empty($projects)) : ?>

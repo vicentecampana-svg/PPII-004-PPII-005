@@ -62,6 +62,18 @@ class MailerService
         return $this->deliver(MailBudgetService::SCOPE_PASSWORD_RESET, $toEmail, $toName, $subject, $body, $resetLink);
     }
 
+    /**
+     * RF-AUT-004 / IS-001: avisa al usuario que se creó su cuenta. No incluye
+     * la contraseña inicial: la entrega el Super Usuario por otro canal.
+     */
+    public function sendAccountCreated(string $toEmail, string $username, string $loginUrl): bool
+    {
+        $subject = 'Tu cuenta en Software Factory Lab ULS fue creada';
+        $body    = $this->buildAccountCreatedBody($username, $loginUrl);
+
+        return $this->deliver(MailBudgetService::SCOPE_ACCOUNTS, $toEmail, $username, $subject, $body, $loginUrl);
+    }
+
     // ──────────────────────────────────────────────
     //  API pública — envío genérico
     // ──────────────────────────────────────────────
@@ -142,7 +154,14 @@ class MailerService
             '',
         ]);
 
-        return (bool) file_put_contents($this->logPath, $entry, FILE_APPEND | LOCK_EX);
+        // Un fallo al escribir la bitácora no debe emitir avisos: romperían la
+        // redirección de la página que envía el correo.
+        $written = @file_put_contents($this->logPath, $entry, FILE_APPEND | LOCK_EX);
+        if ($written === false) {
+            error_log('[MailerService] No se pudo escribir la bitácora de correo: ' . $this->logPath);
+        }
+
+        return $written !== false;
     }
 
     // ──────────────────────────────────────────────
@@ -271,7 +290,7 @@ class MailerService
               </a>
             </p>
             <p class="email-note">
-              Este enlace es válido por <strong>1 hora</strong> y sólo puede usarse
+              Este enlace es válido por <strong>30 minutos</strong> y sólo puede usarse
               una vez. Si no solicitaste el cambio, puedes ignorar este correo.
             </p>
             <p class="email-fallback">
@@ -283,6 +302,31 @@ class MailerService
               Software Factory Lab (SFL) — Universidad de La Serena
             </p>
           </div>
+        </body>
+        </html>
+        HTML;
+    }
+
+    private function buildAccountCreatedBody(string $username, string $loginUrl): string
+    {
+        $safeName = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
+        $safeLink = htmlspecialchars($loginUrl, ENT_QUOTES, 'UTF-8');
+
+        return <<<HTML
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Cuenta creada</title>
+        </head>
+        <body>
+          <h2>Tu cuenta fue creada</h2>
+          <p>Hola, <strong>{$safeName}</strong>.</p>
+          <p>Se creó tu cuenta en el panel de <strong>Software Factory Lab ULS</strong>.
+             El Super Usuario te entregará la contraseña inicial, que deberás cambiar
+             en tu primer ingreso.</p>
+          <p>Ingresa en: <a href="{$safeLink}">{$safeLink}</a></p>
+          <p>Si no esperabas este correo, avísanos respondiendo a esta dirección.</p>
         </body>
         </html>
         HTML;

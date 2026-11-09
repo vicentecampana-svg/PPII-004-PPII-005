@@ -216,14 +216,14 @@ final class SecurityStackTest extends TestCase
         $html = $this->render('contacto', [
             'flashSuccess' => null,
             'flashError'   => 'El código de seguridad (CAPTCHA) es incorrecto o ha expirado.',
-            'old'          => ['name' => 'Ana <b>', 'email' => 'ana@x.cl', 'subject' => 'Otro', 'message' => 'Hola'],
+            'old'          => ['name' => 'Ana <b>', 'email' => 'ana@x.cl', 'subject' => 'Consulta', 'message' => 'Hola'],
         ]);
 
         $this->assertStringContainsString('name="captcha"', $html);
         $this->assertStringContainsString('src="/captcha"', $html);
         $this->assertStringContainsString('name="website"', $html);
         $this->assertStringContainsString('value="Ana &lt;b&gt;"', $html);
-        $this->assertMatchesRegularExpression('/<option value="Otro" selected>/', $html);
+        $this->assertMatchesRegularExpression('/<option value="Consulta" selected>/', $html);
         $this->assertStringContainsString('>Hola</textarea>', $html);
     }
 

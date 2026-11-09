@@ -41,7 +41,7 @@ class NewsServiceTest extends TestCase
 
     public function testGetPublishedByIdReturnsNewsIfPublished()
     {
-        $this->repoMock->method('findById')->with(1)->willReturn(['id' => 1, 'status' => 'publicada']);
+        $this->repoMock->method('findById')->with(1)->willReturn(['id' => 1, 'status' => 'publicada', 'is_public' => true]);
 
         $result = $this->service->getPublishedById(1);
 
@@ -53,7 +53,7 @@ class NewsServiceTest extends TestCase
     {
         $data = [
             'title' => 'Test News',
-            'content' => 'Content of the news'
+            'content' => 'Content of the news item'
         ];
 
         $this->repoMock->method('getStatusId')->with('pendiente')->willReturn(1);
@@ -70,7 +70,7 @@ class NewsServiceTest extends TestCase
     {
         $data = [
             'title' => 'Test News',
-            'content' => 'Content of the news',
+            'content' => 'Content of the news item',
             'author_display' => 'Staff SFL',
         ];
 
