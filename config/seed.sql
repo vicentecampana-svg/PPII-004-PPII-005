@@ -44,14 +44,14 @@ COPY public.tag (id, name) FROM stdin;
 --
 
 COPY public.app_user (id, role_id, username, email, password, active, must_change_password, deleted_at) FROM stdin;
-5	4	manuel.huenche	manuel.huenche@userena.cl	!	t	t	\N
-6	4	adolfo.toledo	adolfo.toledo@userena.cl	!	t	t	\N
-7	4	egodoy7	egodoy7@alumnosuls.cl	!	t	t	\N
-8	4	cristian.cubillos	cristian.cubillos@userena.cl	!	t	t	\N
-9	4	bastian.rojasp	bastian.rojasp@userena.cl	!	t	t	\N
-10	4	luis.molinac	luis.molinac@userena.cl	!	t	t	\N
-11	4	jose.villanuevav1	jose.villanuevav1@userena.cl	!	t	t	\N
-1	1	StaffSFL	staffsfl@sfluls.cl	!	t	f	\N
+5	4	manuel.huenche	manuel.huenche@userena.cl	$2y$12$PvhKWfLDwAIoZLSoiiQ/C.aQaS.HEYPXJ2.fbuolODN5RbXgLF/4G	t	t	\N
+6	4	adolfo.toledo	adolfo.toledo@userena.cl	$2y$12$QcPCONOYmFgmWdwa0IVXLevh9Zh70jsbpf728vaBXFyn9KTO6kJ12	t	t	\N
+7	4	egodoy7	egodoy7@alumnosuls.cl	$2y$12$QVxrz1M5WFykt10khMxW7.EzCEusJIpwzDTJZENhnG89BJiLgyheu	t	t	\N
+8	4	cristian.cubillos	cristian.cubillos@userena.cl	$2y$12$GuMgQ5AYvUD2U.8zaPihIus/1BPTrR/95xWVeCN/T7r8i1SYGJOnO	t	t	\N
+9	4	bastian.rojasp	bastian.rojasp@userena.cl	$2y$12$jhOUk0LtaqBmvYny8xH0CeD4pBCjLQRLT.y8P3zzXVQLhmu309.8y	t	t	\N
+10	4	luis.molinac	luis.molinac@userena.cl	$2y$12$M8iLMx5BECoiUZu6xpLGU.qgNp2pP.Es3lWSPXZJr2rj/BU2VAm.S	t	t	\N
+11	4	jose.villanuevav1	jose.villanuevav1@userena.cl	$2y$12$ep1gDZr9gaXJdzYdjRwDCeHG7btscIn//VT5AQ888o93otFwwgX2S	t	t	\N
+1	1	StaffSFL	staffsfl@sfluls.cl	$2y$12$j04.EdE.mgQgxgDmfUk8guG8xJMP5GJRHU5J7QIB5kZwVJO0D49ti	t	f	\N
 \.
 
 
@@ -267,11 +267,3 @@ SELECT pg_catalog.setval('public.service_id_seq', 3, true);
 SELECT pg_catalog.setval('public.staff_member_id_seq', 8, true);
 SELECT pg_catalog.setval('public.tag_id_seq', 5, true);
 
--- RNF-SEC-003: el repositorio no versiona hashes de contraseña. Las cuentas
--- semilla reciben una contraseña aleatoria que nadie conoce y deben cambiarla:
--- su primer acceso es por "¿Olvidaste tu contraseña?" (ver README.dev.md).
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-UPDATE public.app_user
-SET password = '$2y$' || substr(crypt(gen_random_uuid()::text, gen_salt('bf', 12)), 5),
-    must_change_password = true
-WHERE password = '!';
