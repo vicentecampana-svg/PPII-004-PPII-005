@@ -9,6 +9,11 @@ use App\Repositories\StaffRepository;
 
 class StaffService
 {
+    public const NAME_MIN = 3;
+    public const NAME_MAX = 100;
+    public const POSITION_MIN = 3;
+    public const POSITION_MAX = 80;
+
     private StaffRepository $repo;
     private AuditService $audit;
 
@@ -105,14 +110,24 @@ class StaffService
         $this->audit->log(null, 'eliminar', 'staff_member', $id, 'Miembro del equipo eliminado: ' . ($existing['name'] ?? ''));
     }
 
+    // RF-STA-001: nombre de 3 a 100 caracteres y cargo de 3 a 80, ambos obligatorios.
     private function validate(array $data, bool $partial = false): array
     {
         $errors = [];
-        if (!$partial && (empty($data['name']) || trim($data['name']) === '')) {
-            $errors['name'] = 'El nombre es obligatorio.';
-        }
-        if ($partial && array_key_exists('name', $data) && (empty($data['name']) || trim($data['name']) === '')) {
-            $errors['name'] = 'El nombre no puede estar vacío.';
+        $fields = [
+            'name'     => ['El nombre', self::NAME_MIN, self::NAME_MAX],
+            'position' => ['El cargo', self::POSITION_MIN, self::POSITION_MAX],
+        ];
+        foreach ($fields as $key => [$label, $min, $max]) {
+            if ($partial && !array_key_exists($key, $data)) {
+                continue;
+            }
+            $length = mb_strlen(trim((string) ($data[$key] ?? '')));
+            if ($length === 0) {
+                $errors[$key] = "{$label} es obligatorio.";
+            } elseif ($length < $min || $length > $max) {
+                $errors[$key] = "{$label} debe tener entre {$min} y {$max} caracteres.";
+            }
         }
         return $errors;
     }

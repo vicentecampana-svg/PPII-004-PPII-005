@@ -11,6 +11,7 @@ COPY public.role (id, name, description) FROM stdin;
 2	admin	Gestión de contenido y usuarios
 3	editor	Edición de contenido
 4	redactor	Creación de noticias propias
+5	usuario	Lectura de noticias privadas en el sitio
 \.
 
 
@@ -43,14 +44,14 @@ COPY public.tag (id, name) FROM stdin;
 --
 
 COPY public.app_user (id, role_id, username, email, password, active, must_change_password, deleted_at) FROM stdin;
-5	4	manuel.huenche	manuel.huenche@userena.cl	$2y$12$PvhKWfLDwAIoZLSoiiQ/C.aQaS.HEYPXJ2.fbuolODN5RbXgLF/4G	t	t	\N
-6	4	adolfo.toledo	adolfo.toledo@userena.cl	$2y$12$QcPCONOYmFgmWdwa0IVXLevh9Zh70jsbpf728vaBXFyn9KTO6kJ12	t	t	\N
-7	4	egodoy7	egodoy7@alumnosuls.cl	$2y$12$QVxrz1M5WFykt10khMxW7.EzCEusJIpwzDTJZENhnG89BJiLgyheu	t	t	\N
-8	4	cristian.cubillos	cristian.cubillos@userena.cl	$2y$12$GuMgQ5AYvUD2U.8zaPihIus/1BPTrR/95xWVeCN/T7r8i1SYGJOnO	t	t	\N
-9	4	bastian.rojasp	bastian.rojasp@userena.cl	$2y$12$jhOUk0LtaqBmvYny8xH0CeD4pBCjLQRLT.y8P3zzXVQLhmu309.8y	t	t	\N
-10	4	luis.molinac	luis.molinac@userena.cl	$2y$12$M8iLMx5BECoiUZu6xpLGU.qgNp2pP.Es3lWSPXZJr2rj/BU2VAm.S	t	t	\N
-11	4	jose.villanuevav1	jose.villanuevav1@userena.cl	$2y$12$ep1gDZr9gaXJdzYdjRwDCeHG7btscIn//VT5AQ888o93otFwwgX2S	t	t	\N
-1	1	StaffSFL	staffsfl@sfluls.cl	$2y$12$j04.EdE.mgQgxgDmfUk8guG8xJMP5GJRHU5J7QIB5kZwVJO0D49ti	t	f	\N
+5	4	manuel.huenche	manuel.huenche@userena.cl	!	t	t	\N
+6	4	adolfo.toledo	adolfo.toledo@userena.cl	!	t	t	\N
+7	4	egodoy7	egodoy7@alumnosuls.cl	!	t	t	\N
+8	4	cristian.cubillos	cristian.cubillos@userena.cl	!	t	t	\N
+9	4	bastian.rojasp	bastian.rojasp@userena.cl	!	t	t	\N
+10	4	luis.molinac	luis.molinac@userena.cl	!	t	t	\N
+11	4	jose.villanuevav1	jose.villanuevav1@userena.cl	!	t	t	\N
+1	1	StaffSFL	staffsfl@sfluls.cl	!	t	f	\N
 \.
 
 
@@ -222,6 +223,12 @@ COPY public.service (id, name, description, image, link, active) FROM stdin;
 1	Desarrollo de Software a la Medida	Creamos soluciones digitales adaptadas a las necesidades de tu organización	proyecto-1.jpg	\N	t
 2	Consultoría en Tecnología	Asesoría técnica para la transformación digital de empresas y organizaciones	proyecto-1.jpg	\N	t
 3	Capacitación en Programación	Cursos y talleres de programación para estudiantes y profesionales	proyecto-1.jpg	\N	t
+4	Internet of things	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
+5	SFL	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	https://www.sfluls.cl	t
+6	Observatorio de datos sustentables	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	https://ods.sfluls.cl	t
+7	Repositorio	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
+8	Seguridad de la información y ciberseguridad	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
+9	IALAB	Servicio tecnológico de la Universidad de La Serena.	proyecto-1.jpg	\N	t
 \.
 
 
@@ -261,7 +268,16 @@ SELECT pg_catalog.setval('public.news_status_id_seq', 1, false);
 SELECT pg_catalog.setval('public.password_reset_request_id_seq', 1, false);
 SELECT pg_catalog.setval('public.password_reset_token_id_seq', 1, false);
 SELECT pg_catalog.setval('public.project_id_seq', 3, true);
-SELECT pg_catalog.setval('public.role_id_seq', 1, false);
-SELECT pg_catalog.setval('public.service_id_seq', 3, true);
+SELECT pg_catalog.setval('public.role_id_seq', 5, true);
+SELECT pg_catalog.setval('public.service_id_seq', 9, true);
 SELECT pg_catalog.setval('public.staff_member_id_seq', 8, true);
 SELECT pg_catalog.setval('public.tag_id_seq', 5, true);
+
+-- RNF-SEC-003: el repositorio no versiona hashes de contraseña. Las cuentas
+-- semilla reciben una contraseña aleatoria que nadie conoce y deben cambiarla:
+-- su primer acceso es por "¿Olvidaste tu contraseña?" (ver README.dev.md).
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+UPDATE public.app_user
+SET password = '$2y$' || substr(crypt(gen_random_uuid()::text, gen_salt('bf', 12)), 5),
+    must_change_password = true
+WHERE password = '!';

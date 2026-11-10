@@ -9,8 +9,10 @@ declare(strict_types=1);
  */
 
 $old = $old ?? [];
-$subjects = ['Consulta general', 'Solicitud de servicio', 'Propuesta de proyecto', 'Prácticas y vinculación', 'Otro'];
+// RF-CON-001: tipos de interacción (QueryService::TYPES)
+$subjects = $types ?? ['Sugerencia', 'Consulta', 'Solicitud'];
 $oldSubject = $old['subject'] ?? '';
+$ticketUrl ??= null;
 ?>
 <section class="contacto-hero-section">
   <div class="container contacto-container">
@@ -18,8 +20,11 @@ $oldSubject = $old['subject'] ?? '';
       <h1 class="contacto-card-title">Envío de formulario de contacto</h1>
 
       <?php if (!empty($flashSuccess)) : ?>
-        <div class="alert alert-success" role="alert">
+        <div class="alert alert-success" role="status">
             <?= htmlspecialchars($flashSuccess, ENT_QUOTES, 'UTF-8') ?>
+            <?php if (!empty($ticketUrl)) : ?>
+              <a href="<?= e($ticketUrl) ?>">Seguir tu solicitud en la plataforma de tickets</a>
+            <?php endif; ?>
         </div>
       <?php endif; ?>
 
@@ -44,9 +49,9 @@ $oldSubject = $old['subject'] ?? '';
         </div>
 
         <div class="contacto-form-group">
-          <label for="contact-motivo">Motivo de envío</label>
+          <label for="contact-motivo">Tipo de interacción</label>
           <select id="contact-motivo" name="subject" required>
-            <option value="" disabled<?= in_array($oldSubject, $subjects, true) ? '' : ' selected' ?>>Seleccione motivo de envío</option>
+            <option value="" disabled<?= in_array($oldSubject, $subjects, true) ? '' : ' selected' ?>>Seleccione el tipo de interacción</option>
             <?php foreach ($subjects as $subjectOption) : ?>
               <option value="<?= e($subjectOption) ?>"<?= $oldSubject === $subjectOption ? ' selected' : '' ?>><?= e($subjectOption) ?></option>
             <?php endforeach; ?>
@@ -66,6 +71,15 @@ $oldSubject = $old['subject'] ?? '';
         <div class="contacto-form-group">
           <label for="contact-cuerpo">Cuerpo del motivo</label>
           <textarea id="contact-cuerpo" name="message" rows="5" required placeholder="Describa aquí el motivo del contacto"><?= e($old['message'] ?? '') ?></textarea>
+        </div>
+
+        <!-- RF-LEG-001: consentimiento explícito, nunca premarcado -->
+        <div class="contacto-form-group contacto-consent">
+          <label for="contact-consent">
+            <input type="checkbox" id="contact-consent" name="consent" value="1" required>
+            Acepto el tratamiento de mis datos personales con la finalidad de responder esta solicitud,
+            según la <a href="/privacidad">política de privacidad</a> (Ley N° 19.628 y Ley N° 21.719).
+          </label>
         </div>
 
         <!-- SEC-10: CAPTCHA propio de la plataforma (ver CaptchaService) -->

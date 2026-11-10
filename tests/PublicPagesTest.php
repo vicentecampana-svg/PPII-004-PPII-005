@@ -127,6 +127,27 @@ final class PublicPagesTest extends TestCase
         $this->assertStringContainsString('¿Tienes un requerimiento especial?', $output);
     }
 
+    public function testServiciosViewOmitsActionWithoutLink(): void
+    {
+        $servicios = [
+            [
+                'id' => 7,
+                'name' => 'Repositorio',
+                'description' => 'Servicio tecnológico de la Universidad de La Serena.',
+                'image' => 'proyecto-1.jpg',
+                'link' => null,
+                'active' => true,
+            ],
+        ];
+
+        ob_start();
+        require dirname(__DIR__) . '/app/Views/servicios.php';
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Repositorio', $output);
+        $this->assertStringNotContainsString('Solicitar servicio', $output);
+    }
+
     public function testContactoViewRendersForm(): void
     {
         ob_start();
@@ -135,7 +156,7 @@ final class PublicPagesTest extends TestCase
 
         $this->assertStringContainsString('Envío de formulario de contacto', $output);
         $this->assertStringContainsString('Nombre', $output);
-        $this->assertStringContainsString('Motivo de envío', $output);
+        $this->assertStringContainsString('Tipo de interacción', $output);
         $this->assertStringContainsString('Correo de contacto', $output);
         $this->assertStringContainsString('Teléfono de contacto', $output);
         $this->assertStringContainsString('Cuerpo del motivo', $output);

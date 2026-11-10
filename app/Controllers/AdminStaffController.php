@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Exceptions\ValidationException;
 use App\Services\StaffService;
 
 /**
@@ -29,12 +30,6 @@ final class AdminStaffController extends AdminControllerBase
         $description = trim((string) ($_POST['description'] ?? ''));
         $photo = trim((string) ($_POST['existing_photo'] ?? ''));
 
-        if ($name === '') {
-            $_SESSION['_flash_error'] = 'El nombre del miembro del staff es obligatorio.';
-            header('Location: /admin?tab=staff' . ($id > 0 ? '&edit_id=' . $id : ''));
-            exit;
-        }
-
         if (isset($_FILES['photo_file']) && !empty($_FILES['photo_file']['name'])) {
             try {
                 $photo = $this->mediaService->upload($_FILES['photo_file'], 'staff_');
@@ -52,7 +47,7 @@ final class AdminStaffController extends AdminControllerBase
         try {
             $data = [
                 'name'        => $name,
-                'position'    => $position !== '' ? $position : null,
+                'position'    => $position,
                 'description' => $description !== '' ? $description : null,
                 'photo'       => $photo !== '' ? $photo : null,
             ];
@@ -64,6 +59,11 @@ final class AdminStaffController extends AdminControllerBase
                 $this->staffService->create($data);
                 $_SESSION['_flash_success'] = 'Miembro del staff creado exitosamente.';
             }
+        } catch (ValidationException $e) {
+            // RF-STA-001: se indica el campo y el motivo.
+            $_SESSION['_flash_error'] = implode(' ', $e->getErrors());
+            header('Location: /admin?tab=staff' . ($id > 0 ? '&edit_id=' . $id : ''));
+            exit;
         } catch (\Throwable) {
             $_SESSION['_flash_error'] = 'No se pudo guardar el miembro del staff. Inténtalo nuevamente.';
         }

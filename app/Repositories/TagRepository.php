@@ -24,6 +24,19 @@ class TagRepository
         return dbInsert('tag', $data);
     }
 
+    /** Id del tag con ese nombre; lo crea si aún no existe. */
+    public function findOrCreate(string $name): int
+    {
+        $row = dbFetchOne(
+            "INSERT INTO tag (name) VALUES (:name)
+             ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+             RETURNING id",
+            ['name' => $name]
+        );
+
+        return (int) $row['id'];
+    }
+
     public function delete(int $id): int
     {
         return dbDelete('tag', 'id = :id', ['id' => $id]);

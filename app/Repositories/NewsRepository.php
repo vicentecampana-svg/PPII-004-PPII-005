@@ -34,9 +34,9 @@ class NewsRepository
         return $this->formatRows(dbFetchAll($sql, $params));
     }
 
-    public function findPublished(int $limit = 20, int $offset = 0, string $query = '', ?int $tagId = null): array
+    public function findPublished(int $limit = 20, int $offset = 0, string $query = '', ?int $tagId = null, bool $includePrivate = false): array
     {
-        [$whereSql, $params] = $this->buildWhere('publicada', $query, $tagId);
+        [$whereSql, $params] = $this->buildWhere('publicada', $query, $tagId, $includePrivate);
         $params['limit'] = $limit;
         $params['offset'] = $offset;
 
@@ -137,6 +137,30 @@ class NewsRepository
         );
     }
 
+    /**
+     * RF-NEW-004: resuelve la noticia solo si sigue Pendiente. Devuelve las
+     * filas afectadas (0 = otro editor ya la resolvió). $isPublic null
+     * conserva la visibilidad actual.
+     */
+    public function resolvePending(int $id, int $pendingStatusId, int $newStatusId, ?bool $isPublic): int
+    {
+        $params = ['id' => $id, 'pending' => $pendingStatusId, 'status' => $newStatusId];
+        $visibility = '';
+        if ($isPublic !== null) {
+            $visibility = ', is_public = :is_public';
+            $params['is_public'] = $isPublic;
+        }
+
+        return dbQuery(
+            "UPDATE news
+             SET status_id = :status{$visibility}, updated_at = NOW(),
+                 publication_date = CASE WHEN :status = (SELECT id FROM news_status WHERE name = 'publicada')
+                                         THEN COALESCE(publication_date, NOW()) ELSE publication_date END
+             WHERE id = :id AND status_id = :pending",
+            $params
+        )->rowCount();
+    }
+
     public function getStatusId(string $status): ?int
     {
         $row = dbFetchOne("SELECT id FROM news_status WHERE name = :name", ['name' => $status]);
@@ -156,9 +180,9 @@ class NewsRepository
         return (int) ($r['t'] ?? 0);
     }
 
-    public function countPublished(string $query = '', ?int $tagId = null): int
+    public function countPublished(string $query = '', ?int $tagId = null, bool $includePrivate = false): int
     {
-        [$whereSql, $params] = $this->buildWhere('publicada', $query, $tagId);
+        [$whereSql, $params] = $this->buildWhere('publicada', $query, $tagId, $includePrivate);
         $sql = "SELECT COUNT(DISTINCT n.id) AS t
                 FROM news n
                 JOIN news_status ns ON n.status_id = ns.id
@@ -169,7 +193,7 @@ class NewsRepository
         return (int) ($r['t'] ?? 0);
     }
 
-    private function buildWhere(?string $status, string $query, ?int $tagId): array
+    private function buildWhere(?string $status, string $query, ?int $tagId, bool $includePrivate = false): array
     {
         $conditions = [];
         $params = [];
@@ -178,13 +202,16 @@ class NewsRepository
             $conditions[] = "ns.name = :status";
             $params['status'] = $status;
 
-            if ($status === 'publicada') {
+            if ($status === 'publicada' && !$includePrivate) {
                 $conditions[] = 'n.is_public = TRUE';
             }
         }
 
         if ($query !== '') {
-            $conditions[] = "(n.title ILIKE :q OR n.subtitle ILIKE :q OR n.content ILIKE :q)";
+            // RF-NEW-003: la búsqueda cubre título, contenido y nombre de los tags.
+            $conditions[] = "(n.title ILIKE :q OR n.subtitle ILIKE :q OR n.content ILIKE :q
+                OR EXISTS (SELECT 1 FROM news_tag ntq JOIN tag tq ON tq.id = ntq.tag_id
+                           WHERE ntq.news_id = n.id AND tq.name ILIKE :q))";
             $params['q'] = '%' . $query . '%';
         }
 

@@ -66,6 +66,11 @@ function dbDelete(string $table, string $where, array $params = []): int
     return Database::delete($table, $where, $params);
 }
 
+function dbTransaction(callable $fn): mixed
+{
+    return Database::transaction($fn);
+}
+
 // ══════════════════════════════════════════════
 //  SECURITY & HTTPS
 // ══════════════════════════════════════════════

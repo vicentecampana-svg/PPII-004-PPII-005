@@ -106,6 +106,12 @@ docker compose -f docker-compose.dev.yml exec web composer install
 El proyecto separa el **esquema** (`config/schema.sql`, solo DDL) de los
 **datos semilla** (`config/seed.sql`, BUG-05). Se cargan en ese orden.
 
+> **Primer acceso a las cuentas semilla.** El seed no versiona contraseñas
+> (RNF-SEC-003): cada cuenta recibe una contraseña aleatoria que nadie conoce.
+> Para entrar, usa "¿Olvidaste tu contraseña?" en `/login` con el correo de la
+> cuenta. Con `MAIL_DRIVER=log`, el enlace queda en `storage/logs/mail_dev.log`
+> y vence a los 30 minutos.
+
 ### En Windows (PowerShell)
 ```powershell
 docker compose -f docker-compose.dev.yml cp config/schema.sql postgres:/tmp/schema.sql

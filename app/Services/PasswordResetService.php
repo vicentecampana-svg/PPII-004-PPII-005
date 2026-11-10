@@ -14,14 +14,15 @@ use App\Repositories\UserRepository;
  * Flujo:
  *  1. El usuario pide recuperar su contraseña (requestReset).
  *  2. Se aplica un cooldown por correo para evitar spam de reenvíos.
- *  3. Se genera un token de un solo uso con vencimiento de 1 hora.
+ *  3. Se genera un token de un solo uso con vencimiento de 30 minutos.
  *  4. Se envía el enlace por correo (o se loguea en dev).
  *  5. El usuario abre el enlace y envía la nueva contraseña (resetPassword).
  *  6. El token queda marcado como usado y la contraseña se actualiza.
  */
 final class PasswordResetService
 {
-    private const TOKEN_TTL_HOURS = 1;
+    // RF-AUT-002: el enlace de recuperación vence a los 30 minutos.
+    private const TOKEN_TTL_MINUTES = 30;
 
     /** Segundos que deben pasar entre dos solicitudes para el mismo correo. */
     public const RESEND_COOLDOWN_SECONDS = 60;
@@ -118,7 +119,7 @@ final class PasswordResetService
         // Guardar sólo el hash para que si la BD es comprometida el token no sirva
         $hashedToken = hash('sha256', $plainToken);
 
-        $expiresAt = date('Y-m-d H:i:s', time() + self::TOKEN_TTL_HOURS * 3600);
+        $expiresAt = date('Y-m-d H:i:s', time() + self::TOKEN_TTL_MINUTES * 60);
 
         $this->resetRepo->create((int) $user['id'], $hashedToken, $expiresAt);
 
@@ -160,12 +161,13 @@ final class PasswordResetService
 
         $userId = (int) $tokenRow['user_id'];
 
-        // Actualizar contraseña y quitar flag de cambio forzado. El flujo corre
-        // sin sesión, así que el autor de la auditoría es el propio usuario.
+        // RF-AUT-002: tras recuperar la cuenta se fuerza el cambio de contraseña
+        // en el siguiente ingreso. El flujo corre sin sesión, así que el autor
+        // de la auditoría es el propio usuario.
         $userService = new UserService($this->userRepo);
         $userService->update($userId, [
             'password'             => $newPassword,
-            'must_change_password' => false,
+            'must_change_password' => true,
         ], $userId);
 
         // Invalidar el token

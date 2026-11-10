@@ -19,7 +19,8 @@ $flashError ??= null;
 
 // Definición de las pestañas del panel según la maqueta exacta
 $allTabs = [
-    'proyectos'      => ['label' => 'Proyectos',        'title' => 'Proyectos y servicios', 'roles' => ['superadmin', 'admin']],
+    'proyectos'      => ['label' => 'Proyectos',        'title' => 'Proyectos',             'roles' => ['superadmin', 'admin']],
+    'servicios'      => ['label' => 'Servicios',        'title' => 'Servicios',             'roles' => ['superadmin']],
     'staff'          => ['label' => 'Staff',            'title' => 'Staff',                 'roles' => ['superadmin', 'admin']],
     'noticias'       => ['label' => 'Noticias',         'title' => 'Noticias',              'roles' => ['superadmin', 'admin', 'redactor', 'editor']],
     'sobre-nosotros' => ['label' => 'Sobre nosotros',   'title' => 'Sobre nosotros',        'roles' => ['superadmin', 'admin']],
@@ -107,6 +108,8 @@ $roleClass = match ($roleNormalized) {
     <!-- Contenido de la pestaña activa -->
     <?php if ($activeTab === 'proyectos' && isset($visibleTabs['proyectos'])) : ?>
         <?php require __DIR__ . '/admin/proyectos.php'; ?>
+    <?php elseif ($activeTab === 'servicios' && isset($visibleTabs['servicios'])) : ?>
+        <?php require __DIR__ . '/admin/servicios.php'; ?>
     <?php elseif ($activeTab === 'staff' && isset($visibleTabs['staff'])) : ?>
         <?php require __DIR__ . '/admin/staff.php'; ?>
     <?php elseif ($activeTab === 'noticias' && isset($visibleTabs['noticias'])) : ?>

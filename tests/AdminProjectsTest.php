@@ -49,7 +49,8 @@ final class AdminProjectsTest extends TestCase
         require dirname(__DIR__) . '/app/Views/admin/proyectos.php';
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('Proyectos y servicios', $output);
+        $this->assertStringContainsString('>Proyectos</h2>', $output);
+        $this->assertStringNotContainsString('Proyectos y servicios', $output);
         $this->assertStringContainsString('Plataforma Académica', $output);
         $this->assertStringContainsString('Gestión de Laboratorios', $output);
         $this->assertStringContainsString('Nuevo registro', $output);

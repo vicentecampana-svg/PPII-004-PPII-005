@@ -4,18 +4,30 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\NewsConflictException;
 use App\Exceptions\ValidationException;
 use App\Repositories\NewsRepository;
+use App\Repositories\TagRepository;
 
 class NewsService
 {
+    public const TITLE_MIN = 5;
+    public const TITLE_MAX = 150;
+    public const CONTENT_MIN = 20;
+    public const CONTENT_MAX = 10000;
+    public const TAGS_MAX = 5;
+    public const TAG_MIN = 2;
+    public const TAG_MAX = 30;
+
     private NewsRepository $repo;
     private AuditService $audit;
+    private TagRepository $tags;
 
-    public function __construct(?NewsRepository $repo = null, ?AuditService $audit = null)
+    public function __construct(?NewsRepository $repo = null, ?AuditService $audit = null, ?TagRepository $tags = null)
     {
         $this->repo = $repo ?? new NewsRepository();
         $this->audit = $audit ?? new AuditService();
+        $this->tags = $tags ?? new TagRepository();
     }
 
     public function getAll(int $page, int $perPage, string $query = '', ?int $tagId = null): array
@@ -34,15 +46,19 @@ class NewsService
         ];
     }
 
-    public function getPublished(int $page, int $perPage, string $query = '', ?int $tagId = null): array
+    /**
+     * @param bool $includePrivate RF-NEW-002: las publicadas Privadas solo se
+     *                             listan para usuarios autenticados.
+     */
+    public function getPublished(int $page, int $perPage, string $query = '', ?int $tagId = null, bool $includePrivate = false): array
     {
-        $total = $this->repo->countPublished($query, $tagId);
+        $total = $this->repo->countPublished($query, $tagId, $includePrivate);
         $totalPages = max(1, (int) ceil($total / $perPage));
         $page = max(1, min($page, $totalPages));
         $offset = ($page - 1) * $perPage;
 
         return [
-            'items'       => $this->repo->findPublished($perPage, $offset, $query, $tagId),
+            'items'       => $this->repo->findPublished($perPage, $offset, $query, $tagId, $includePrivate),
             'total'       => $total,
             'page'        => $page,
             'per_page'    => $perPage,
@@ -62,10 +78,13 @@ class NewsService
         return $this->repo->findById($id);
     }
 
-    public function getPublishedById(int $id): ?array
+    public function getPublishedById(int $id, bool $includePrivate = false): ?array
     {
         $item = $this->repo->findById($id);
-        if ($item && $item['status'] !== 'publicada') {
+        if (!$item || $item['status'] !== 'publicada') {
+            return null;
+        }
+        if (!$includePrivate && empty($item['is_public'])) {
             return null;
         }
         return $item;
@@ -78,31 +97,36 @@ class NewsService
             throw new ValidationException($errors);
         }
 
-        $statusId = $this->repo->getStatusId('pendiente');
-        $tagIds = $this->extractTagIds($data);
         $authorDisplay = $data['author_display'] ?? null;
         if (is_string($authorDisplay)) {
             $authorDisplay = trim($authorDisplay);
             $authorDisplay = $authorDisplay !== '' ? $authorDisplay : null;
         }
 
-        $id = $this->repo->create([
-            'author_id'      => $authorId,
-            'status_id'      => $statusId,
-            'author_display' => $authorDisplay,
-            'title'          => $data['title'],
-            'subtitle'       => $data['subtitle'] ?? null,
-            'content'        => $data['content'],
-            'image'           => $data['image'] ?? null,
-            'is_public'      => $data['is_public'] ?? true,
-            'tag_id'         => $tagIds[0] ?? ($data['tag_id'] ?? null),
-        ]);
+        // RF-AUD-001: la noticia solo queda guardada si también queda auditada.
+        $id = dbTransaction(function () use ($data, $authorId, $authorDisplay): int {
+            $tagIds = $this->resolveTagIds($data);
 
-        if (!empty($tagIds)) {
-            $this->repo->syncTags($id, $tagIds);
-        }
+            $id = $this->repo->create([
+                'author_id'      => $authorId,
+                'status_id'      => $this->repo->getStatusId('pendiente'),
+                'author_display' => $authorDisplay,
+                'title'          => $data['title'],
+                'subtitle'       => $data['subtitle'] ?? null,
+                'content'        => $data['content'],
+                'image'           => $data['image'] ?? null,
+                'is_public'      => $data['is_public'] ?? true,
+                'tag_id'         => $tagIds[0] ?? ($data['tag_id'] ?? null),
+            ]);
 
-        $this->audit->log($authorId, 'crear', 'news', $id, 'Noticia creada: ' . $data['title']);
+            if (!empty($tagIds)) {
+                $this->repo->syncTags($id, $tagIds);
+            }
+
+            $this->audit->log($authorId, 'crear', 'news', $id, 'Noticia creada: ' . $data['title']);
+
+            return $id;
+        });
 
         return $this->repo->findById($id);
     }
@@ -144,15 +168,64 @@ class NewsService
             $fields['is_public'] = (bool) $data['is_public'];
         }
 
-        if (array_key_exists('tag_ids', $data) || array_key_exists('tag_id', $data)) {
-            $tagIds = $this->extractTagIds($data);
-            $fields['tag_id'] = $tagIds[0] ?? null;
-            $this->repo->syncTags($id, $tagIds);
+        dbTransaction(function () use ($id, $data, $fields, $existing): void {
+            if (array_key_exists('tag_ids', $data) || array_key_exists('tag_id', $data) || array_key_exists('tags', $data)) {
+                $tagIds = $this->resolveTagIds($data);
+                $fields['tag_id'] = $tagIds[0] ?? null;
+                $this->repo->syncTags($id, $tagIds);
+            }
+
+            $this->repo->update($id, $fields);
+
+            $this->audit->log(null, 'actualizar', 'news', $id, 'Noticia actualizada: ' . ($data['title'] ?? $existing['title']));
+        });
+
+        return $this->repo->findById($id);
+    }
+
+    /**
+     * RF-NEW-002 y RF-NEW-004: aprueba o rechaza una noticia Pendiente.
+     *
+     * Aprobar exige la visibilidad (publica o privada) en el mismo acto. Solo
+     * la primera resolución se aplica: si otro editor ya la resolvió, se
+     * lanza NewsConflictException y no se registra una segunda resolución.
+     */
+    public function resolve(int $id, string $status, ?string $visibility = null): array
+    {
+        if (!in_array($status, ['publicada', 'archivada'], true)) {
+            throw new ValidationException(['status' => 'La resolución debe ser aprobar o rechazar.']);
         }
 
-        $this->repo->update($id, $fields);
+        $isPublic = null;
+        if ($status === 'publicada') {
+            if (!in_array($visibility, ['publica', 'privada'], true)) {
+                throw new ValidationException([
+                    'visibility' => 'La visibilidad es obligatoria para aprobar: elige Pública o Privada.',
+                ]);
+            }
+            $isPublic = $visibility === 'publica';
+        }
 
-        $this->audit->log(null, 'actualizar', 'news', $id, 'Noticia actualizada: ' . ($data['title'] ?? $existing['title']));
+        dbTransaction(function () use ($id, $status, $isPublic, $visibility): void {
+            $resolved = $this->repo->resolvePending(
+                $id,
+                (int) $this->repo->getStatusId('pendiente'),
+                (int) $this->repo->getStatusId($status),
+                $isPublic
+            );
+
+            if ($resolved === 0) {
+                if (!$this->repo->findById($id)) {
+                    throw new \RuntimeException('Noticia no encontrada.');
+                }
+                throw new NewsConflictException('Esta noticia ya fue resuelta por otro editor.');
+            }
+
+            $details = $status === 'publicada'
+                ? 'Noticia aprobada con visibilidad ' . ($visibility === 'publica' ? 'Pública' : 'Privada')
+                : 'Noticia rechazada y archivada';
+            $this->audit->log(null, $status === 'publicada' ? 'aprobar' : 'archivar', 'news', $id, $details);
+        });
 
         return $this->repo->findById($id);
     }
@@ -181,10 +254,12 @@ class NewsService
             $fields['publication_date'] = date('Y-m-d H:i:s');
         }
 
-        $this->repo->update($id, $fields);
-
         $action = $status === 'publicada' ? 'aprobar' : ($status === 'archivada' ? 'archivar' : 'cambiar_estado');
-        $this->audit->log(null, $action, 'news', $id, "Estado cambiado a {$status}");
+
+        dbTransaction(function () use ($id, $fields, $action, $status): void {
+            $this->repo->update($id, $fields);
+            $this->audit->log(null, $action, 'news', $id, "Estado cambiado a {$status}");
+        });
 
         return $this->repo->findById($id);
     }
@@ -196,9 +271,10 @@ class NewsService
             throw new \RuntimeException('Noticia no encontrada.');
         }
 
-        $this->repo->delete($id);
-
-        $this->audit->log(null, 'eliminar', 'news', $id, 'Noticia eliminada: ' . ($existing['title'] ?? ''));
+        dbTransaction(function () use ($id, $existing): void {
+            $this->repo->delete($id);
+            $this->audit->log(null, 'eliminar', 'news', $id, 'Noticia eliminada: ' . ($existing['title'] ?? ''));
+        });
     }
 
     private function extractTagIds(array $data): array
@@ -217,15 +293,41 @@ class NewsService
         return array_values(array_unique($tagIds));
     }
 
+    /**
+     * Ids de tags indicados por id (tag_ids / tag_id) más los escritos por
+     * nombre en 'tags' (separados por comas), que se crean si no existen.
+     */
+    private function resolveTagIds(array $data): array
+    {
+        $tagIds = $this->extractTagIds($data);
+        foreach (self::parseTagNames($data['tags'] ?? null) as $name) {
+            $tagIds[] = $this->tags->findOrCreate($name);
+        }
+
+        return array_values(array_unique($tagIds));
+    }
+
+    /** @return string[] */
+    public static function parseTagNames(mixed $tags): array
+    {
+        if (is_array($tags)) {
+            $tags = implode(',', $tags);
+        }
+        if (!is_string($tags)) {
+            return [];
+        }
+
+        $names = array_map(static fn(string $t): string => trim($t), explode(',', $tags));
+
+        return array_values(array_unique(array_filter($names, static fn(string $t): bool => $t !== '')));
+    }
+
     private function validateCreate(array $data): array
     {
         $errors = [];
-        if (empty($data['title']) || trim($data['title']) === '') {
-            $errors['title'] = 'El título es obligatorio.';
-        }
-        if (empty($data['content']) || trim($data['content']) === '') {
-            $errors['content'] = 'El contenido es obligatorio.';
-        }
+        $this->validateTitle($data['title'] ?? '', $errors);
+        $this->validateContent($data['content'] ?? '', $errors);
+        $this->validateTags($data, $errors);
         $this->validateAuthorDisplay($data, $errors);
         return $errors;
     }
@@ -233,14 +335,54 @@ class NewsService
     private function validateUpdate(array $data): array
     {
         $errors = [];
-        if (array_key_exists('title', $data) && (empty($data['title']) || trim($data['title']) === '')) {
-            $errors['title'] = 'El título no puede estar vacío.';
+        if (array_key_exists('title', $data)) {
+            $this->validateTitle($data['title'], $errors);
         }
-        if (array_key_exists('content', $data) && (empty($data['content']) || trim($data['content']) === '')) {
-            $errors['content'] = 'El contenido no puede estar vacío.';
+        if (array_key_exists('content', $data)) {
+            $this->validateContent($data['content'], $errors);
         }
+        $this->validateTags($data, $errors);
         $this->validateAuthorDisplay($data, $errors);
         return $errors;
+    }
+
+    // RF-NEW-001: título de 5 a 150 caracteres y cuerpo de 20 a 10.000.
+    private function validateTitle(mixed $title, array &$errors): void
+    {
+        $length = mb_strlen(trim((string) $title));
+        if ($length === 0) {
+            $errors['title'] = 'El título es obligatorio.';
+        } elseif ($length < self::TITLE_MIN || $length > self::TITLE_MAX) {
+            $errors['title'] = 'El título debe tener entre ' . self::TITLE_MIN . ' y ' . self::TITLE_MAX . ' caracteres.';
+        }
+    }
+
+    private function validateContent(mixed $content, array &$errors): void
+    {
+        $length = mb_strlen(trim((string) $content));
+        if ($length === 0) {
+            $errors['content'] = 'El cuerpo de la noticia es obligatorio.';
+        } elseif ($length < self::CONTENT_MIN || $length > self::CONTENT_MAX) {
+            $errors['content'] = 'El cuerpo de la noticia debe tener entre ' . self::CONTENT_MIN . ' y '
+                . number_format(self::CONTENT_MAX, 0, ',', '.') . ' caracteres.';
+        }
+    }
+
+    // RF-NEW-001: hasta 5 tags, de 2 a 30 caracteres cada uno.
+    private function validateTags(array $data, array &$errors): void
+    {
+        $names = self::parseTagNames($data['tags'] ?? null);
+        if (count($names) > self::TAGS_MAX) {
+            $errors['tags'] = 'Se permiten como máximo ' . self::TAGS_MAX . ' tags por noticia.';
+            return;
+        }
+        foreach ($names as $name) {
+            $length = mb_strlen($name);
+            if ($length < self::TAG_MIN || $length > self::TAG_MAX) {
+                $errors['tags'] = 'Cada tag debe tener entre ' . self::TAG_MIN . ' y ' . self::TAG_MAX . ' caracteres.';
+                return;
+            }
+        }
     }
 
     private function validateAuthorDisplay(array $data, array &$errors): void

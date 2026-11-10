@@ -71,6 +71,27 @@ class ContactDigestService
         }
     }
 
+    /**
+     * IS-002: envía en el momento las consultas aún no avisadas, sin esperar
+     * el intervalo. Lo usa cada envío del formulario de contacto.
+     */
+    public function sendPending(): bool
+    {
+        $locked = (bool) (dbFetchOne(
+            'SELECT pg_try_advisory_lock(hashtext(:key)) AS locked',
+            ['key' => 'contact_digest']
+        )['locked'] ?? false);
+        if (!$locked) {
+            return false;
+        }
+
+        try {
+            return $this->sendUnnotified();
+        } finally {
+            dbQuery('SELECT pg_advisory_unlock(hashtext(:key))', ['key' => 'contact_digest']);
+        }
+    }
+
     private function sendIfDueLocked(): bool
     {
         // El intervalo se cuenta desde el último intento, aunque haya fallado,
@@ -80,6 +101,11 @@ class ContactDigestService
             return false;
         }
 
+        return $this->sendUnnotified();
+    }
+
+    private function sendUnnotified(): bool
+    {
         $total = $this->repo->countUnnotified();
         if ($total === 0) {
             return false;

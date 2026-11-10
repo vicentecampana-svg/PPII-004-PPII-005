@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Exceptions\NewsConflictException;
+use App\Exceptions\ValidationException;
 use App\Services\NewsService;
 
 /**
@@ -37,14 +39,10 @@ final class AdminNewsController extends AdminControllerBase
         $authorDisplay = in_array($role, ['superadmin', 'admin', 'editor'], true)
             ? trim((string) ($_POST['author'] ?? ''))
             : trim((string) ($user['username'] ?? ''));
+        $tags = trim((string) ($_POST['tags'] ?? ''));
         $isPublic = isset($_POST['is_public']);
         $isApproved = isset($_POST['is_approved']) ? (bool) $_POST['is_approved'] : false;
-
-        if ($title === '' || $content === '') {
-            $_SESSION['_flash_error'] = 'El título y el contenido de la noticia son obligatorios.';
-            header('Location: /admin?tab=noticias' . ($id > 0 ? '&edit_id=' . $id : ''));
-            exit;
-        }
+        $backUrl = '/admin?tab=noticias' . ($id > 0 ? '&edit_id=' . $id : '');
 
         if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
             try {
@@ -68,6 +66,7 @@ final class AdminNewsController extends AdminControllerBase
                 'content'        => $content,
                 'image'          => $image !== '' ? $image : null,
                 'is_public' => $isPublic,
+                'tags'           => $tags,
             ];
 
             if ($id > 0) {
@@ -92,6 +91,11 @@ final class AdminNewsController extends AdminControllerBase
                 }
                 $_SESSION['_flash_success'] = 'Noticia creada exitosamente.';
             }
+        } catch (ValidationException $e) {
+            // RF-NEW-001: se indica el campo y el motivo, y no se guarda nada.
+            $_SESSION['_flash_error'] = implode(' ', $e->getErrors());
+            header('Location: ' . $backUrl);
+            exit;
         } catch (\Throwable) {
             $_SESSION['_flash_error'] = 'No se pudo guardar la noticia. Inténtalo nuevamente.';
         }
@@ -143,11 +147,25 @@ final class AdminNewsController extends AdminControllerBase
 
         $id = (int) ($_POST['id'] ?? 0);
         $status = trim((string) ($_POST['status'] ?? 'publicada'));
+        $visibility = trim((string) ($_POST['visibility'] ?? ''));
 
         if ($id > 0) {
             try {
-                $this->newsService->updateStatus($id, $status);
-                $_SESSION['_flash_success'] = 'Estado de la noticia actualizado a ' . $status . '.';
+                if ($status === 'pendiente') {
+                    // Despublicar una noticia ya aprobada.
+                    $this->newsService->updateStatus($id, $status);
+                    $_SESSION['_flash_success'] = 'La noticia volvió a quedar pendiente.';
+                } else {
+                    // RF-NEW-002 / RF-NEW-004: aprobar (con visibilidad) o rechazar una pendiente.
+                    $this->newsService->resolve($id, $status, $visibility !== '' ? $visibility : null);
+                    $_SESSION['_flash_success'] = $status === 'publicada'
+                        ? 'Noticia aprobada y publicada.'
+                        : 'Noticia rechazada: quedó archivada.';
+                }
+            } catch (ValidationException $e) {
+                $_SESSION['_flash_error'] = implode(' ', $e->getErrors());
+            } catch (NewsConflictException $e) {
+                $_SESSION['_flash_error'] = $e->getMessage();
             } catch (\Throwable) {
                 $_SESSION['_flash_error'] = 'No se pudo cambiar el estado de la noticia. Inténtalo nuevamente.';
             }

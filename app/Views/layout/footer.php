@@ -30,6 +30,10 @@ if ($grupos === []) {
 
   <footer class="site-footer" role="contentinfo">
     <div class="container">
+      <!-- RF-FTR-001: logo institucional -->
+      <a href="/" class="footer-logo-link">
+        <img src="/assets/images/logo-sfl.png" alt="Software Factory Lab — Universidad de La Serena" width="139" height="48" class="footer-logo" loading="lazy">
+      </a>
       <p class="footer-eyebrow">Software Factory Lab</p>
 
       <div class="footer-links">
@@ -75,8 +79,9 @@ if ($grupos === []) {
       </div>
 
       <div class="footer-bottom">
-        <p class="footer-copy"><?= htmlspecialchars($contacto['copyright_text'] ?? '© SFL. Todos los derechos reservados', ENT_QUOTES, 'UTF-8') ?></p>
+        <p class="footer-copy"><?= htmlspecialchars($contacto['copyright_text'] ?? '© 2026 Software Factory Lab. Todos los derechos reservados', ENT_QUOTES, 'UTF-8') ?></p>
         <button type="button" class="footer-legal-link" id="legal-reopen-btn">Aviso legal</button>
+        <a href="/privacidad" class="footer-legal-link">Política de privacidad</a>
         <a href="/credits" class="footer-credits-link">Página creada por equipo Charlie</a>
       </div>
     </div>

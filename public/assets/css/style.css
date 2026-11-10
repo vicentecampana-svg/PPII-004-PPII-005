@@ -658,6 +658,16 @@ button.logout-submit:hover {
   padding-bottom: 40px;
 }
 
+.footer-logo-link {
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.footer-logo {
+  height: 48px;
+  width: auto;
+}
+
 .footer-eyebrow {
   font-size: 0.75rem;
   color: #f1f5f9;

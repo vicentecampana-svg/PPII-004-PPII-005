@@ -119,4 +119,34 @@ final class Database
     {
         return self::query("DELETE FROM {$table} WHERE {$where}", $params)->rowCount();
     }
+
+    /**
+     * RF-AUD-001: ejecuta $fn en una transacción. Si algo falla (incluida la
+     * escritura de auditoría), se revierte todo y la excepción se propaga.
+     * Dentro de una transacción ya abierta, solo ejecuta $fn.
+     */
+    public static function transaction(callable $fn): mixed
+    {
+        try {
+            $pdo = self::connection();
+        } catch (PDOException) {
+            // Sin base no hay nada que revertir: las consultas de $fn fallarán solas.
+            return $fn();
+        }
+
+        if ($pdo->inTransaction()) {
+            return $fn();
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $result = $fn();
+            $pdo->commit();
+
+            return $result;
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Exceptions\ValidationException;
+use App\Services\MailerService;
 use App\Services\PasswordPolicy;
 use App\Services\UserService;
 
@@ -69,8 +70,9 @@ final class AdminUsersController extends AdminControllerBase
                 $this->userService->update($id, $data);
                 $_SESSION['_flash_success'] = 'Usuario actualizado exitosamente.';
             } else {
-                $this->userService->create($data);
+                $created = $this->userService->create($data);
                 $_SESSION['_flash_success'] = 'Usuario creado exitosamente.';
+                $this->notifyAccountCreated($created);
             }
         } catch (ValidationException $e) {
             $_SESSION['_flash_error'] = implode(' ', $e->getErrors());
@@ -82,6 +84,24 @@ final class AdminUsersController extends AdminControllerBase
 
         header('Location: /admin?tab=usuarios');
         exit;
+    }
+
+    /**
+     * RF-AUT-004 / IS-001: el aviso de cuenta creada es accesorio; si el
+     * correo falla, la cuenta igual queda creada y se informa al Super Usuario.
+     */
+    private function notifyAccountCreated(array $user): void
+    {
+        try {
+            $loginUrl = rtrim((string) (getenv('APP_URL') ?: ''), '/') . '/login';
+            $sent = (new MailerService())->sendAccountCreated((string) $user['email'], (string) $user['username'], $loginUrl);
+        } catch (\Throwable) {
+            $sent = false;
+        }
+
+        if (!$sent) {
+            $_SESSION['_flash_success'] .= ' No se pudo enviar el aviso por correo: comunícale la creación de la cuenta directamente.';
+        }
     }
 
     public function deleteUser(): void
