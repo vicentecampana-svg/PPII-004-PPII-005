@@ -449,7 +449,7 @@ button.logout-submit:hover {
 
 @media (min-width: 1024px) {
   .grid-proyectos {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .grid-staff {
