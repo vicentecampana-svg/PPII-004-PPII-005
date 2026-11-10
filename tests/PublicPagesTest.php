@@ -131,9 +131,9 @@ final class PublicPagesTest extends TestCase
     {
         $servicios = [
             [
-                'id' => 7,
-                'name' => 'Repositorio',
-                'description' => 'Servicio tecnológico de la Universidad de La Serena.',
+                'id' => 2,
+                'name' => 'Consultoría en Tecnología',
+                'description' => 'Asesoría técnica para la transformación digital de empresas y organizaciones',
                 'image' => 'proyecto-1.jpg',
                 'link' => null,
                 'active' => true,
@@ -144,7 +144,7 @@ final class PublicPagesTest extends TestCase
         require dirname(__DIR__) . '/app/Views/servicios.php';
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('Repositorio', $output);
+        $this->assertStringContainsString('Consultoría en Tecnología', $output);
         $this->assertStringNotContainsString('Solicitar servicio', $output);
     }
 
