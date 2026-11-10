@@ -85,11 +85,11 @@ final class HomeController extends Controller
         ];
     }
 
-    /** Los primeros 4 proyectos activos, para el homepage. */
+    /** Los primeros 3 proyectos activos, para el homepage (misma grilla que noticias). */
     private function proyectos(): array
     {
         try {
-            $items = (new ProjectService())->getAll(1, 4, false)['items'];
+            $items = (new ProjectService())->getAll(1, 3, false)['items'];
         } catch (\Throwable) {
             $items = [];
         }
